@@ -1,0 +1,86 @@
+---
+import { Activity, Bell, Bus, CalendarDays, ChevronDown, ChevronRight, CircleAlert, ClipboardList, Fuel, Gauge, LayoutDashboard, Menu, MoreHorizontal, Route, Search, Settings, ShieldCheck, Truck, UserRound, UsersRound, Wrench, X } from 'lucide-astro'
+import '../styles/global.css'
+
+const navItems = [
+  { label: 'Panel principal', icon: LayoutDashboard, active: true },
+  { label: 'Vehículos / Flota', icon: Truck },
+  { label: 'Choferes', icon: UsersRound },
+  { label: 'Viajes / Hojas de ruta', icon: Route },
+  { label: 'Mantenimientos', icon: Wrench },
+  { label: 'Combustible', icon: Fuel },
+]
+
+const fleet = [
+  { plate: 'AB 123 CD', vehicle: 'Toyota Hilux', type: 'Camioneta', km: '45.280 km', vtv: '12/10/2024', status: 'Disponible', tone: 'green' },
+  { plate: 'AC 847 EF', vehicle: 'Kangoo Furgón', type: 'Utilitario', km: '82.640 km', vtv: '04/11/2024', status: 'En comisión', tone: 'blue' },
+  { plate: 'AD 592 GH', vehicle: 'Ford Ranger', type: 'Camioneta', km: '61.930 km', vtv: '28/09/2024', status: 'En taller', tone: 'orange' },
+  { plate: 'AE 312 IJ', vehicle: 'Fiat Cronos', type: 'Sedán', km: '32.110 km', vtv: '19/12/2024', status: 'Disponible', tone: 'green' },
+  { plate: 'AF 765 KL', vehicle: 'Mercedes Sprinter', type: 'Minibús', km: '104.520 km', vtv: '03/10/2024', status: 'En comisión', tone: 'blue' },
+]
+
+const travels = [
+  { place: 'Valle Fértil', area: 'Dirección de Educación Rural', driver: 'Martín Rojas', vehicle: 'Toyota Hilux · AB 123 CD', time: 'Salió hace 2 h', color: 'bg-blue' },
+  { place: 'Jáchal', area: 'Supervisión Zona Norte', driver: 'Lucía Gómez', vehicle: 'Mercedes Sprinter · AF 765 KL', time: 'Salió hace 5 h', color: 'bg-gold' },
+  { place: 'Calingasta', area: 'Infraestructura Escolar', driver: 'Carlos Molina', vehicle: 'Kangoo Furgón · AC 847 EF', time: 'Programado 14:30', color: 'bg-sky' },
+]
+
+const maintenance = [
+  { title: 'Cambio de aceite y filtros', vehicle: 'Ford Ranger · AD 592 GH', date: 'Hoy, 09:30', tag: 'En curso', tagClass: 'bg-sky text-blue' },
+  { title: 'Revisión de frenos', vehicle: 'Fiat Cronos · AE 312 IJ', date: 'Mañana, 08:00', tag: 'Programado', tagClass: 'bg-sky text-blue' },
+]
+---
+
+<div class="min-h-screen bg-paper">
+  <div id="mobile-overlay" class="mobile-overlay fixed inset-0 z-30 bg-navy/30"></div>
+  <aside id="sidebar" class="sidebar fixed inset-y-0 left-0 z-40 flex w-[258px] flex-col bg-navy text-white">
+    <div class="flex h-[94px] items-center gap-3 border-b border-white/10 px-6">
+      <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-gold text-navy"><Bus size={25} strokeWidth={2.5} /></div>
+      <div><p class="font-display text-[17px] font-bold tracking-tight">Movilidades</p><p class="text-[11px] font-semibold uppercase tracking-[.16em] text-white/55">Ministerio de Educación</p></div>
+    </div>
+    <div class="px-4 pt-7"><p class="mb-3 px-3 text-[10px] font-bold uppercase tracking-[.2em] text-white/35">Gestión operativa</p>
+      <nav class="space-y-1">
+        {navItems.map((item) => <a href={`#${item.label.toLowerCase().replaceAll(' ', '-')}`} class:list={{'bg-white/12 text-white': item.active}} class="group flex items-center gap-3 rounded-lg px-3 py-3 text-[13px] font-semibold text-white/65 transition hover:bg-white/10 hover:text-white"><item.icon size={18} strokeWidth={1.9} /><span>{item.label}</span>{item.active && <span class="ml-auto h-1.5 w-1.5 rounded-full bg-gold" />}</a>)}
+      </nav>
+    </div>
+    <div class="mt-auto px-4 pb-5"><div class="mb-3 h-px bg-white/10"></div><a href="#configuracion" class="flex items-center gap-3 rounded-lg px-3 py-3 text-[13px] font-semibold text-white/60 hover:bg-white/10 hover:text-white"><Settings size={18} /><span>Configuración</span></a><div class="mt-4 flex items-center gap-3 rounded-lg bg-white/8 p-3"><div class="flex h-9 w-9 items-center justify-center rounded-full bg-gold font-display text-sm font-bold text-navy">MG</div><div class="min-w-0 flex-1"><p class="truncate text-xs font-bold">María Gutiérrez</p><p class="truncate text-[11px] text-white/50">Administradora</p></div><ChevronDown size={15} class="text-white/45" /></div></div>
+  </aside>
+
+  <main class="ml-0 min-h-screen lg:ml-[258px]">
+    <header class="flex h-[94px] items-center justify-between border-b border-line bg-white px-5 sm:px-8">
+      <div class="flex items-center gap-4"><button id="menu-button" class="rounded-lg p-2 text-muted hover:bg-sky lg:hidden" aria-label="Abrir menú"><Menu size={21} /></button><div><p class="text-xs font-semibold text-muted">Miércoles, 18 de septiembre de 2024</p><h1 class="font-display text-xl font-bold text-navy sm:text-2xl">Panel principal</h1></div></div>
+      <div class="flex items-center gap-3"><div class="relative hidden md:block"><Search size={17} class="absolute left-3 top-1/2 -translate-y-1/2 text-muted" /><input aria-label="Buscar" placeholder="Buscar vehículo, patente..." class="h-10 w-[230px] rounded-lg border border-line bg-paper pl-10 pr-3 text-xs outline-none focus:border-blue" /></div><button class="relative rounded-lg p-2.5 text-muted hover:bg-sky" aria-label="Notificaciones"><Bell size={19} /><span class="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-gold ring-2 ring-white"></span></button><button class="hidden rounded-lg border border-line px-3 py-2 text-xs font-bold text-blue sm:flex sm:items-center sm:gap-2"><CalendarDays size={15} /> Este mes <ChevronDown size={14} /></button></div>
+    </header>
+
+    <div class="p-5 sm:p-8">
+      <div class="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><p class="mb-1 text-sm font-semibold text-blue">Resumen operativo</p><h2 class="font-display text-[27px] font-bold tracking-tight text-navy">Buen día, María</h2><p class="mt-1 text-sm text-muted">Este es el estado actual de la flota y las movilidades.</p></div><button class="flex w-fit items-center gap-2 rounded-lg bg-blue px-4 py-2.5 text-xs font-bold text-white shadow-sm shadow-blue/20 hover:opacity-90"><span class="text-lg leading-none">+</span> Nueva comisión</button></div>
+      <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {[{label:'Unidades en parque',value:'28',detail:'Total de vehículos',icon:Truck,accent:'text-blue',bg:'bg-sky'},{label:'Disponibles ahora',value:'17',detail:'61% de la flota',icon:ShieldCheck,accent:'text-blue',bg:'bg-sky'},{label:'Comisiones activas',value:'06',detail:'En distintos departamentos',icon:Route,accent:'text-gold',bg:'bg-[#fff6df]'},{label:'Unidades en taller',value:'05',detail:'2 requieren atención',icon:Wrench,accent:'text-[#bf6e32]',bg:'bg-[#fff0e4]'}].map((stat) => <div class="card flex items-start justify-between p-5"><div><p class="text-[12px] font-bold text-muted">{stat.label}</p><p class="mt-2 font-display text-[30px] font-bold text-navy">{stat.value}</p><p class="mt-1 text-[11px] font-semibold text-muted">{stat.detail}</p></div><div class:list={[stat.bg, stat.accent]} class="flex h-10 w-10 items-center justify-center rounded-lg"><stat.icon size={19} /></div></div>)}
+      </section>
+
+      <div class="mt-6 grid gap-6 xl:grid-cols-[1.55fr_1fr]">
+        <section id="vehículos-/-flota" class="card overflow-hidden"><div class="flex items-center justify-between border-b border-line px-5 py-4"><div><h3 class="font-display text-[16px] font-bold text-navy">Estado de la flota</h3><p class="mt-0.5 text-xs text-muted">Monitoreo de unidades y documentación</p></div><a href="#flota" class="flex items-center gap-1 text-xs font-bold text-blue">Ver flota completa <ChevronRight size={14} /></a></div><div class="overflow-x-auto"><table class="w-full min-w-[680px] text-left"><thead><tr class="border-b border-line bg-paper text-[10px] font-bold uppercase tracking-[.08em] text-muted"><th class="px-5 py-3">Unidad</th><th class="px-3 py-3">Patente</th><th class="px-3 py-3">Odómetro</th><th class="px-3 py-3">VTV / RTO</th><th class="px-5 py-3 text-right">Estado</th></tr></thead><tbody>{fleet.map((item) => <tr class="border-b border-line last:border-0"><td class="px-5 py-3.5"><p class="text-[13px] font-bold text-navy">{item.vehicle}</p><p class="text-[11px] text-muted">{item.type}</p></td><td class="px-3 py-3.5"><span class="rounded bg-paper px-2 py-1 font-mono text-[11px] font-bold tracking-wider text-navy">{item.plate}</span></td><td class="px-3 py-3.5 text-xs font-semibold text-muted">{item.km}</td><td class="px-3 py-3.5 text-xs font-semibold text-muted">{item.vtv}</td><td class="px-5 py-3.5 text-right"><span class:list={{'bg-[#e8f7ef] text-[#20864f]':item.tone==='green','bg-sky text-blue':item.tone==='blue','bg-[#fff0e4] text-[#bf6e32]':item.tone==='orange'}} class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold"><span class="h-1.5 w-1.5 rounded-full bg-current"></span>{item.status}</span></td></tr>)}</tbody></table></div></section>
+
+        <section class="card"><div class="flex items-center justify-between border-b border-line px-5 py-4"><div><h3 class="font-display text-[16px] font-bold text-navy">Actividad en tiempo real</h3><p class="mt-0.5 text-xs text-muted">Últimas novedades operativas</p></div><button class="text-muted" aria-label="Más opciones"><MoreHorizontal size={19} /></button></div><div class="divide-y divide-[#e5ebf2] px-5">{travels.map((travel) => <div class="flex gap-3 py-4"><div class:list={[travel.color]} class="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white"><Route size={15} /></div><div class="min-w-0"><div class="flex items-start justify-between gap-2"><p class="text-[13px] font-bold text-navy">Comisión a {travel.place}</p><span class="whitespace-nowrap text-[10px] font-semibold text-muted">{travel.time}</span></div><p class="mt-1 truncate text-[11px] text-muted">{travel.driver} · {travel.vehicle}</p><p class="mt-1 truncate text-[11px] font-semibold text-blue">{travel.area}</p></div></div>)}</div><a href="#actividad" class="flex items-center justify-center gap-1 border-t border-line py-3 text-xs font-bold text-blue">Ver toda la actividad <ChevronRight size={14} /></a></section>
+      </div>
+
+      <div class="mt-6 grid gap-6 lg:grid-cols-3">
+        <section id="choferes" class="card p-5"><div class="flex items-center justify-between"><div><h3 class="font-display text-[16px] font-bold text-navy">Choferes</h3><p class="mt-0.5 text-xs text-muted">Estado de documentación</p></div><div class="rounded-lg bg-sky p-2 text-blue"><UsersRound size={18} /></div></div><div class="mt-5 flex items-end justify-between"><div><p class="font-display text-3xl font-bold text-navy">34</p><p class="text-[11px] font-semibold text-muted">Conductores registrados</p></div><div class="text-right"><p class="font-display text-xl font-bold text-[#bf6e32]">03</p><p class="text-[11px] font-semibold text-muted">Carnets por vencer</p></div></div><div class="mt-5 h-2 overflow-hidden rounded-full bg-sky"><div class="h-full w-[82%] rounded-full bg-blue"></div></div><div class="mt-2 flex justify-between text-[10px] font-bold text-muted"><span>82% documentación al día</span><a href="#choferes-listado" class="text-blue">Gestionar</a></div></section>
+        <section id="mantenimientos" class="card p-5"><div class="flex items-center justify-between"><div><h3 class="font-display text-[16px] font-bold text-navy">Mantenimientos</h3><p class="mt-0.5 text-xs text-muted">Agenda de servicios</p></div><div class="rounded-lg bg-[#fff0e4] p-2 text-[#bf6e32]"><Wrench size={18} /></div></div><div class="mt-4 space-y-3">{maintenance.map((item) => <div class="rounded-lg bg-paper p-3"><div class="flex items-center justify-between gap-3"><p class="text-xs font-bold text-navy">{item.title}</p><span class:list={[item.tagClass]} class="rounded px-2 py-1 text-[9px] font-bold">{item.tag}</span></div><p class="mt-1 text-[11px] text-muted">{item.vehicle} · {item.date}</p></div>)}</div><a href="#mantenimientos-listado" class="mt-4 flex items-center gap-1 text-xs font-bold text-blue">Ver agenda completa <ChevronRight size={14} /></a></section>
+        <section id="combustible" class="card p-5"><div class="flex items-center justify-between"><div><h3 class="font-display text-[16px] font-bold text-navy">Consumo de combustible</h3><p class="mt-0.5 text-xs text-muted">Resumen de la flota · Septiembre</p></div><div class="rounded-lg bg-[#fff6df] p-2 text-[#b17b09]"><Fuel size={18} /></div></div><div class="mt-5 flex items-end gap-2"><p class="font-display text-3xl font-bold text-navy">8,4</p><p class="mb-1 text-xs font-bold text-muted">L / 100 km</p><span class="mb-1 ml-auto rounded-full bg-[#e8f7ef] px-2 py-1 text-[10px] font-bold text-[#20864f]">↓ 4,2%</span></div><div class="mt-4 flex h-14 items-end gap-1.5">{[35,48,42,65,57,72,60,82,70,76,88,78].map((height, index) => <div class:list={{'bg-blue':index===11,'bg-sky':index!==11}} style={`height:${height}%`} class="flex-1 rounded-t-sm"></div>)}</div><div class="mt-2 flex justify-between text-[10px] font-semibold text-muted"><span>01 Sep</span><span>18 Sep</span></div></section>
+      </div>
+
+      <footer class="mt-8 flex flex-col justify-between gap-2 border-t border-line pt-5 text-[11px] font-semibold text-muted sm:flex-row"><span>Ministerio de Educación · Gobierno de San Juan</span><span class="flex items-center gap-1.5"><Activity size={13} class="text-blue" /> Sistema operativo · Última actualización hace 2 min</span></footer>
+    </div>
+  </main>
+</div>
+
+<script>
+  const menuButton = document.querySelector('#menu-button')
+  const sidebar = document.querySelector('#sidebar')
+  const overlay = document.querySelector('#mobile-overlay')
+  const closeMenu = () => { sidebar?.classList.remove('open'); overlay?.classList.remove('open') }
+  menuButton?.addEventListener('click', () => { sidebar?.classList.toggle('open'); overlay?.classList.toggle('open') })
+  overlay?.addEventListener('click', closeMenu)
+  sidebar?.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeMenu))
+</script>
