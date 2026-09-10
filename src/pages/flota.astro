@@ -1,0 +1,629 @@
+---
+import { AlertTriangle, CheckCircle2, ChevronRight, Edit3, Eye, FileText, Filter, Plus, Search, ShieldAlert, ShieldCheck, Truck, Wrench, X } from 'lucide-astro'
+import DashboardLayout from '../layouts/DashboardLayout.astro'
+import VehicleDetailModal from '../components/flota/VehicleDetailModal.astro'
+import VehicleFormModal from '../components/flota/VehicleFormModal.astro'
+import { getVehiclesFullList, getVehicleTypes, getDependenciasList, getDashboardStats } from '../../lib/db'
+
+// Carga en servidor
+const [vehicles, types, dependencias, stats] = await Promise.all([
+  getVehiclesFullList(),
+  getVehicleTypes(),
+  getDependenciasList(),
+  getDashboardStats(),
+])
+
+// Cálculo de alertas RTO
+const rtoAlertsCount = vehicles.filter((v) => v.vtvStatus === 'proxima' || v.vtvStatus === 'vencida').length
+---
+
+<DashboardLayout activeNav="flota" title="Vehículos y Flota · Movilidades · Ministerio de Educación">
+  <h1 slot="header-title" class="font-display text-xl font-bold text-navy sm:text-2xl">Vehículos y Flota Oficial</h1>
+
+  <!-- Encabezado de sección -->
+  <div class="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+    <div>
+      <div class="flex items-center gap-2 text-xs font-semibold text-blue mb-1">
+        <span>Ministerio de Educación</span>
+        <span>·</span>
+        <span>Parque Automotor</span>
+      </div>
+      <h2 class="font-display text-[26px] font-bold tracking-tight text-navy">Gestión de Unidades</h2>
+      <p class="mt-0.5 text-xs text-muted">Control de patentes, cédulas, RTO, historial mecánico y comisiones de viaje.</p>
+    </div>
+    
+    <div class="flex items-center gap-2">
+      <button
+        id="btn-open-create-modal"
+        class="flex items-center gap-2 rounded-lg bg-blue px-4 py-2.5 text-xs font-bold text-white shadow-sm shadow-blue/20 hover:opacity-90 transition cursor-pointer"
+      >
+        <Plus size={16} strokeWidth={2.5} />
+        <span>Registrar nueva unidad</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Tarjetas KPI del Parque Automotor -->
+  <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5 mb-6">
+    <div class="card p-4 flex items-center justify-between">
+      <div>
+        <p class="text-[11px] font-bold text-muted uppercase tracking-wider">Total Flota</p>
+        <p class="mt-1 font-display text-2xl font-bold text-navy">{String(stats.totalFleet).padStart(2, '0')}</p>
+        <p class="text-[10px] text-muted">Unidades oficiales</p>
+      </div>
+      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-sky text-blue">
+        <Truck size={20} />
+      </div>
+    </div>
+
+    <div class="card p-4 flex items-center justify-between">
+      <div>
+        <p class="text-[11px] font-bold text-muted uppercase tracking-wider">Disponibles</p>
+        <p class="mt-1 font-display text-2xl font-bold text-[#20864f]">{String(stats.availableFleet).padStart(2, '0')}</p>
+        <p class="text-[10px] text-muted">{stats.availablePercent}% operativa</p>
+      </div>
+      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e8f7ef] text-[#20864f]">
+        <CheckCircle2 size={20} />
+      </div>
+    </div>
+
+    <div class="card p-4 flex items-center justify-between">
+      <div>
+        <p class="text-[11px] font-bold text-muted uppercase tracking-wider">En Comisión</p>
+        <p class="mt-1 font-display text-2xl font-bold text-blue">{String(stats.activeTravels).padStart(2, '0')}</p>
+        <p class="text-[10px] text-muted">En viaje oficial</p>
+      </div>
+      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-sky text-blue">
+        <FileText size={20} />
+      </div>
+    </div>
+
+    <div class="card p-4 flex items-center justify-between">
+      <div>
+        <p class="text-[11px] font-bold text-muted uppercase tracking-wider">En Taller</p>
+        <p class="mt-1 font-display text-2xl font-bold text-[#bf6e32]">{String(stats.inRepairFleet).padStart(2, '0')}</p>
+        <p class="text-[10px] text-muted">Mantenimiento</p>
+      </div>
+      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fff0e4] text-[#bf6e32]">
+        <Wrench size={20} />
+      </div>
+    </div>
+
+    <div class="card p-4 flex items-center justify-between">
+      <div>
+        <p class="text-[11px] font-bold text-muted uppercase tracking-wider">Alertas RTO</p>
+        <p class="mt-1 font-display text-2xl font-bold text-red-600">{String(rtoAlertsCount).padStart(2, '0')}</p>
+        <p class="text-[10px] text-muted">Por vencer o vencidas</p>
+      </div>
+      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-600">
+        <ShieldAlert size={20} />
+      </div>
+    </div>
+  </section>
+
+  <!-- Barra de Búsqueda y Filtros Reactivos -->
+  <div class="card p-4 mb-6">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-3">
+      <!-- Buscador por patente o marca -->
+      <div class="relative w-full md:w-80">
+        <Search size={16} class="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+        <input
+          id="filter-search"
+          type="text"
+          placeholder="Buscar por patente, marca, modelo o cédula..."
+          class="h-9 w-full rounded-lg border border-line bg-paper pl-9 pr-3 text-xs outline-none focus:border-blue focus:bg-white transition"
+        />
+      </div>
+
+      <!-- Filtros desplegables -->
+      <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+        <div class="flex items-center gap-1.5 text-xs text-muted">
+          <Filter size={14} />
+          <span class="font-bold text-[11px] uppercase">Filtros:</span>
+        </div>
+
+        <select id="filter-estado" class="h-9 rounded-lg border border-line bg-paper px-2.5 text-xs outline-none focus:border-blue focus:bg-white transition">
+          <option value="">Estado: Todos</option>
+          <option value="disponible">Disponibles</option>
+          <option value="en_comision">En comisión</option>
+          <option value="en_taller">En taller</option>
+          <option value="baja">Baja</option>
+        </select>
+
+        <select id="filter-tipo" class="h-9 rounded-lg border border-line bg-paper px-2.5 text-xs outline-none focus:border-blue focus:bg-white transition">
+          <option value="">Tipo: Todos</option>
+          {types.map((t) => (
+            <option value={t.nombre}>{t.nombre}</option>
+          ))}
+        </select>
+
+        <select id="filter-dependencia" class="h-9 rounded-lg border border-line bg-paper px-2.5 text-xs outline-none focus:border-blue focus:bg-white transition max-w-[200px] truncate">
+          <option value="">Área: Todas</option>
+          {dependencias.map((d) => (
+            <option value={d.nombre}>{d.sigla ? `${d.sigla} - ${d.nombre}` : d.nombre}</option>
+          ))}
+        </select>
+
+        <button id="btn-clear-filters" class="h-9 rounded-lg border border-line bg-white px-3 text-xs font-semibold text-muted hover:text-navy hover:bg-paper transition">
+          Limpiar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla Principal de la Flota -->
+  <section class="card overflow-hidden shadow-sm">
+    <div class="flex items-center justify-between border-b border-line px-6 py-4">
+      <div>
+        <h3 class="font-display text-base font-bold text-navy">Parque Automotor Registrado</h3>
+        <p class="text-xs text-muted">
+          Mostrando <span id="visible-count" class="font-bold text-navy">{vehicles.length}</span> de {vehicles.length} unidades oficiales
+        </p>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[1050px] text-left text-xs">
+        <thead>
+          <tr class="border-b border-line bg-paper text-[10px] font-bold uppercase tracking-wider text-muted">
+            <th class="px-5 py-3.5">Patente</th>
+            <th class="px-4 py-3.5">Unidad / Modelo</th>
+            <th class="px-3 py-3.5">Cédula Oficial</th>
+            <th class="px-3 py-3.5">RTO / VTV</th>
+            <th class="px-3 py-3.5">Combustible</th>
+            <th class="px-3 py-3.5">Área Asignada</th>
+            <th class="px-3 py-3.5">Odómetro</th>
+            <th class="px-3 py-3.5">Estado</th>
+            <th class="px-5 py-3.5 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="fleet-table-body" class="divide-y divide-line">
+          {vehicles.map((v) => (
+            <tr
+              class="vehicle-row hover:bg-paper/60 transition group"
+              data-id={v.id}
+              data-patente={v.patente.toLowerCase()}
+              data-marca={v.marca.toLowerCase()}
+              data-modelo={v.modelo.toLowerCase()}
+              data-cedula={v.numeroCedula ? v.numeroCedula.toLowerCase() : ''}
+              data-estado={v.estado}
+              data-tipo={v.tipoNombre}
+              data-dependencia={v.dependenciaNombre}
+            >
+              <!-- Patente con estilo placa oficial -->
+              <td class="px-5 py-4 whitespace-nowrap">
+                <span class="inline-block rounded-md border-2 border-navy/20 bg-paper px-2.5 py-1 font-mono text-xs font-black tracking-widest text-navy shadow-2xs group-hover:border-blue/40 transition">
+                  {v.patente}
+                </span>
+              </td>
+
+              <!-- Marca y Modelo -->
+              <td class="px-4 py-4">
+                <p class="font-bold text-navy text-[13px]">{v.marca} {v.modelo}</p>
+                <p class="text-[11px] text-muted">{v.tipoNombre} {v.anio ? `· ${v.anio}` : ''} {v.version ? `(${v.version})` : ''}</p>
+              </td>
+
+              <!-- Cédula -->
+              <td class="px-3 py-4 whitespace-nowrap">
+                <p class="font-mono text-xs font-semibold text-navy flex items-center gap-1">
+                  <FileText size={13} class="text-blue shrink-0" />
+                  {v.numeroCedula}
+                </p>
+                <span class="text-[10px] text-muted">Oficial San Juan</span>
+              </td>
+
+              <!-- RTO con semáforo -->
+              <td class="px-3 py-4 whitespace-nowrap">
+                <div class="flex items-center gap-1.5">
+                  {v.vtvStatus === 'vigente' && <span class="h-2 w-2 rounded-full bg-[#20864f]" title="Vigente" />}
+                  {v.vtvStatus === 'proxima' && <span class="h-2 w-2 rounded-full bg-amber-500 animate-pulse" title="Próxima a vencer" />}
+                  {v.vtvStatus === 'vencida' && <span class="h-2 w-2 rounded-full bg-red-600" title="Vencida" />}
+                  <span class="font-semibold text-navy text-xs">{v.vtvFormatted}</span>
+                </div>
+                <p class="text-[10px] text-muted font-mono">{v.numeroRto}</p>
+              </td>
+
+              <!-- Combustible -->
+              <td class="px-3 py-4 whitespace-nowrap">
+                <p class="text-xs font-semibold text-navy">{v.tipoCombustibleLabel}</p>
+                <p class="text-[10px] text-muted">{v.capacidadTanqueLitros ? `${v.capacidadTanqueLitros} L · ` : ''}{v.capacidadPasajeros} pas.</p>
+              </td>
+
+              <!-- Dependencia -->
+              <td class="px-3 py-4">
+                <p class="text-xs font-semibold text-blue truncate max-w-[170px]" title={v.dependenciaNombre}>
+                  {v.dependenciaNombre}
+                </p>
+              </td>
+
+              <!-- Odómetro -->
+              <td class="px-3 py-4 whitespace-nowrap font-mono text-xs font-semibold text-navy">
+                {v.odometroFormatted}
+              </td>
+
+              <!-- Estado -->
+              <td class="px-3 py-4 whitespace-nowrap">
+                <span
+                  class:list={{
+                    'bg-[#e8f7ef] text-[#20864f]': v.tone === 'green',
+                    'bg-sky text-blue': v.tone === 'blue',
+                    'bg-[#fff0e4] text-[#bf6e32]': v.tone === 'orange',
+                    'bg-gray-100 text-gray-600': v.tone === 'gray',
+                  }}
+                  class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold"
+                >
+                  <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
+                  {v.estadoLabel}
+                </span>
+              </td>
+
+              <!-- Acciones -->
+              <td class="px-5 py-4 text-right whitespace-nowrap">
+                <div class="flex items-center justify-end gap-1.5">
+                  <button
+                    class="btn-view-detail flex items-center gap-1 rounded-lg border border-line bg-white px-2.5 py-1.5 text-xs font-bold text-navy hover:bg-paper hover:text-blue transition shadow-2xs"
+                    data-id={v.id}
+                    title="Ver Ficha Técnica, Historial Mecánico y Viajes"
+                  >
+                    <Eye size={14} class="text-blue" />
+                    <span>Ficha 360°</span>
+                  </button>
+                  <button
+                    class="btn-edit-vehicle rounded-lg p-1.5 text-muted hover:bg-paper hover:text-navy border border-transparent hover:border-line transition"
+                    data-id={v.id}
+                    title="Editar datos del vehículo"
+                  >
+                    <Edit3 size={15} />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Mensaje cuando no hay resultados en los filtros -->
+    <div id="no-results" class="hidden p-12 text-center text-muted">
+      <Truck size={36} class="mx-auto mb-2 text-muted/50" />
+      <p class="text-sm font-bold text-navy">No se encontraron vehículos</p>
+      <p class="text-xs text-muted mt-1">Prueba modificando los criterios de búsqueda o limpiando los filtros.</p>
+    </div>
+  </section>
+
+  <!-- Modales integrados en el slot específico del body -->
+  <Fragment slot="modals">
+    <VehicleDetailModal />
+    <VehicleFormModal types={types} dependencias={dependencias} />
+  </Fragment>
+</DashboardLayout>
+
+<script>
+  // -------------------------------------------------------------
+  // Filtrado reactivo en el cliente
+  // -------------------------------------------------------------
+  const searchInput = document.querySelector('#filter-search') as HTMLInputElement
+  const estadoSelect = document.querySelector('#filter-estado') as HTMLSelectElement
+  const tipoSelect = document.querySelector('#filter-tipo') as HTMLSelectElement
+  const depSelect = document.querySelector('#filter-dependencia') as HTMLSelectElement
+  const clearBtn = document.querySelector('#btn-clear-filters')
+  const rows = document.querySelectorAll('.vehicle-row') as NodeListOf<HTMLTableRowElement>
+  const visibleCounter = document.querySelector('#visible-count')
+  const noResultsBox = document.querySelector('#no-results')
+
+  function applyFilters() {
+    const q = searchInput?.value.toLowerCase().trim() || ''
+    const estado = estadoSelect?.value || ''
+    const tipo = tipoSelect?.value || ''
+    const dep = depSelect?.value || ''
+
+    let visibleCount = 0
+
+    rows.forEach((row) => {
+      const rowPatente = row.dataset.patente || ''
+      const rowMarca = row.dataset.marca || ''
+      const rowModelo = row.dataset.modelo || ''
+      const rowCedula = row.dataset.cedula || ''
+      const rowEstado = row.dataset.estado || ''
+      const rowTipo = row.dataset.tipo || ''
+      const rowDep = row.dataset.dependencia || ''
+
+      const matchesSearch =
+        !q ||
+        rowPatente.includes(q) ||
+        rowMarca.includes(q) ||
+        rowModelo.includes(q) ||
+        rowCedula.includes(q)
+
+      const matchesEstado = !estado || rowEstado === estado
+      const matchesTipo = !tipo || rowTipo === tipo
+      const matchesDep = !dep || rowDep === dep
+
+      if (matchesSearch && matchesEstado && matchesTipo && matchesDep) {
+        row.style.display = ''
+        visibleCount++
+      } else {
+        row.style.display = 'none'
+      }
+    })
+
+    if (visibleCounter) visibleCounter.textContent = String(visibleCount)
+    if (noResultsBox) {
+      if (visibleCount === 0) noResultsBox.classList.remove('hidden')
+      else noResultsBox.classList.add('hidden')
+    }
+  }
+
+  searchInput?.addEventListener('input', applyFilters)
+  estadoSelect?.addEventListener('change', applyFilters)
+  tipoSelect?.addEventListener('change', applyFilters)
+  depSelect?.addEventListener('change', applyFilters)
+
+  clearBtn?.addEventListener('click', () => {
+    if (searchInput) searchInput.value = ''
+    if (estadoSelect) estadoSelect.value = ''
+    if (tipoSelect) tipoSelect.value = ''
+    if (depSelect) depSelect.value = ''
+    applyFilters()
+  })
+
+  // -------------------------------------------------------------
+  // Modal de Detalle (Ficha 360°, Mecánico, Viajes, Combustible)
+  // -------------------------------------------------------------
+  const detailModal = document.querySelector('#vehicle-detail-modal')
+
+  document.querySelectorAll('.btn-view-detail').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-id')
+      if (!id) return
+
+      try {
+        const res = await fetch(`/api/vehiculos?id=${id}`)
+        if (!res.ok) throw new Error('No se pudo cargar el vehículo')
+        const data = await res.json()
+        const v = data.vehicle
+
+        if (!v) return
+
+        // Encabezado
+        const titleEl = document.querySelector('#modal-vehicle-title')
+        const plateEl = document.querySelector('#modal-vehicle-plate')
+        const statusEl = document.querySelector('#modal-vehicle-status')
+        if (titleEl) titleEl.textContent = `${v.marca} ${v.modelo}`
+        if (plateEl) plateEl.textContent = v.patente
+        if (statusEl) {
+          statusEl.textContent = v.estadoLabel
+          statusEl.className = 'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold ' +
+            (v.tone === 'green' ? 'bg-[#e8f7ef] text-[#20864f]' : (v.tone === 'blue' ? 'bg-sky text-blue' : 'bg-[#fff0e4] text-[#bf6e32]'))
+        }
+
+        // Pestaña 1: Info básica y Cédula / RTO
+        const cedulaEl = document.querySelector('#info-cedula')
+        const rtoEl = document.querySelector('#info-rto')
+        const rtoVencEl = document.querySelector('#info-rto-venc')
+        const seguroCiaEl = document.querySelector('#info-seguro-cia')
+        const seguroPolizaEl = document.querySelector('#info-seguro-poliza')
+        const marcaModeloEl = document.querySelector('#info-marca-modelo')
+        const versionAnioEl = document.querySelector('#info-version-anio')
+        const tipoEl = document.querySelector('#info-tipo')
+        const odometroEl = document.querySelector('#info-odometro')
+        const combustibleEl = document.querySelector('#info-combustible')
+        const tanqueEl = document.querySelector('#info-tanque')
+        const pasajerosEl = document.querySelector('#info-pasajeros')
+        const dependenciaEl = document.querySelector('#info-dependencia')
+        const chasisEl = document.querySelector('#info-chasis')
+        const motorEl = document.querySelector('#info-motor')
+        const obsEl = document.querySelector('#info-observaciones')
+
+        if (cedulaEl) cedulaEl.textContent = v.numeroCedula || 'CV-S/D'
+        if (rtoEl) rtoEl.textContent = v.numeroRto || 'RTO-S/D'
+        if (rtoVencEl) rtoVencEl.textContent = `Vence: ${v.vtvFormatted}`
+        if (seguroCiaEl) seguroCiaEl.textContent = v.companiaSeguro || 'Nación Seguros'
+        if (seguroPolizaEl) seguroPolizaEl.textContent = `Póliza: ${v.numeroPoliza || 'S/D'}`
+        if (marcaModeloEl) marcaModeloEl.textContent = `${v.marca} ${v.modelo}`
+        if (versionAnioEl) versionAnioEl.textContent = `${v.version || 'Base'} · ${v.anio || 'S/D'}`
+        if (tipoEl) tipoEl.textContent = v.tipoNombre
+        if (odometroEl) odometroEl.textContent = v.odometroFormatted
+        if (combustibleEl) combustibleEl.textContent = v.tipoCombustibleLabel
+        if (tanqueEl) tanqueEl.textContent = v.capacidadTanqueLitros ? `${v.capacidadTanqueLitros} L` : 'S/D'
+        if (pasajerosEl) pasajerosEl.textContent = `${v.capacidadPasajeros} personas`
+        if (dependenciaEl) dependenciaEl.textContent = v.dependenciaNombre
+        if (chasisEl) chasisEl.textContent = v.numeroChasis || 'S/D'
+        if (motorEl) motorEl.textContent = v.numeroMotor || 'S/D'
+        if (obsEl) obsEl.textContent = v.observaciones || 'Sin novedades registradas.'
+
+        // Pestaña 2: Historial Mecánico
+        const badgeMecanico = document.querySelector('#badge-count-mecanico')
+        if (badgeMecanico) badgeMecanico.textContent = String(data.mantenimientos.length)
+        const mecanicoEmpty = document.querySelector('#mecanico-empty')
+        const mecanicoTable = document.querySelector('#mecanico-table-container')
+        const mecanicoTbody = document.querySelector('#mecanico-tbody')
+        if (mecanicoTbody) {
+          mecanicoTbody.innerHTML = ''
+          if (data.mantenimientos.length === 0) {
+            mecanicoEmpty?.classList.remove('hidden')
+            mecanicoTable?.classList.add('hidden')
+          } else {
+            mecanicoEmpty?.classList.add('hidden')
+            mecanicoTable?.classList.remove('hidden')
+            data.mantenimientos.forEach((m: any) => {
+              const tr = document.createElement('tr')
+              tr.className = 'hover:bg-paper/40'
+              tr.innerHTML = `
+                <td class="px-4 py-3 font-bold text-navy">${m.titulo}</td>
+                <td class="px-3 py-3 text-muted">${m.tipo}</td>
+                <td class="px-3 py-3 text-muted">${m.taller}</td>
+                <td class="px-3 py-3 font-mono">${m.odometro}</td>
+                <td class="px-3 py-3 text-muted">${m.fecha}</td>
+                <td class="px-3 py-3 font-bold text-navy text-right">${m.costoTotal}</td>
+                <td class="px-4 py-3 text-right">
+                  <span class="rounded px-2 py-0.5 text-[9px] font-bold ${m.estado === 'En taller' ? 'bg-sky text-blue' : 'bg-paper text-muted'}">
+                    ${m.estado}
+                  </span>
+                </td>
+              `
+              mecanicoTbody.appendChild(tr)
+            })
+          }
+        }
+
+        // Pestaña 3: Historial de Viajes
+        const badgeViajes = document.querySelector('#badge-count-viajes')
+        if (badgeViajes) badgeViajes.textContent = String(data.viajes.length)
+        const viajesEmpty = document.querySelector('#viajes-empty')
+        const viajesTable = document.querySelector('#viajes-table-container')
+        const viajesTbody = document.querySelector('#viajes-tbody')
+        if (viajesTbody) {
+          viajesTbody.innerHTML = ''
+          if (data.viajes.length === 0) {
+            viajesEmpty?.classList.remove('hidden')
+            viajesTable?.classList.add('hidden')
+          } else {
+            viajesEmpty?.classList.add('hidden')
+            viajesTable?.classList.remove('hidden')
+            data.viajes.forEach((vj: any) => {
+              const tr = document.createElement('tr')
+              tr.className = 'hover:bg-paper/40'
+              tr.innerHTML = `
+                <td class="px-4 py-3 font-mono font-bold text-navy">${vj.codigo}</td>
+                <td class="px-3 py-3 font-bold text-navy">${vj.destino}</td>
+                <td class="px-3 py-3 text-blue truncate max-w-[150px]">${vj.area}</td>
+                <td class="px-3 py-3 text-muted">${vj.chofer}</td>
+                <td class="px-3 py-3 text-muted">${vj.fechaSalida}</td>
+                <td class="px-3 py-3 font-mono">${vj.kmRecorridos}</td>
+                <td class="px-4 py-3 text-right">
+                  <span class="rounded px-2 py-0.5 text-[9px] font-bold ${vj.estado === 'En viaje' ? 'bg-[#fff6df] text-[#b17b09]' : 'bg-[#e8f7ef] text-[#20864f]'}">
+                    ${vj.estado}
+                  </span>
+                </td>
+              `
+              viajesTbody.appendChild(tr)
+            })
+          }
+        }
+
+        // Pestaña 4: Combustible
+        const badgeCombustible = document.querySelector('#badge-count-combustible')
+        if (badgeCombustible) badgeCombustible.textContent = String(data.cargasCombustible.length)
+        const combustibleEmpty = document.querySelector('#combustible-empty')
+        const combustibleTable = document.querySelector('#combustible-table-container')
+        const combustibleTbody = document.querySelector('#combustible-tbody')
+        if (combustibleTbody) {
+          combustibleTbody.innerHTML = ''
+          if (data.cargasCombustible.length === 0) {
+            combustibleEmpty?.classList.remove('hidden')
+            combustibleTable?.classList.add('hidden')
+          } else {
+            combustibleEmpty?.classList.add('hidden')
+            combustibleTable?.classList.remove('hidden')
+            data.cargasCombustible.forEach((c: any) => {
+              const tr = document.createElement('tr')
+              tr.className = 'hover:bg-paper/40'
+              tr.innerHTML = `
+                <td class="px-4 py-3 text-muted">${c.fecha}</td>
+                <td class="px-3 py-3 font-bold text-navy">${c.estacion}</td>
+                <td class="px-3 py-3 font-mono">${c.litros}</td>
+                <td class="px-3 py-3 font-bold text-navy">${c.importe}</td>
+                <td class="px-3 py-3 font-mono text-muted">${c.odometro}</td>
+                <td class="px-4 py-3 text-right font-bold text-[#20864f]">${c.rendimiento}</td>
+              `
+              combustibleTbody.appendChild(tr)
+            })
+          }
+        }
+
+        // Reset tab to first tab
+        const tabBtns = document.querySelectorAll('#vehicle-detail-modal .tab-btn')
+        const tabPanes = document.querySelectorAll('#vehicle-detail-modal .tab-pane')
+        tabBtns.forEach((b, idx) => {
+          if (idx === 0) {
+            b.classList.add('active', 'border-blue', 'text-blue')
+            b.classList.remove('border-transparent', 'text-muted')
+          } else {
+            b.classList.remove('active', 'border-blue', 'text-blue')
+            b.classList.add('border-transparent', 'text-muted')
+          }
+        })
+        tabPanes.forEach((p, idx) => {
+          if (idx === 0) p.classList.remove('hidden')
+          else p.classList.add('hidden')
+        })
+
+        // Abrir modal
+        if (detailModal) (detailModal as HTMLElement).style.display = 'flex'
+      } catch (err) {
+        alert('Error al obtener la ficha del vehículo')
+      }
+    })
+  })
+
+  // -------------------------------------------------------------
+  // Modal de Alta / Edición de Vehículo
+  // -------------------------------------------------------------
+  const formModal = document.querySelector('#vehicle-form-modal') as HTMLElement | null
+  const form = document.querySelector('#vehicle-form') as HTMLFormElement
+  const formTitle = document.querySelector('#form-modal-title')
+  const submitText = document.querySelector('#btn-submit-text')
+
+  // Abrir para crear
+  document.querySelector('#btn-open-create-modal')?.addEventListener('click', () => {
+    form?.reset()
+    const idInput = document.querySelector('#vehicle-id') as HTMLInputElement
+    if (idInput) idInput.value = ''
+    if (formTitle) formTitle.textContent = 'Registrar Nueva Unidad'
+    if (submitText) submitText.textContent = 'Guardar Vehículo'
+    if (formModal) formModal.style.display = 'flex'
+  })
+
+  // Abrir para editar
+  document.querySelectorAll('.btn-edit-vehicle').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-id')
+      if (!id) return
+
+      try {
+        const res = await fetch(`/api/vehiculos?id=${id}`)
+        if (!res.ok) throw new Error('No se pudo cargar el vehículo')
+        const { vehicle: v } = await res.json()
+        if (!v) return
+
+        form?.reset()
+        if (formTitle) formTitle.textContent = `Editar Vehículo: ${v.marca} ${v.modelo}`
+        if (submitText) submitText.textContent = 'Actualizar Cambios'
+
+        // Precargar campos
+        const setValue = (selector: string, value: any) => {
+          const el = document.querySelector(selector) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+          if (el && value != null) el.value = String(value)
+        }
+
+        setValue('#vehicle-id', v.id)
+        setValue('#form-patente', v.patente)
+        setValue('#form-tipo', v.tipoId)
+        setValue('#form-estado', v.estado)
+        setValue('#form-marca', v.marca)
+        setValue('#form-modelo', v.modelo)
+        setValue('#form-version', v.version || '')
+        setValue('#form-anio', v.anio || '')
+        setValue('#form-cedula', v.numeroCedula || '')
+        setValue('#form-rto', v.numeroRto || '')
+        setValue('#form-vtv', v.fechaVencimientoVtv ? v.fechaVencimientoVtv.split('T')[0] : '')
+        setValue('#form-seguro-cia', v.companiaSeguro || '')
+        setValue('#form-seguro-poliza', v.numeroPoliza || '')
+        setValue('#form-seguro-venc', v.fechaVencimientoSeguro ? v.fechaVencimientoSeguro.split('T')[0] : '')
+        setValue('#form-odometro', v.odometroActual)
+        setValue('#form-combustible', v.tipoCombustible)
+        setValue('#form-tanque', v.capacidadTanqueLitros || '')
+        setValue('#form-pasajeros', v.capacidadPasajeros || 5)
+        setValue('#form-chasis', v.numeroChasis || '')
+        setValue('#form-motor', v.numeroMotor || '')
+        setValue('#form-dependencia', v.dependenciaId || '')
+        setValue('#form-observaciones', v.observaciones || '')
+
+        if (formModal) formModal.style.display = 'flex'
+      } catch (err) {
+        alert('Error al abrir editor de vehículo')
+      }
+    })
+  })
+</script>

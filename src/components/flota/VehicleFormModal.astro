@@ -1,0 +1,278 @@
+---
+import { FileText, Save, ShieldCheck, Truck, X } from 'lucide-astro'
+
+interface Props {
+  types: Array<{ id: number; nombre: string }>
+  dependencias: Array<{ id: number; nombre: string; sigla: string | null }>
+}
+
+const { types, dependencias } = Astro.props
+---
+
+<div id="vehicle-form-modal" class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-navy/60 p-4 backdrop-blur-sm transition-opacity" style="display: none;">
+  <div class="relative w-full max-w-3xl rounded-2xl bg-white shadow-2xl border border-line flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between border-b border-line bg-paper px-6 py-4">
+      <div class="flex items-center gap-3">
+        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue text-white font-bold shadow-xs">
+          <Truck size={20} />
+        </div>
+        <div>
+          <h2 id="form-modal-title" class="font-display text-base font-bold text-navy">Registrar Nueva Unidad</h2>
+          <p class="text-xs text-muted">Ingresa los datos técnicos, de identificación y documentación oficial.</p>
+        </div>
+      </div>
+      <button id="close-form-modal" class="rounded-lg p-2 text-muted hover:bg-sky hover:text-navy transition" aria-label="Cerrar modal">
+        <X size={20} />
+      </button>
+    </div>
+
+    <!-- Form Container -->
+    <form id="vehicle-form" class="p-6 overflow-y-auto flex-1 space-y-6 text-xs">
+      <input type="hidden" id="vehicle-id" name="id" value="" />
+
+      <!-- SECCIÓN 1: IDENTIFICACIÓN BÁSICA Y PATENTE -->
+      <div>
+        <p class="font-bold text-navy uppercase tracking-wider text-[11px] mb-3 flex items-center gap-2">
+          <span class="flex h-5 w-5 items-center justify-center rounded-full bg-sky text-blue text-[10px]">1</span>
+          Identificación y Patente
+        </p>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="font-bold text-muted block mb-1">Patente / Dominio *</label>
+            <input
+              type="text"
+              id="form-patente"
+              name="patente"
+              required
+              placeholder="AB 123 CD"
+              class="w-full h-9 rounded-lg border border-line bg-paper px-3 font-mono font-bold uppercase tracking-wider focus:border-blue focus:bg-white outline-none"
+            />
+          </div>
+          <div>
+            <label class="font-bold text-muted block mb-1">Tipo de Vehículo *</label>
+            <select id="form-tipo" name="tipoId" required class="w-full h-9 rounded-lg border border-line bg-paper px-2 focus:border-blue focus:bg-white outline-none">
+              {types.map((t) => (
+                <option value={t.id}>{t.nombre}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label class="font-bold text-muted block mb-1">Estado Operativo</label>
+            <select id="form-estado" name="estado" class="w-full h-9 rounded-lg border border-line bg-paper px-2 focus:border-blue focus:bg-white outline-none">
+              <option value="disponible">Disponible</option>
+              <option value="en_comision">En comisión</option>
+              <option value="en_taller">En taller</option>
+              <option value="baja">Baja</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mt-3">
+          <div>
+            <label class="font-bold text-muted block mb-1">Marca *</label>
+            <input type="text" id="form-marca" name="marca" required placeholder="Ej: Toyota" class="w-full h-9 rounded-lg border border-line bg-paper px-3 focus:border-blue focus:bg-white outline-none" />
+          </div>
+          <div>
+            <label class="font-bold text-muted block mb-1">Modelo *</label>
+            <input type="text" id="form-modelo" name="modelo" required placeholder="Ej: Hilux" class="w-full h-9 rounded-lg border border-line bg-paper px-3 focus:border-blue focus:bg-white outline-none" />
+          </div>
+          <div>
+            <label class="font-bold text-muted block mb-1">Versión</label>
+            <input type="text" id="form-version" name="version" placeholder="Ej: DX 2.4 TDI 4x4" class="w-full h-9 rounded-lg border border-line bg-paper px-3 focus:border-blue focus:bg-white outline-none" />
+          </div>
+          <div>
+            <label class="font-bold text-muted block mb-1">Año</label>
+            <input type="number" id="form-anio" name="anio" min="1990" max="2030" placeholder="2022" class="w-full h-9 rounded-lg border border-line bg-paper px-3 focus:border-blue focus:bg-white outline-none" />
+          </div>
+        </div>
+      </div>
+
+      <!-- SECCIÓN 2: DOCUMENTACIÓN OFICIAL (CÉDULA Y RTO) -->
+      <div class="pt-4 border-t border-line">
+        <p class="font-bold text-navy uppercase tracking-wider text-[11px] mb-3 flex items-center gap-2">
+          <span class="flex h-5 w-5 items-center justify-center rounded-full bg-sky text-blue text-[10px]">2</span>
+          Documentación Oficial (Cédula y RTO)
+        </p>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="font-bold text-muted block mb-1">Número de Cédula Oficial</label>
+            <input type="text" id="form-cedula" name="numeroCedula" placeholder="CV-09412356" class="w-full h-9 rounded-lg border border-line bg-paper px-3 font-mono focus:border-blue focus:bg-white outline-none" />
+          </div>
+          <div>
+            <label class="font-bold text-muted block mb-1">Número de Certificado RTO</label>
+            <input type="text" id="form-rto" name="numeroRto" placeholder="RTO-SJ-2024-8841" class="w-full h-9 rounded-lg border border-line bg-paper px-3 font-mono focus:border-blue focus:bg-white outline-none" />
+          </div>
+          <div>
+            <label class="font-bold text-muted block mb-1">Vencimiento RTO / VTV *</label>
+            <input type="date" id="form-vtv" name="fechaVencimientoVtv" required class="w-full h-9 rounded-lg border border-line bg-paper px-3 focus:border-blue focus:bg-white outline-none" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-3">
+          <div>
+            <label class="font-bold text-muted block mb-1">Compañía de Seguro</label>
+            <input type="text" id="form-seguro-cia" name="companiaSeguro" placeholder="Nación Seguros" class="w-full h-9 rounded-lg border border-line bg-paper px-3 focus:border-blue focus:bg-white outline-none" />
+          </div>
+          <div>
+            <label class="font-bold text-muted block mb-1">Número de Póliza</label>
+            <input type="text" id="form-seguro-poliza" name="numeroPoliza" placeholder="POL-784512-SJ" class="w-full h-9 rounded-lg border border-line bg-paper px-3 font-mono focus:border-blue focus:bg-white outline-none" />
+          </div>
+          <div>
+            <label class="font-bold text-muted block mb-1">Vencimiento de Seguro</label>
+            <input type="date" id="form-seguro-venc" name="fechaVencimientoSeguro" class="w-full h-9 rounded-lg border border-line bg-paper px-3 focus:border-blue focus:bg-white outline-none" />
+          </div>
+        </div>
+      </div>
+
+      <!-- SECCIÓN 3: ESPECIFICACIONES TÉCNICAS Y OPERATIVAS -->
+      <div class="pt-4 border-t border-line">
+        <p class="font-bold text-navy uppercase tracking-wider text-[11px] mb-3 flex items-center gap-2">
+          <span class="flex h-5 w-5 items-center justify-center rounded-full bg-sky text-blue text-[10px]">3</span>
+          Especificaciones y Asignación
+        </p>
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+          <div>
+            <label class="font-bold text-muted block mb-1">Odómetro Actual (km) *</label>
+            <input type="number" id="form-odometro" name="odometroActual" required min="0" placeholder="45890" class="w-full h-9 rounded-lg border border-line bg-paper px-3 font-bold focus:border-blue focus:bg-white outline-none" />
+          </div>
+          <div>
+            <label class="font-bold text-muted block mb-1">Combustible</label>
+            <select id="form-combustible" name="tipoCombustible" class="w-full h-9 rounded-lg border border-line bg-paper px-2 focus:border-blue focus:bg-white outline-none">
+              <option value="diesel_grado_3">Diésel Grado 3 (Premium)</option>
+              <option value="diesel_500">Diésel 500</option>
+              <option value="nafta_super">Nafta Súper</option>
+              <option value="nafta_premium">Nafta Premium</option>
+              <option value="gnc">GNC</option>
+            </select>
+          </div>
+          <div>
+            <label class="font-bold text-muted block mb-1">Tanque (Litros)</label>
+            <input type="number" id="form-tanque" name="capacidadTanqueLitros" min="10" max="500" placeholder="80" class="w-full h-9 rounded-lg border border-line bg-paper px-3 focus:border-blue focus:bg-white outline-none" />
+          </div>
+          <div>
+            <label class="font-bold text-muted block mb-1">Capacidad Pasajeros</label>
+            <input type="number" id="form-pasajeros" name="capacidadPasajeros" min="1" max="60" placeholder="5" class="w-full h-9 rounded-lg border border-line bg-paper px-3 focus:border-blue focus:bg-white outline-none" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-3">
+          <div>
+            <label class="font-bold text-muted block mb-1">Número de Chasis (VIN)</label>
+            <input type="text" id="form-chasis" name="numeroChasis" placeholder="8AJHA3CD5M1001234" class="w-full h-9 rounded-lg border border-line bg-paper px-3 font-mono focus:border-blue focus:bg-white outline-none" />
+          </div>
+          <div>
+            <label class="font-bold text-muted block mb-1">Número de Motor</label>
+            <input type="text" id="form-motor" name="numeroMotor" placeholder="2GD4567890" class="w-full h-9 rounded-lg border border-line bg-paper px-3 font-mono focus:border-blue focus:bg-white outline-none" />
+          </div>
+          <div>
+            <label class="font-bold text-muted block mb-1">Dependencia Asignada</label>
+            <select id="form-dependencia" name="dependenciaId" class="w-full h-9 rounded-lg border border-line bg-paper px-2 focus:border-blue focus:bg-white outline-none">
+              <option value="">Sin asignación específica</option>
+              {dependencias.map((d) => (
+                <option value={d.id}>{d.nombre}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div class="mt-3">
+          <label class="font-bold text-muted block mb-1">Observaciones</label>
+          <textarea id="form-observaciones" name="observaciones" rows="2" placeholder="Detalles de afectación, accesorios instalados o notas..." class="w-full rounded-lg border border-line bg-paper p-3 focus:border-blue focus:bg-white outline-none"></textarea>
+        </div>
+      </div>
+
+      <!-- Alerta de errores -->
+      <div id="form-error" class="hidden rounded-lg bg-red-50 border border-red-200 p-3 text-red-700 text-xs font-semibold"></div>
+
+      <!-- Form Footer -->
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-line">
+        <button type="button" id="btn-cancel-form" class="rounded-lg border border-line bg-white px-4 py-2 text-xs font-bold text-navy hover:bg-paper transition">
+          Cancelar
+        </button>
+        <button type="submit" id="btn-submit-form" class="flex items-center gap-2 rounded-lg bg-blue px-5 py-2 text-xs font-bold text-white shadow-sm shadow-blue/20 hover:opacity-90 transition">
+          <Save size={15} />
+          <span id="btn-submit-text">Guardar Vehículo</span>
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<script>
+  const formModal = document.querySelector('#vehicle-form-modal') as HTMLElement | null
+  const closeFormModal = () => {
+    if (formModal) formModal.style.display = 'none'
+  }
+  document.querySelector('#close-form-modal')?.addEventListener('click', closeFormModal)
+  document.querySelector('#btn-cancel-form')?.addEventListener('click', closeFormModal)
+  formModal?.addEventListener('click', (e) => {
+    if (e.target === formModal) closeFormModal()
+  })
+
+  // Enviar formulario al API
+  const form = document.querySelector('#vehicle-form') as HTMLFormElement
+  const errorBox = document.querySelector('#form-error')
+  const submitBtn = document.querySelector('#btn-submit-form') as HTMLButtonElement
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    errorBox?.classList.add('hidden')
+    submitBtn.disabled = true
+
+    const formData = new FormData(form)
+    const payload: any = {
+      patente: formData.get('patente'),
+      tipoId: Number(formData.get('tipoId')),
+      estado: formData.get('estado'),
+      marca: formData.get('marca'),
+      modelo: formData.get('modelo'),
+      version: formData.get('version') || null,
+      anio: formData.get('anio') ? Number(formData.get('anio')) : null,
+      numeroCedula: formData.get('numeroCedula') || null,
+      numeroRto: formData.get('numeroRto') || null,
+      fechaVencimientoVtv: formData.get('fechaVencimientoVtv'),
+      companiaSeguro: formData.get('companiaSeguro') || null,
+      numeroPoliza: formData.get('numeroPoliza') || null,
+      fechaVencimientoSeguro: formData.get('fechaVencimientoSeguro') || null,
+      odometroActual: Number(formData.get('odometroActual') || 0),
+      tipoCombustible: formData.get('tipoCombustible'),
+      capacidadTanqueLitros: formData.get('capacidadTanqueLitros') ? Number(formData.get('capacidadTanqueLitros')) : null,
+      capacidadPasajeros: formData.get('capacidadPasajeros') ? Number(formData.get('capacidadPasajeros')) : 5,
+      numeroChasis: formData.get('numeroChasis') || null,
+      numeroMotor: formData.get('numeroMotor') || null,
+      dependenciaId: formData.get('dependenciaId') ? Number(formData.get('dependenciaId')) : null,
+      observaciones: formData.get('observaciones') || null,
+    }
+
+    const id = formData.get('id')
+    if (id) {
+      payload.id = Number(id)
+    }
+
+    try {
+      const res = await fetch('/api/vehiculos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      const data = await res.json()
+      if (!res.ok || data.error) {
+        throw new Error(data.error || 'Error al guardar el vehículo')
+      }
+
+      // Éxito: recargar la página para reflejar los datos nuevos
+      window.location.reload()
+    } catch (err: any) {
+      if (errorBox) {
+        errorBox.textContent = err.message
+        errorBox.classList.remove('hidden')
+      }
+    } finally {
+      submitBtn.disabled = false
+    }
+  })
+</script>

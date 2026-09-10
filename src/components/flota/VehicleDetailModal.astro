@@ -1,0 +1,287 @@
+---
+import { Bus, Calendar, ChevronRight, Clock, FileText, Fuel, Gauge, MapPin, ShieldAlert, ShieldCheck, Truck, User, Wrench, X } from 'lucide-astro'
+---
+
+<div id="vehicle-detail-modal" class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-navy/60 p-4 backdrop-blur-sm transition-opacity" style="display: none;">
+  <div class="relative w-full max-w-4xl rounded-2xl bg-white shadow-2xl border border-line flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between border-b border-line bg-paper px-6 py-4">
+      <div class="flex items-center gap-3">
+        <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-sky text-blue font-bold">
+          <Truck size={22} />
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 id="modal-vehicle-title" class="font-display text-lg font-bold text-navy">Ficha del Vehículo</h2>
+            <span id="modal-vehicle-plate" class="rounded border border-line bg-white px-2 py-0.5 font-mono text-xs font-bold tracking-wider text-navy shadow-xs">
+              AB 123 CD
+            </span>
+            <span id="modal-vehicle-status" class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold">
+              Disponible
+            </span>
+          </div>
+          <p id="modal-vehicle-subtitle" class="text-xs text-muted">Detalles técnicos, documentación e historial operativo</p>
+        </div>
+      </div>
+      <button id="close-detail-modal" class="rounded-lg p-2 text-muted hover:bg-sky hover:text-navy transition" aria-label="Cerrar modal">
+        <X size={20} />
+      </button>
+    </div>
+
+    <!-- Modal Tabs Navigation -->
+    <div class="flex border-b border-line bg-white px-6 overflow-x-auto">
+      <button data-tab="info" class="tab-btn active border-b-2 border-blue px-4 py-3 text-xs font-bold text-blue flex items-center gap-2 transition whitespace-nowrap">
+        <FileText size={15} /> Ficha Técnica y Cédula
+      </button>
+      <button data-tab="mecanico" class="tab-btn border-b-2 border-transparent px-4 py-3 text-xs font-bold text-muted hover:text-navy flex items-center gap-2 transition whitespace-nowrap">
+        <Wrench size={15} /> Historial Mecánico <span id="badge-count-mecanico" class="rounded-full bg-paper px-2 py-0.5 text-[10px] text-muted">0</span>
+      </button>
+      <button data-tab="viajes" class="tab-btn border-b-2 border-transparent px-4 py-3 text-xs font-bold text-muted hover:text-navy flex items-center gap-2 transition whitespace-nowrap">
+        <MapPin size={15} /> Historial de Viajes <span id="badge-count-viajes" class="rounded-full bg-paper px-2 py-0.5 text-[10px] text-muted">0</span>
+      </button>
+      <button data-tab="combustible" class="tab-btn border-b-2 border-transparent px-4 py-3 text-xs font-bold text-muted hover:text-navy flex items-center gap-2 transition whitespace-nowrap">
+        <Fuel size={15} /> Consumo de Combustible <span id="badge-count-combustible" class="rounded-full bg-paper px-2 py-0.5 text-[10px] text-muted">0</span>
+      </button>
+    </div>
+
+    <!-- Modal Content Scrollable -->
+    <div class="p-6 overflow-y-auto flex-1 bg-paper/30">
+      
+      <!-- TAB 1: INFORMACIÓN BÁSICA, CÉDULA Y RTO -->
+      <div id="tab-content-info" class="tab-pane space-y-6">
+        
+        <!-- Bloque Documentación Oficial Clave -->
+        <div class="grid gap-4 sm:grid-cols-3">
+          <div class="rounded-xl border border-line bg-white p-4 shadow-xs">
+            <div class="flex items-center justify-between text-muted mb-2">
+              <span class="text-[11px] font-bold uppercase tracking-wider">Cédula Oficial</span>
+              <FileText size={16} class="text-blue" />
+            </div>
+            <p id="info-cedula" class="font-mono text-base font-bold text-navy">CV-09412356</p>
+            <p class="mt-1 text-[11px] text-[#20864f] font-semibold flex items-center gap-1">
+              <ShieldCheck size={13} /> Identificación Oficial Vigente
+            </p>
+          </div>
+
+          <div class="rounded-xl border border-line bg-white p-4 shadow-xs">
+            <div class="flex items-center justify-between text-muted mb-2">
+              <span class="text-[11px] font-bold uppercase tracking-wider">RTO / VTV</span>
+              <ShieldCheck size={16} class="text-blue" />
+            </div>
+            <p id="info-rto" class="font-mono text-base font-bold text-navy">RTO-SJ-2024-8841</p>
+            <p id="info-rto-venc" class="mt-1 text-[11px] font-semibold text-muted">Vence: 12/10/2026</p>
+          </div>
+
+          <div class="rounded-xl border border-line bg-white p-4 shadow-xs">
+            <div class="flex items-center justify-between text-muted mb-2">
+              <span class="text-[11px] font-bold uppercase tracking-wider">Póliza Seguro</span>
+              <ShieldAlert size={16} class="text-blue" />
+            </div>
+            <p id="info-seguro-cia" class="text-sm font-bold text-navy">Nación Seguros</p>
+            <p id="info-seguro-poliza" class="mt-1 text-[11px] text-muted font-mono">Póliza: POL-784512-SJ</p>
+          </div>
+        </div>
+
+        <!-- Ficha Técnica Completa -->
+        <div class="rounded-xl border border-line bg-white p-5 shadow-xs">
+          <h3 class="font-display text-sm font-bold text-navy mb-4 flex items-center gap-2">
+            <Gauge size={16} class="text-blue" /> Especificaciones Técnicas y de Fábrica
+          </h3>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+            <div class="p-3 bg-paper rounded-lg">
+              <p class="text-[10px] font-bold uppercase text-muted">Marca y Modelo</p>
+              <p id="info-marca-modelo" class="mt-1 font-bold text-navy">Toyota Hilux</p>
+            </div>
+            <div class="p-3 bg-paper rounded-lg">
+              <p class="text-[10px] font-bold uppercase text-muted">Versión / Año</p>
+              <p id="info-version-anio" class="mt-1 font-bold text-navy">DX 2.4 TDI · 2021</p>
+            </div>
+            <div class="p-3 bg-paper rounded-lg">
+              <p class="text-[10px] font-bold uppercase text-muted">Tipo de Vehículo</p>
+              <p id="info-tipo" class="mt-1 font-bold text-navy">Camioneta</p>
+            </div>
+            <div class="p-3 bg-paper rounded-lg">
+              <p class="text-[10px] font-bold uppercase text-muted">Odómetro Actual</p>
+              <p id="info-odometro" class="mt-1 font-bold text-navy">45.890 km</p>
+            </div>
+            <div class="p-3 bg-paper rounded-lg">
+              <p class="text-[10px] font-bold uppercase text-muted">Combustible</p>
+              <p id="info-combustible" class="mt-1 font-bold text-navy">Diésel Grado 3</p>
+            </div>
+            <div class="p-3 bg-paper rounded-lg">
+              <p class="text-[10px] font-bold uppercase text-muted">Capacidad Tanque</p>
+              <p id="info-tanque" class="mt-1 font-bold text-navy">80 Litros</p>
+            </div>
+            <div class="p-3 bg-paper rounded-lg">
+              <p class="text-[10px] font-bold uppercase text-muted">Capacidad Pasajeros</p>
+              <p id="info-pasajeros" class="mt-1 font-bold text-navy">5 ocupantes</p>
+            </div>
+            <div class="p-3 bg-paper rounded-lg">
+              <p class="text-[10px] font-bold uppercase text-muted">Área Asignada</p>
+              <p id="info-dependencia" class="mt-1 font-bold text-navy truncate">Educación Rural</p>
+            </div>
+          </div>
+
+          <div class="mt-4 pt-4 border-t border-line grid sm:grid-cols-2 gap-4 text-xs">
+            <div class="flex items-center justify-between p-3 bg-paper rounded-lg">
+              <span class="text-[11px] font-bold text-muted">Número de Chasis (VIN):</span>
+              <span id="info-chasis" class="font-mono font-bold text-navy">8AJHA3CD5M1001234</span>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-paper rounded-lg">
+              <span class="text-[11px] font-bold text-muted">Número de Motor:</span>
+              <span id="info-motor" class="font-mono font-bold text-navy">2GD4567890</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Observaciones -->
+        <div class="rounded-xl border border-line bg-white p-4 shadow-xs">
+          <p class="text-xs font-bold text-navy mb-1">Observaciones operativas</p>
+          <p id="info-observaciones" class="text-xs text-muted">Sin novedades registradas.</p>
+        </div>
+      </div>
+
+      <!-- TAB 2: HISTORIAL MECÁNICO -->
+      <div id="tab-content-mecanico" class="tab-pane hidden space-y-4">
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <h3 class="font-display text-sm font-bold text-navy">Historial de Intervenciones Mecánicas</h3>
+            <p class="text-xs text-muted">Registro de servicios preventivos, correctivos y reparaciones en taller.</p>
+          </div>
+          <span class="text-xs font-bold text-blue bg-sky px-3 py-1 rounded-lg">Histórico Oficial</span>
+        </div>
+
+        <div id="mecanico-empty" class="hidden rounded-xl border border-line bg-white p-8 text-center text-muted text-xs">
+          No hay registros de servicio mecánico para esta unidad.
+        </div>
+
+        <div id="mecanico-table-container" class="overflow-x-auto rounded-xl border border-line bg-white shadow-xs">
+          <table class="w-full text-left text-xs">
+            <thead class="border-b border-line bg-paper text-[10px] font-bold uppercase tracking-wider text-muted">
+              <tr>
+                <th class="px-4 py-3">Servicio</th>
+                <th class="px-3 py-3">Tipo</th>
+                <th class="px-3 py-3">Taller</th>
+                <th class="px-3 py-3">Odómetro</th>
+                <th class="px-3 py-3">Fecha</th>
+                <th class="px-3 py-3 text-right">Costo Total</th>
+                <th class="px-4 py-3 text-right">Estado</th>
+              </tr>
+            </thead>
+            <tbody id="mecanico-tbody" class="divide-y divide-line">
+              <!-- Se inyecta dinámicamente con JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 3: HISTORIAL DE VIAJES -->
+      <div id="tab-content-viajes" class="tab-pane hidden space-y-4">
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <h3 class="font-display text-sm font-bold text-navy">Historial de Viajes y Comisiones</h3>
+            <p class="text-xs text-muted">Hojas de ruta oficiales realizadas por este vehículo.</p>
+          </div>
+        </div>
+
+        <div id="viajes-empty" class="hidden rounded-xl border border-line bg-white p-8 text-center text-muted text-xs">
+          No hay comisiones registradas para esta unidad.
+        </div>
+
+        <div id="viajes-table-container" class="overflow-x-auto rounded-xl border border-line bg-white shadow-xs">
+          <table class="w-full text-left text-xs">
+            <thead class="border-b border-line bg-paper text-[10px] font-bold uppercase tracking-wider text-muted">
+              <tr>
+                <th class="px-4 py-3">Código</th>
+                <th class="px-3 py-3">Destino</th>
+                <th class="px-3 py-3">Área Solicitante</th>
+                <th class="px-3 py-3">Chofer</th>
+                <th class="px-3 py-3">Fecha Salida</th>
+                <th class="px-3 py-3">Recorrido</th>
+                <th class="px-4 py-3 text-right">Estado</th>
+              </tr>
+            </thead>
+            <tbody id="viajes-tbody" class="divide-y divide-line">
+              <!-- Se inyecta dinámicamente con JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 4: COMBUSTIBLE -->
+      <div id="tab-content-combustible" class="tab-pane hidden space-y-4">
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <h3 class="font-display text-sm font-bold text-navy">Historial de Cargas de Combustible</h3>
+            <p class="text-xs text-muted">Volumen de carga, importes y rendimiento promedio.</p>
+          </div>
+        </div>
+
+        <div id="combustible-empty" class="hidden rounded-xl border border-line bg-white p-8 text-center text-muted text-xs">
+          No hay cargas registradas para esta unidad.
+        </div>
+
+        <div id="combustible-table-container" class="overflow-x-auto rounded-xl border border-line bg-white shadow-xs">
+          <table class="w-full text-left text-xs">
+            <thead class="border-b border-line bg-paper text-[10px] font-bold uppercase tracking-wider text-muted">
+              <tr>
+                <th class="px-4 py-3">Fecha</th>
+                <th class="px-3 py-3">Estación</th>
+                <th class="px-3 py-3">Litros</th>
+                <th class="px-3 py-3">Importe</th>
+                <th class="px-3 py-3">Odómetro</th>
+                <th class="px-4 py-3 text-right">Rendimiento</th>
+              </tr>
+            </thead>
+            <tbody id="combustible-tbody" class="divide-y divide-line">
+              <!-- Se inyecta dinámicamente con JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="flex items-center justify-between border-t border-line bg-paper px-6 py-3.5">
+      <span class="text-xs text-muted">Ministerio de Educación · Ficha Oficial de Movilidad</span>
+      <button id="btn-close-detail" class="rounded-lg border border-line bg-white px-4 py-2 text-xs font-bold text-navy hover:bg-paper transition">
+        Cerrar
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // Control de pestañas dentro del modal
+  const tabBtns = document.querySelectorAll('#vehicle-detail-modal .tab-btn')
+  const tabPanes = document.querySelectorAll('#vehicle-detail-modal .tab-pane')
+
+  tabBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const targetTab = btn.getAttribute('data-tab')
+      tabBtns.forEach((b) => {
+        b.classList.remove('active', 'border-blue', 'text-blue')
+        b.classList.add('border-transparent', 'text-muted')
+      })
+      btn.classList.add('active', 'border-blue', 'text-blue')
+      btn.classList.remove('border-transparent', 'text-muted')
+
+      tabPanes.forEach((pane) => pane.classList.add('hidden'))
+      document.querySelector(`#tab-content-${targetTab}`)?.classList.remove('hidden')
+    })
+  })
+
+  // Cierre del modal
+  const modal = document.querySelector('#vehicle-detail-modal') as HTMLElement | null
+  const closeModal = () => {
+    if (modal) modal.style.display = 'none'
+  }
+  document.querySelector('#close-detail-modal')?.addEventListener('click', closeModal)
+  document.querySelector('#btn-close-detail')?.addEventListener('click', closeModal)
+  modal?.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal()
+  })
+</script>
