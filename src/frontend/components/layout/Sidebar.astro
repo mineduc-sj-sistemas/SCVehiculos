@@ -1,0 +1,82 @@
+---
+import { Bus, ChevronDown, Fuel, LayoutDashboard, Route, Settings, Truck, UsersRound, Wrench } from 'lucide-astro'
+
+interface Props {
+  activeNav?: 'panel' | 'flota' | 'choferes' | 'viajes' | 'mantenimientos' | 'combustible' | 'configuracion'
+}
+
+const { activeNav = 'panel' } = Astro.props
+
+const navItems = [
+  { id: 'panel', label: 'Panel principal', href: '/', icon: LayoutDashboard },
+  { id: 'flota', label: 'Vehículos / Flota', href: '/flota', icon: Truck },
+  { id: 'choferes', label: 'Choferes', href: '/#choferes', icon: UsersRound },
+  { id: 'viajes', label: 'Viajes / Hojas de ruta', href: '/#viajes', icon: Route },
+  { id: 'mantenimientos', label: 'Mantenimientos', href: '/#mantenimientos', icon: Wrench },
+  { id: 'combustible', label: 'Combustible', href: '/#combustible', icon: Fuel },
+]
+---
+
+<aside id="sidebar" class="sidebar fixed inset-y-0 left-0 z-40 flex w-[258px] flex-col bg-navy text-white shadow-xl">
+  <!-- Identificación institucional -->
+  <div class="flex h-[94px] items-center gap-3 border-b border-white/10 px-6">
+    <a href="/" class="flex items-center gap-3 hover:opacity-95 transition">
+      <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-gold text-navy shadow-sm">
+        <Bus size={25} strokeWidth={2.5} />
+      </div>
+      <div>
+        <p class="font-display text-[17px] font-bold tracking-tight">Movilidades</p>
+        <p class="text-[11px] font-semibold uppercase tracking-[.16em] text-white/55">Ministerio de Educación</p>
+      </div>
+    </a>
+  </div>
+  
+  <!-- Enlaces de navegación -->
+  <div class="px-4 pt-7">
+    <p class="mb-3 px-3 text-[10px] font-bold uppercase tracking-[.2em] text-white/35">Gestión operativa</p>
+    <nav class="space-y-1">
+      {navItems.map((item) => {
+        const isActive = activeNav === item.id
+        return (
+          <a
+            href={item.href}
+            class:list={[
+              'group flex items-center gap-3 rounded-lg px-3 py-3 text-[13px] font-semibold transition',
+              isActive ? 'bg-white/12 text-white font-bold' : 'text-white/65 hover:bg-white/10 hover:text-white'
+            ]}
+          >
+            <item.icon size={18} strokeWidth={1.9} />
+            <span>{item.label}</span>
+            {isActive && <span class="ml-auto h-1.5 w-1.5 rounded-full bg-gold" />}
+          </a>
+        )
+      })}
+    </nav>
+  </div>
+  
+  <!-- Configuración y usuario -->
+  <div class="mt-auto px-4 pb-5">
+    <div class="mb-3 h-px bg-white/10"></div>
+    <a
+      href="#configuracion"
+      class:list={[
+        'flex items-center gap-3 rounded-lg px-3 py-3 text-[13px] font-semibold transition',
+        activeNav === 'configuracion' ? 'bg-white/12 text-white' : 'text-white/60 hover:bg-white/10 hover:text-white'
+      ]}
+    >
+      <Settings size={18} />
+      <span>Configuración</span>
+    </a>
+    
+    <div class="mt-4 flex items-center gap-3 rounded-lg bg-white/8 p-3">
+      <div class="flex h-9 w-9 items-center justify-center rounded-full bg-gold font-display text-sm font-bold text-navy">
+        MG
+      </div>
+      <div class="min-w-0 flex-1">
+        <p class="truncate text-xs font-bold">María Gutiérrez</p>
+        <p class="truncate text-[11px] text-white/50">Administradora</p>
+      </div>
+      <ChevronDown size={15} class="text-white/45" />
+    </div>
+  </div>
+</aside>

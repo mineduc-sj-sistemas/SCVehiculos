@@ -1,9 +1,12 @@
 ---
-import { ChevronRight, Fuel, MoreHorizontal, Route, ShieldCheck, Truck, UsersRound, Wrench } from 'lucide-astro'
-import DashboardLayout from '../layouts/DashboardLayout.astro'
-import { getDashboardStats, getFleet, getActiveTravels, getDriverStats, getMaintenanceList, getFuelStats } from '../../lib/db'
+import { ChevronRight, Fuel, MoreHorizontal, Route, UsersRound, Wrench } from 'lucide-astro'
+import DashboardLayout from '../frontend/layouts/DashboardLayout.astro'
+import DashboardStatCards from '../frontend/components/dashboard/DashboardStatCards.astro'
+import PlateBadge from '../frontend/components/ui/PlateBadge.astro'
+import StatusBadge from '../frontend/components/ui/StatusBadge.astro'
+import { getDashboardStats, getFleet, getActiveTravels, getDriverStats, getMaintenanceList, getFuelStats } from '../backend/index'
 
-// Consultas dinámicas a la base de datos MySQL (sc_vehiculos)
+// Consultas dinámicas a la base de datos MySQL (sc_vehiculos) a través de la capa Backend
 const [stats, fleet, travels, driverStats, maintenance, fuelStats] = await Promise.all([
   getDashboardStats(),
   getFleet(),
@@ -12,41 +15,6 @@ const [stats, fleet, travels, driverStats, maintenance, fuelStats] = await Promi
   getMaintenanceList(),
   getFuelStats(),
 ])
-
-const statCards = [
-  {
-    label: 'Unidades en parque',
-    value: String(stats.totalFleet).padStart(2, '0'),
-    detail: 'Total de vehículos',
-    icon: Truck,
-    accent: 'text-blue',
-    bg: 'bg-sky',
-  },
-  {
-    label: 'Disponibles ahora',
-    value: String(stats.availableFleet).padStart(2, '0'),
-    detail: `${stats.availablePercent}% de la flota`,
-    icon: ShieldCheck,
-    accent: 'text-blue',
-    bg: 'bg-sky',
-  },
-  {
-    label: 'Comisiones activas',
-    value: String(stats.activeTravels).padStart(2, '0'),
-    detail: 'En distintos departamentos',
-    icon: Route,
-    accent: 'text-gold',
-    bg: 'bg-[#fff6df]',
-  },
-  {
-    label: 'Unidades en taller',
-    value: String(stats.inRepairFleet).padStart(2, '0'),
-    detail: stats.inRepairFleet > 0 ? `${stats.inRepairFleet} en atención mecánica` : 'Sin unidades en taller',
-    icon: Wrench,
-    accent: 'text-[#bf6e32]',
-    bg: 'bg-[#fff0e4]',
-  },
-]
 ---
 
 <DashboardLayout activeNav="panel" title="Panel principal · Movilidades · Ministerio de Educación">
@@ -59,35 +27,24 @@ const statCards = [
       <h2 class="font-display text-[27px] font-bold tracking-tight text-navy">Buen día, María</h2>
       <p class="mt-1 text-sm text-muted">Este es el estado actual de la flota y las movilidades en tiempo real.</p>
     </div>
+    
     <div class="flex items-center gap-2">
       <a
         href="/flota"
-        class="flex items-center gap-2 rounded-lg border border-line bg-white px-3.5 py-2.5 text-xs font-bold text-navy shadow-sm hover:bg-paper transition"
+        class="flex items-center gap-2 rounded-lg border border-line bg-white px-4 py-2.5 text-xs font-bold text-navy hover:bg-paper transition"
       >
-        <Truck size={15} class="text-blue" />
         <span>Ver parque automotor</span>
       </a>
-      <button class="flex items-center gap-2 rounded-lg bg-blue px-4 py-2.5 text-xs font-bold text-white shadow-sm shadow-blue/20 hover:opacity-90 transition">
+      <button class="flex items-center gap-2 rounded-lg bg-blue px-4 py-2.5 text-xs font-bold text-white shadow-sm shadow-blue/20 hover:opacity-90 transition cursor-pointer">
         <span class="text-lg leading-none">+</span>
         <span>Nueva comisión</span>
       </button>
     </div>
   </div>
 
-  <!-- Tarjetas KPI superiores -->
-  <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-    {statCards.map((stat) => (
-      <div class="card flex items-start justify-between p-5">
-        <div>
-          <p class="text-[12px] font-bold text-muted">{stat.label}</p>
-          <p class="mt-2 font-display text-[30px] font-bold text-navy">{stat.value}</p>
-          <p class="mt-1 text-[11px] font-semibold text-muted">{stat.detail}</p>
-        </div>
-        <div class:list={[stat.bg, stat.accent]} class="flex h-10 w-10 items-center justify-center rounded-lg">
-          <stat.icon size={19} />
-        </div>
-      </div>
-    ))}
+  <!-- Tarjetas KPI superiores (Componente de Frontend) -->
+  <section class="mb-6">
+    <DashboardStatCards stats={stats} />
   </section>
 
   <!-- Grilla: Estado de la Flota y Actividad en tiempo real -->
@@ -122,25 +79,12 @@ const statCards = [
                   <p class="text-[11px] text-muted">{item.type}</p>
                 </td>
                 <td class="px-3 py-3.5">
-                  <span class="rounded bg-paper border border-line px-2 py-1 font-mono text-[11px] font-bold tracking-wider text-navy">
-                    {item.plate}
-                  </span>
+                  <PlateBadge plate={item.plate} />
                 </td>
                 <td class="px-3 py-3.5 text-xs font-semibold text-muted">{item.km}</td>
                 <td class="px-3 py-3.5 text-xs font-semibold text-muted">{item.vtv}</td>
                 <td class="px-5 py-3.5 text-right">
-                  <span
-                    class:list={{
-                      'bg-[#e8f7ef] text-[#20864f]': item.tone === 'green',
-                      'bg-sky text-blue': item.tone === 'blue',
-                      'bg-[#fff0e4] text-[#bf6e32]': item.tone === 'orange',
-                      'bg-gray-100 text-gray-600': item.tone === 'gray',
-                    }}
-                    class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold"
-                  >
-                    <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
-                    {item.status}
-                  </span>
+                  <StatusBadge status={item.status} tone={item.tone} />
                 </td>
               </tr>
             ))}
@@ -156,7 +100,7 @@ const statCards = [
           <h3 class="font-display text-[16px] font-bold text-navy">Actividad en tiempo real</h3>
           <p class="mt-0.5 text-xs text-muted">Últimas novedades operativas</p>
         </div>
-        <button class="text-muted hover:text-navy" aria-label="Más opciones">
+        <button class="text-muted hover:text-navy cursor-pointer" aria-label="Más opciones">
           <MoreHorizontal size={19} />
         </button>
       </div>

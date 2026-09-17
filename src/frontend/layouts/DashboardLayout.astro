@@ -1,0 +1,73 @@
+---
+import Sidebar from '../components/layout/Sidebar.astro'
+import Header from '../components/layout/Header.astro'
+import Footer from '../components/layout/Footer.astro'
+import '../styles/global.css'
+
+interface Props {
+  title?: string
+  activeNav?: 'panel' | 'flota' | 'choferes' | 'viajes' | 'mantenimientos' | 'combustible' | 'configuracion'
+}
+
+const {
+  title = 'Movilidades · Ministerio de Educación · Gobierno de San Juan',
+  activeNav = 'panel',
+} = Astro.props
+---
+
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+  </head>
+  <body class="bg-paper text-ink antialiased">
+    <div class="min-h-screen bg-paper">
+      <!-- Overlay móvil para cuando el menú lateral está abierto -->
+      <div id="mobile-overlay" class="mobile-overlay fixed inset-0 z-30 bg-navy/30"></div>
+      
+      <!-- Barra lateral de navegación -->
+      <Sidebar activeNav={activeNav} />
+
+      <!-- Contenedor Principal -->
+      <main class="ml-0 min-h-screen lg:ml-[258px]">
+        <!-- Cabecera Superior -->
+        <Header>
+          <slot name="header-title" slot="header-title" />
+        </Header>
+
+        <!-- Contenido de la página -->
+        <div class="p-5 sm:p-8">
+          <slot />
+
+          <!-- Pie de página -->
+          <Footer />
+        </div>
+      </main>
+    </div>
+
+    <!-- Modales fuera del flujo principal -->
+    <slot name="modals" />
+
+    <script>
+      const menuButton = document.querySelector('#menu-button')
+      const sidebar = document.querySelector('#sidebar')
+      const overlay = document.querySelector('#mobile-overlay')
+      
+      const closeMenu = () => {
+        sidebar?.classList.remove('open')
+        overlay?.classList.remove('open')
+      }
+
+      menuButton?.addEventListener('click', () => {
+        sidebar?.classList.toggle('open')
+        overlay?.classList.toggle('open')
+      })
+
+      overlay?.addEventListener('click', closeMenu)
+      sidebar?.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeMenu))
+    </script>
+  </body>
+</html>

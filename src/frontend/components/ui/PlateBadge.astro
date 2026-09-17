@@ -1,0 +1,15 @@
+---
+interface Props {
+  plate: string
+  size?: 'sm' | 'md'
+}
+
+const { plate, size = 'sm' } = Astro.props
+
+const isMd = size === 'md'
+---
+
+<div class={`inline-flex items-center rounded border border-navy/20 bg-white shadow-xs select-all ${isMd ? 'px-2.5 py-1' : 'px-2 py-0.5'}`}>
+  <span class={`font-black tracking-tighter text-blue ${isMd ? 'mr-1.5 text-[10px]' : 'mr-1 text-[9px]'}`}>AR</span>
+  <span class={`font-mono font-black tracking-wider text-navy ${isMd ? 'text-sm' : 'text-xs'}`}>{plate}</span>
+</div>

@@ -1,0 +1,62 @@
+---
+import { Route, ShieldCheck, Truck, Wrench } from 'lucide-astro'
+import type { DashboardStats } from '../../backend/types'
+
+interface Props {
+  stats: DashboardStats
+}
+
+const { stats } = Astro.props
+
+const statCards = [
+  {
+    label: 'Unidades en parque',
+    value: String(stats.totalFleet).padStart(2, '0'),
+    detail: 'Total de vehículos',
+    icon: Truck,
+    accent: 'text-blue',
+    bg: 'bg-sky',
+  },
+  {
+    label: 'Disponibles ahora',
+    value: String(stats.availableFleet).padStart(2, '0'),
+    detail: `${stats.availablePercent}% de la flota`,
+    icon: ShieldCheck,
+    accent: 'text-blue',
+    bg: 'bg-sky',
+  },
+  {
+    label: 'Comisiones activas',
+    value: String(stats.activeTravels).padStart(2, '0'),
+    detail: 'En distintos departamentos',
+    icon: Route,
+    accent: 'text-gold',
+    bg: 'bg-[#fff6df]',
+  },
+  {
+    label: 'Unidades en taller',
+    value: String(stats.inRepairFleet).padStart(2, '0'),
+    detail: stats.inRepairFleet > 0 ? `${stats.inRepairFleet} en atención mecánica` : 'Sin unidades en taller',
+    icon: Wrench,
+    accent: 'text-[#bf6e32]',
+    bg: 'bg-[#fff0e4]',
+  },
+]
+---
+
+<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+  {statCards.map((card) => (
+    <div class="card p-5 transition-shadow hover:shadow-md">
+      <div class="flex items-start justify-between">
+        <div>
+          <p class="text-xs font-bold text-muted uppercase tracking-wider">{card.label}</p>
+          <p class="mt-2 font-display text-3xl font-bold tracking-tight text-navy">{card.value}</p>
+          <p class="mt-1 text-xs text-muted">{card.detail}</p>
+        </div>
+        <div class={`flex h-11 w-11 items-center justify-center rounded-xl ${card.bg} ${card.accent}`}>
+          <card.icon size={22} />
+        </div>
+      </div>
+    </div>
+  ))}
+</div>

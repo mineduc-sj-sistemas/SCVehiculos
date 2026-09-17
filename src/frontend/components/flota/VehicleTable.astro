@@ -1,0 +1,138 @@
+---
+import { Edit3, Eye, FileText, Truck } from 'lucide-astro'
+import PlateBadge from '../ui/PlateBadge.astro'
+import StatusBadge from '../ui/StatusBadge.astro'
+import type { VehicleFull } from '../../backend/types'
+
+interface Props {
+  vehicles: VehicleFull[]
+}
+
+const { vehicles } = Astro.props
+---
+
+<section class="card overflow-hidden shadow-sm">
+  <div class="flex items-center justify-between border-b border-line px-6 py-4">
+    <div>
+      <h3 class="font-display text-base font-bold text-navy">Parque Automotor Registrado</h3>
+      <p class="text-xs text-muted">
+        Mostrando <span id="visible-count" class="font-bold text-navy">{vehicles.length}</span> de {vehicles.length} unidades oficiales
+      </p>
+    </div>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="w-full min-w-[1050px] text-left text-xs">
+      <thead>
+        <tr class="border-b border-line bg-paper text-[10px] font-bold uppercase tracking-wider text-muted">
+          <th class="px-5 py-3.5">Patente</th>
+          <th class="px-4 py-3.5">Unidad / Modelo</th>
+          <th class="px-3 py-3.5">Cédula Oficial</th>
+          <th class="px-3 py-3.5">RTO / VTV</th>
+          <th class="px-3 py-3.5">Combustible</th>
+          <th class="px-3 py-3.5">Área Asignada</th>
+          <th class="px-3 py-3.5">Odómetro</th>
+          <th class="px-3 py-3.5">Estado</th>
+          <th class="px-5 py-3.5 text-right">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="fleet-table-body" class="divide-y divide-line">
+        {vehicles.map((v) => (
+          <tr
+            class="vehicle-row hover:bg-paper/60 transition group"
+            data-id={v.id}
+            data-patente={v.patente.toLowerCase()}
+            data-marca={v.marca.toLowerCase()}
+            data-modelo={v.modelo.toLowerCase()}
+            data-cedula={v.numeroCedula ? v.numeroCedula.toLowerCase() : ''}
+            data-estado={v.estado}
+            data-tipo={v.tipoNombre}
+            data-dependencia={v.dependenciaNombre}
+          >
+            <!-- Patente oficial -->
+            <td class="px-5 py-4 whitespace-nowrap">
+              <PlateBadge plate={v.patente} />
+            </td>
+
+            <!-- Marca y Modelo -->
+            <td class="px-4 py-4">
+              <p class="font-bold text-navy text-[13px]">{v.marca} {v.modelo}</p>
+              <p class="text-[11px] text-muted">{v.tipoNombre} {v.anio ? `· ${v.anio}` : ''} {v.version ? `(${v.version})` : ''}</p>
+            </td>
+
+            <!-- Cédula -->
+            <td class="px-3 py-4 whitespace-nowrap">
+              <p class="font-mono text-xs font-semibold text-navy flex items-center gap-1">
+                <FileText size={13} class="text-blue shrink-0" />
+                {v.numeroCedula}
+              </p>
+              <span class="text-[10px] text-muted">Oficial San Juan</span>
+            </td>
+
+            <!-- RTO con semáforo -->
+            <td class="px-3 py-4 whitespace-nowrap">
+              <div class="flex items-center gap-1.5">
+                {v.vtvStatus === 'vigente' && <span class="h-2 w-2 rounded-full bg-emerald-600" title="Vigente" />}
+                {v.vtvStatus === 'proxima' && <span class="h-2 w-2 rounded-full bg-amber-500 animate-pulse" title="Próxima a vencer" />}
+                {v.vtvStatus === 'vencida' && <span class="h-2 w-2 rounded-full bg-rose-600" title="Vencida" />}
+                <span class="font-semibold text-navy text-xs">{v.vtvFormatted}</span>
+              </div>
+              <p class="text-[10px] text-muted font-mono">{v.numeroRto}</p>
+            </td>
+
+            <!-- Combustible -->
+            <td class="px-3 py-4 whitespace-nowrap">
+              <p class="text-xs font-semibold text-navy">{v.tipoCombustibleLabel}</p>
+              <p class="text-[10px] text-muted">{v.capacidadTanqueLitros ? `${v.capacidadTanqueLitros} L · ` : ''}{v.capacidadPasajeros} pas.</p>
+            </td>
+
+            <!-- Dependencia -->
+            <td class="px-3 py-4">
+              <p class="text-xs font-semibold text-blue truncate max-w-[170px]" title={v.dependenciaNombre}>
+                {v.dependenciaNombre}
+              </p>
+            </td>
+
+            <!-- Odómetro -->
+            <td class="px-3 py-4 whitespace-nowrap font-mono text-xs font-semibold text-navy">
+              {v.odometroFormatted}
+            </td>
+
+            <!-- Estado -->
+            <td class="px-3 py-4 whitespace-nowrap">
+              <StatusBadge status={v.estado} tone={v.tone} label={v.estadoLabel} />
+            </td>
+
+            <!-- Acciones -->
+            <td class="px-5 py-4 text-right whitespace-nowrap">
+              <div class="flex items-center justify-end gap-1.5">
+                <button
+                  class="btn-view-detail flex items-center gap-1 rounded-lg border border-line bg-white px-2.5 py-1.5 text-xs font-bold text-navy hover:bg-paper hover:text-blue transition shadow-2xs cursor-pointer"
+                  data-id={v.id}
+                  title="Ver Ficha Técnica, Historial Mecánico y Viajes"
+                >
+                  <Eye size={14} class="text-blue" />
+                  <span>Ficha 360°</span>
+                </button>
+                <button
+                  class="btn-edit-vehicle rounded-lg p-1.5 text-muted hover:bg-paper hover:text-navy border border-transparent hover:border-line transition cursor-pointer"
+                  data-id={v.id}
+                  title="Editar datos del vehículo"
+                >
+                  <Edit3 size={15} />
+                </button>
+              </div>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Mensaje cuando no hay resultados en los filtros -->
+  <div id="no-results" class="hidden p-12 text-center text-muted">
+    <Truck size={36} class="mx-auto mb-2 text-muted/50" />
+    <p class="text-sm font-bold text-navy">No se encontraron vehículos</p>
+    <p class="text-xs text-muted mt-1">Prueba modificando los criterios de búsqueda o limpiando los filtros.</p>
+  </div>
+</section>

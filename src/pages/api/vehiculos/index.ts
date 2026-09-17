@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro'
-import { getVehicleDetailWithHistory, saveVehicle, getVehiclesFullList } from '../../../../lib/db'
+import { getVehicleDetailWithHistory, saveVehicle, getVehiclesFullList } from '../../../backend/index'
 
 export const prerender = false
 

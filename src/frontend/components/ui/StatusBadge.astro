@@ -1,0 +1,36 @@
+---
+interface Props {
+  status: string
+  tone?: 'green' | 'blue' | 'orange' | 'gray'
+  label?: string
+}
+
+const { status, tone, label } = Astro.props
+
+let badgeClasses = 'bg-slate-100 text-slate-700 border-slate-200'
+let dotClasses = 'bg-slate-400'
+let displayLabel = label || status
+
+if (tone === 'green' || status === 'disponible') {
+  badgeClasses = 'bg-emerald-50 text-emerald-700 border-emerald-200/80'
+  dotClasses = 'bg-emerald-500'
+  if (!label) displayLabel = 'Disponible'
+} else if (tone === 'blue' || status === 'en_comision') {
+  badgeClasses = 'bg-sky text-blue border-blue/20'
+  dotClasses = 'bg-blue'
+  if (!label) displayLabel = 'En comisión'
+} else if (tone === 'orange' || status === 'en_taller') {
+  badgeClasses = 'bg-amber-50 text-amber-800 border-amber-200/80'
+  dotClasses = 'bg-amber-500'
+  if (!label) displayLabel = 'En taller'
+} else if (tone === 'gray' || status === 'baja') {
+  badgeClasses = 'bg-gray-100 text-gray-600 border-gray-200'
+  dotClasses = 'bg-gray-400'
+  if (!label) displayLabel = 'Baja'
+}
+---
+
+<span class={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold ${badgeClasses}`}>
+  <span class={`h-1.5 w-1.5 rounded-full ${dotClasses}`}></span>
+  <span>{displayLabel}</span>
+</span>

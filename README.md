@@ -5,45 +5,86 @@ Sistema web institucional para la gestión, control operativo y trazabilidad del
 
 ---
 
-## 🚀 Estado Actual del Desarrollo (Handover / Relevo)
+## 🏛️ Arquitectura del Proyecto: Separación Frontend y Backend
 
-El proyecto ha avanzado significativamente, eliminando todos los datos hardcodeados y conectando la aplicación a una base de datos MySQL relacional con soporte completo para codificación UTF-8.
+El código está estructurado con una separación limpia y modular entre la capa de **Frontend** (diseño, componentes visuales, estilos y UX) y la capa de **Backend** (conexión a base de datos MySQL, modelos TypeScript, servicios de dominio y endpoints de API).
 
-### 1. Base de Datos Relacional (`sc_vehiculos`)
-- **Archivos fuente**:
-  - `database/schema.sql`: Estructura DDL completa de tablas e índices (`tipos_vehiculo`, `dependencias`, `choferes`, `vehiculos`, `mantenimientos`, `viajes`, `cargas_combustible`).
-  - `database/seed.sql`: Datos maestros y registros oficiales del parque automotor (patentes, choferes, viajes a Jáchal/Calingasta/Valle Fértil, mantenimientos y cargas).
-- **Campos incorporados**:
-  - `patente`: Dominio del vehículo formateado.
-  - `numero_cedula` y `fecha_vencimiento_cedula`: Documentación oficial de identificación.
-  - `numero_rto` y `fecha_vencimiento_vtv`: Certificado y vencimiento de Revisión Técnica Obligatoria.
-  - Póliza de seguro, odómetro, VIN/chasis, motor, tipo y capacidad de combustible.
+```
+SCVehiculos/
+├── database/                               # Scripts SQL de MySQL
+│   ├── schema.sql                          # Estructura DDL completa de tablas e índices
+│   └── seed.sql                            # Datos maestros y parque automotor oficial
+│
+├── src/
+│   ├── backend/                            # 🔧 CAPA BACKEND (Datos, Lógica y Modelos)
+│   │   ├── config/
+│   │   │   └── db.ts                       # Conexión MySQL con pool utf8mb4 y query helper
+│   │   ├── types/                          # Contratos y tipos TypeScript
+│   │   │   ├── vehicle.types.ts            # Tipos de vehículos, fichas 360 y formularios
+│   │   │   ├── dashboard.types.ts          # Tipos de KPIs y resumen operativo
+│   │   │   └── index.ts                    # Exportador unificado de tipos
+│   │   ├── services/                       # Servicios de consultas y lógica de negocio
+│   │   │   ├── vehicleService.ts           # CRUD vehículos, tipos, dependencias, ficha 360
+│   │   │   └── dashboardService.ts         # KPIs, comisiones, mantenimientos, choferes y combustible
+│   │   └── index.ts                        # Punto de exportación unificado del backend
+│   │
+│   ├── frontend/                           # 🎨 CAPA FRONTEND (UI, Estilos y Componentes)
+│   │   ├── components/                     # Componentes visuales organizados por dominio
+│   │   │   ├── layout/                     # Elementos estructurales
+│   │   │   │   ├── Sidebar.astro           # Menú lateral con accesos y estado activo
+│   │   │   │   ├── Header.astro            # Cabecera superior con fecha oficial y buscador
+│   │   │   │   └── Footer.astro            # Pie de página institucional y estado de conexión
+│   │   │   ├── flota/                      # Gestión de parque automotor
+│   │   │   │   ├── VehicleKpiCards.astro   # Tarjetas métricas superiores de unidades
+│   │   │   │   ├── VehicleFilters.astro    # Buscador y selectores de filtrado
+│   │   │   │   ├── VehicleTable.astro      # Tabla de unidades con semáforos y acciones
+│   │   │   │   ├── VehicleDetailModal.astro # Ficha técnica 360° con 4 pestañas interactivas
+│   │   │   │   └── VehicleFormModal.astro   # Modal de creación y edición validado
+│   │   │   ├── dashboard/                  # Panel principal
+│   │   │   │   └── DashboardStatCards.astro # Tarjetas de métricas del panel
+│   │   │   └── ui/                         # Componentes atómicos reutilizables
+│   │   │       ├── StatusBadge.astro       # Semáforos de estado (disponible, comisión, taller)
+│   │   │       └── PlateBadge.astro        # Chapa patente argentina oficial
+│   │   ├── layouts/
+│   │   │   └── DashboardLayout.astro       # Layout maestro que integra Sidebar, Header y Footer
+│   │   ├── styles/
+│   │   │   └── global.css                  # Variables CSS, fuentes institucionales y Tailwind
+│   │   ├── scripts/                        # Interactividad del lado del cliente
+│   │   │   └── flotaController.ts          # Controlador de búsqueda reactiva y modales
+│   │   └── index.ts                        # Barrel export del Frontend
+│   │
+│   ├── pages/                              # 🌐 CONTROLADORES DE RUTA (Astro Routing)
+│   │   ├── index.astro                     # Página principal / (Dashboard)
+│   │   ├── flota.astro                     # Página /flota (Parque Automotor)
+│   │   └── api/                            # Endpoints REST HTTP
+│   │       └── vehiculos/
+│   │           └── index.ts                # Endpoint API /api/vehiculos (GET, POST)
+│   │
+│   ├── middleware.ts                       # Middleware de codificación UTF-8
+│   └── env.d.ts                            # Declaraciones de tipos para Astro
+│
+├── lib/
+│   ├── db.ts                               # Fachada retrocompatible hacia src/backend
+│   └── utils.ts                            # Helper cn() para clases de Tailwind
+│
+└── tsconfig.json                           # Configuración de TypeScript con alias @backend y @frontend
+```
 
-### 2. Capa de Datos (`lib/db.ts`) y API REST
-- Pool de conexiones `mysql2/promise` configurado con `charset: 'utf8mb4'`.
-- Funciones SQL para KPIs, listado de flota, detalle 360° y guardado/edición de unidades.
-- Endpoint `/api/vehiculos`:
-  - `GET /api/vehiculos?id=X`: Devuelve vehículo + mantenimientos mecánicos + viajes + consumos de combustible.
-  - `POST /api/vehiculos`: Da de alta o actualiza una movilidad en la base de datos.
+---
 
-### 3. Pantalla de Flota y Parque Automotor (`/flota`)
-- **Ubicación**: `src/pages/flota.astro`.
-- **Características**:
-  - **KPIs en tiempo real**: Total flota, unidades disponibles, en comisión, en taller y alertas de RTO por vencer.
-  - **Buscador reactivo**: Filtrado instantáneo por patente, modelo, marca o cédula oficial.
-  - **Filtros por Estado, Tipo y Área Asignada**.
-  - **Tabla de Flota**: Placas patentes con diseño oficial de chapa, semáforo visual de RTO, odómetro y dependencias.
-  - **Ficha 360° (`VehicleDetailModal.astro`)**:
-    - Pestaña 1: Ficha Técnica, Cédula oficial y estado de RTO / Seguro.
-    - Pestaña 2: Historial Mecánico (servicios preventivos/correctivos, talleres y costos).
-    - Pestaña 3: Historial de Viajes y Comisiones (destinos, fechas, chóferes y km recorridos).
-    - Pestaña 4: Control de Consumo de Combustible y rendimiento.
-  - **Formulario de Registro / Edición (`VehicleFormModal.astro`)**: Modal validado para crear nuevas unidades o editar móviles existentes.
+## 🚀 Guía Rápida para Desarrolladores
 
-### 4. Layout Base Institucional (`src/layouts/DashboardLayout.astro`)
-- Envelope HTML5 estandarizado con `<meta charset="UTF-8">` (elimina cualquier error de caracteres `Ã³`, `Ã`, etc.).
-- Navegación lateral con slugs limpios (`/`, `/flota`, `/choferes`, `/viajes`, `/mantenimientos`, `/combustible`).
-- Header superior con fecha oficial en español y usuario autenticado.
+### ¿Dónde implementar cambios visuales o de interfaz (Frontend)?
+- **Modificar la navegación o cabecera**: [Sidebar.astro](file:///c:/Users/Docente/Desktop/SCVehiculos/src/frontend/components/layout/Sidebar.astro) o [Header.astro](file:///c:/Users/Docente/Desktop/SCVehiculos/src/frontend/components/layout/Header.astro).
+- **Modificar colores, tipografía o utilidades CSS**: [global.css](file:///c:/Users/Docente/Desktop/SCVehiculos/src/frontend/styles/global.css).
+- **Modificar la vista de la flota o sus tarjetas**: [VehicleKpiCards.astro](file:///c:/Users/Docente/Desktop/SCVehiculos/src/frontend/components/flota/VehicleKpiCards.astro), [VehicleFilters.astro](file:///c:/Users/Docente/Desktop/SCVehiculos/src/frontend/components/flota/VehicleFilters.astro) o [VehicleTable.astro](file:///c:/Users/Docente/Desktop/SCVehiculos/src/frontend/components/flota/VehicleTable.astro).
+- **Modificar modales de detalle o edición**: [VehicleDetailModal.astro](file:///c:/Users/Docente/Desktop/SCVehiculos/src/frontend/components/flota/VehicleDetailModal.astro) o [VehicleFormModal.astro](file:///c:/Users/Docente/Desktop/SCVehiculos/src/frontend/components/flota/VehicleFormModal.astro).
+
+### ¿Dónde implementar cambios de datos, SQL o endpoints (Backend)?
+- **Conexión o credenciales a MySQL**: [db.ts](file:///c:/Users/Docente/Desktop/SCVehiculos/src/backend/config/db.ts).
+- **Consultas SQL de vehículos y parque automotor**: [vehicleService.ts](file:///c:/Users/Docente/Desktop/SCVehiculos/src/backend/services/vehicleService.ts).
+- **Consultas SQL de estadísticas y panel**: [dashboardService.ts](file:///c:/Users/Docente/Desktop/SCVehiculos/src/backend/services/dashboardService.ts).
+- **Nuevos endpoints REST**: [src/pages/api/](file:///c:/Users/Docente/Desktop/SCVehiculos/src/pages/api).
 
 ---
 
@@ -64,20 +105,19 @@ El proyecto ha avanzado significativamente, eliminando todos los datos hardcodea
    pnpm install
    ```
 4. **Levantar Servidor de Desarrollo**:
-   > **Nota para agentes o PowerShell**: Astro 7 puede desacoplar procesos en segundo plano. Para correrlo de forma persistente en terminal ejecutar:
    ```powershell
    $env:ASTRO_DEV_BACKGROUND="false"; pnpm astro dev
    ```
-   Abrir: `http://localhost:4321/` o `http://localhost:4321/flota`.
+   Abrir en navegador: `http://localhost:4321/` o `http://localhost:4321/flota`.
 
 ---
 
-## 📌 Próximos Módulos Sugeridos para Continuar
+## 📌 Próximos Módulos Planificados
 
 1. **Módulo de Choferes (`/choferes`)**:
-   - Vista de personal de choferes, licencias de conducir con semáforo de vencimiento, teléfonos de contacto y asignación de viajes.
+   - Vista de personal de choferes, licencias de conducir con semáforo de vencimiento y teléfonos de contacto.
 2. **Módulo de Viajes y Hojas de Ruta (`/viajes`)**:
-   - Registro de comisiones oficiales, chofer asignado, movilidad, odómetro de salida y llegada, estado del viaje.
+   - Registro de comisiones oficiales, chofer asignado, movilidad, odómetro de salida y llegada.
 3. **Módulo de Mantenimientos (`/mantenimientos`)**:
    - Órdenes de taller, presupuesto, fechas de ingreso y egreso, tipo de servicio (preventivo/correctivo).
 4. **Módulo de Combustible (`/combustible`)**:
