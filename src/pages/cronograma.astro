@@ -7,9 +7,12 @@ import CronogramaDispatchModal from '../frontend/components/cronograma/Cronogram
 import CronogramaDetailModal from '../frontend/components/cronograma/CronogramaDetailModal.astro'
 import { getCronogramaSemanal, getDatosAuxiliaresDespacho } from '../backend/index'
 
+// Obtener fecha solicitada por query param si existe
+const fechaParam = Astro.url.searchParams.get('fecha') || undefined
+
 // Carga en servidor a través del backend
 const [cronogramaData, datosAuxiliares] = await Promise.all([
-  getCronogramaSemanal(),
+  getCronogramaSemanal(fechaParam),
   getDatosAuxiliaresDespacho(),
 ])
 ---

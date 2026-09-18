@@ -1,74 +1,396 @@
 /**
  * Controlador de Cliente para el Cronograma Semanal y Despacho
+ * - Navegación semanal reactiva (<, >, Hoy) y selector de fecha con Flatpickr
+ * - Actualización fluida de la grilla vía /api/cronograma sin recargar la página completa
+ * - Filtros reactivos por búsqueda (patente, modelo, chofer, departamento) y estado
+ * - Modal de despacho rápido de comisiones con precarga de móvil y fecha
+ * - Modal de detalle y hoja de ruta con acciones operativas (marcar salida, regreso, cancelación)
  */
+
+import flatpickr from 'flatpickr'
+import 'flatpickr/dist/flatpickr.min.css'
+import type { CronogramaDiaHeader, CronogramaSemanalData, CronogramaVehiculoRow } from '../../backend/types/cronograma.types'
+
+const SpanishLocale: any = {
+  firstDayOfWeek: 1,
+  weekdays: {
+    shorthand: ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá'],
+    longhand: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
+  },
+  months: {
+    shorthand: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+    longhand: [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+    ],
+  },
+  ordinal: () => 'º',
+  rangeSeparator: ' a ',
+  weekAbbreviation: 'Sem',
+  scrollTitle: 'Desplazar para aumentar',
+  toggleTitle: 'Hacer clic para cambiar',
+}
+
+function toDateString(d: Date): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+let fechaSemanaActiva: string = ''
+let fpInstance: any = null
 
 document.addEventListener('DOMContentLoaded', () => {
   initCronogramaNav()
   initCronogramaFilters()
   initDispatchModal()
   initDetailModal()
+
+  // Si hay un query param 'fecha' diferente en la URL al cargar, sincronizar
+  const urlParams = new URLSearchParams(window.location.search)
+  const fechaUrl = urlParams.get('fecha')
+  if (fechaUrl && /^\d{4}-\d{2}-\d{2}$/.test(fechaUrl) && fechaUrl !== fechaSemanaActiva) {
+    cargarSemana(fechaUrl)
+  }
 })
 
 /**
- * 1. Navegación Semanal
+ * 1. Navegación Semanal y Selector de Fecha
  */
 function initCronogramaNav() {
+  const navGroup = document.getElementById('cronograma-nav-group')
   const btnPrev = document.getElementById('btn-semana-prev')
   const btnHoy = document.getElementById('btn-semana-hoy')
   const btnNext = document.getElementById('btn-semana-next')
+  const btnOpenPicker = document.getElementById('btn-open-datepicker')
   const inputPicker = document.getElementById('input-fecha-picker') as HTMLInputElement | null
   const btnRecargar = document.getElementById('btn-recargar-cronograma')
   const btnImprimir = document.getElementById('btn-imprimir-cronograma')
 
-  const urlParams = new URLSearchParams(window.location.search)
-  const currentFechaParam = urlParams.get('fecha')
+  fechaSemanaActiva = navGroup?.dataset.fechaInicio || toDateString(new Date())
 
-  // Obtener fecha base activa
-  let baseDate: Date
-  if (currentFechaParam && /^\d{4}-\d{2}-\d{2}$/.test(currentFechaParam)) {
-    const [y, m, d] = currentFechaParam.split('-').map(Number)
-    baseDate = new Date(y, m - 1, d, 12, 0, 0)
-  } else {
-    baseDate = new Date()
+  // Inicializar Flatpickr
+  if (inputPicker) {
+    fpInstance = flatpickr(inputPicker, {
+      locale: SpanishLocale,
+      dateFormat: 'Y-m-d',
+      defaultDate: fechaSemanaActiva,
+      disableMobile: true,
+      onChange: (_selectedDates, dateStr) => {
+        if (dateStr) {
+          cargarSemana(dateStr)
+        }
+      },
+    })
+
+    btnOpenPicker?.addEventListener('click', (e) => {
+      e.stopPropagation()
+      fpInstance?.open()
+    })
   }
 
-  const navigateToDate = (d: Date) => {
-    const y = d.getFullYear()
-    const m = String(d.getMonth() + 1).padStart(2, '0')
-    const day = String(d.getDate()).padStart(2, '0')
-    const fechaStr = `${y}-${m}-${day}`
-    window.location.href = `/cronograma?fecha=${fechaStr}`
-  }
-
-  btnPrev?.addEventListener('click', () => {
-    const prev = new Date(baseDate)
-    prev.setDate(prev.getDate() - 7)
-    navigateToDate(prev)
-  })
-
-  btnNext?.addEventListener('click', () => {
-    const next = new Date(baseDate)
-    next.setDate(next.getDate() + 7)
-    navigateToDate(next)
-  })
-
-  btnHoy?.addEventListener('click', () => {
-    navigateToDate(new Date())
-  })
-
-  inputPicker?.addEventListener('change', () => {
-    if (inputPicker.value) {
-      window.location.href = `/cronograma?fecha=${inputPicker.value}`
+  const getBaseDate = (): Date => {
+    if (fechaSemanaActiva && /^\d{4}-\d{2}-\d{2}$/.test(fechaSemanaActiva)) {
+      const [y, m, d] = fechaSemanaActiva.split('-').map(Number)
+      return new Date(y, m - 1, d, 12, 0, 0)
     }
+    return new Date()
+  }
+
+  // Navegación semana anterior
+  btnPrev?.addEventListener('click', () => {
+    const d = getBaseDate()
+    d.setDate(d.getDate() - 7)
+    cargarSemana(toDateString(d))
   })
 
+  // Navegación semana siguiente
+  btnNext?.addEventListener('click', () => {
+    const d = getBaseDate()
+    d.setDate(d.getDate() + 7)
+    cargarSemana(toDateString(d))
+  })
+
+  // Botón Esta Semana / Hoy
+  btnHoy?.addEventListener('click', () => {
+    const hoyStr = toDateString(new Date())
+    cargarSemana(hoyStr)
+  })
+
+  // Recargar
   btnRecargar?.addEventListener('click', () => {
-    window.location.reload()
+    cargarSemana(fechaSemanaActiva)
   })
 
+  // Imprimir
   btnImprimir?.addEventListener('click', () => {
     window.print()
   })
+}
+
+/**
+ * Carga asíncrona de datos de la semana y re-renderizado reactivo de la grilla
+ */
+async function cargarSemana(fechaRef: string) {
+  const tbody = document.getElementById('tbody-cronograma')
+  const thead = document.querySelector('#tabla-cronograma thead')
+  const labelSemana = document.getElementById('label-semana-activa')
+  const navGroup = document.getElementById('cronograma-nav-group')
+
+  // Indicador visual de carga suave
+  if (tbody) tbody.classList.add('opacity-40', 'transition-opacity')
+
+  try {
+    const res = await fetch(`/api/cronograma?fecha=${fechaRef}`)
+    if (!res.ok) throw new Error('Error al consultar datos de la semana')
+    const data: CronogramaSemanalData = await res.json()
+
+    fechaSemanaActiva = data.rangoSemana.inicio
+    if (navGroup) navGroup.dataset.fechaInicio = fechaSemanaActiva
+    if (fpInstance) fpInstance.setDate(fechaSemanaActiva, false)
+
+    // 1. Actualizar título del rango
+    if (labelSemana) labelSemana.innerText = data.rangoSemana.label
+
+    // 2. Actualizar KPIs superiores
+    const elKpiTotal = document.getElementById('kpi-total-semana')
+    const elKpiEnCurso = document.getElementById('kpi-en-curso')
+    const elKpiProgramadas = document.getElementById('kpi-programadas')
+    const elKpiMoviles = document.getElementById('kpi-moviles')
+
+    if (elKpiTotal) elKpiTotal.innerText = String(data.stats.totalComisionesSemana)
+    if (elKpiEnCurso) elKpiEnCurso.innerText = String(data.stats.enCursoHoy)
+    if (elKpiProgramadas) elKpiProgramadas.innerText = String(data.stats.programadasSemana)
+    if (elKpiMoviles) {
+      elKpiMoviles.innerHTML = `${data.stats.vehiculosAsignadosSemana} <span class="text-xs font-normal text-muted">/ ${data.stats.vehiculosOperativos} disp.</span>`
+    }
+
+    // 3. Actualizar cabecera de días (thead)
+    if (thead) {
+      renderTheadDias(thead, data.dias, data.filas.length)
+    }
+
+    // 4. Actualizar cuerpo de la grilla (tbody)
+    if (tbody) {
+      renderTbodyFilas(tbody, data.dias, data.filas)
+    }
+
+    // 5. Re-asociar eventos de modales a los nuevos elementos del DOM
+    bindGridEvents()
+
+    // 6. Aplicar filtros vigentes
+    aplicarFiltrosActivos()
+
+    // 7. Sincronizar URL del navegador
+    const currentUrl = new URL(window.location.href)
+    currentUrl.searchParams.set('fecha', data.rangoSemana.inicio)
+    window.history.replaceState({}, '', currentUrl.toString())
+  } catch (err: any) {
+    console.error('Error al cargar semana:', err)
+    alert(err.message || 'Error al cargar la semana seleccionada')
+  } finally {
+    if (tbody) tbody.classList.remove('opacity-40')
+  }
+}
+
+/**
+ * Renderiza las columnas del thead para los 7 días
+ */
+function renderTheadDias(thead: Element, dias: CronogramaDiaHeader[], totalMoviles: number) {
+  const tr = thead.querySelector('tr')
+  if (!tr) return
+
+  let html = `
+    <th class="sticky left-0 z-20 w-[240px] min-w-[240px] bg-gray-50/95 px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-navy shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)] border-r border-gray-200">
+      <div class="flex items-center justify-between">
+        <span>Móvil / Vehículo</span>
+        <span class="text-[10px] font-normal text-muted lowercase">(${totalMoviles} móviles)</span>
+      </div>
+    </th>
+  `
+
+  dias.forEach((d) => {
+    const bgClass = d.esHoy ? 'bg-blue/10 border-blue/30' : d.esFinDeSemana ? 'bg-gray-100/50' : 'bg-gray-50/50'
+    const textDayClass = d.esHoy ? 'text-blue' : 'text-gray-600'
+    const numBadgeClass = d.esHoy ? 'bg-blue text-white shadow-sm' : 'text-navy'
+
+    html += `
+      <th class="w-[180px] min-w-[170px] px-3 py-3 text-center border-r border-gray-200 transition-colors ${bgClass}">
+        <div class="flex flex-col items-center justify-center gap-0.5">
+          <span class="text-[11px] uppercase tracking-wider font-bold ${textDayClass}">
+            ${d.diaNombre}
+          </span>
+          <div class="flex items-center gap-1.5">
+            <span class="inline-flex items-center justify-center h-6 w-6 rounded-full text-xs font-bold transition ${numBadgeClass}">
+              ${d.diaNumero}
+            </span>
+            <span class="text-[10px] font-medium text-muted">${d.mesNombre}</span>
+          </div>
+          ${d.esHoy ? '<span class="inline-flex items-center rounded-full bg-gold/25 px-2 py-0.5 text-[9px] font-bold text-navy mt-0.5 border border-gold/40">HOY</span>' : ''}
+        </div>
+      </th>
+    `
+  })
+
+  tr.innerHTML = html
+}
+
+/**
+ * Renderiza las filas de la tabla para los vehículos y comisiones
+ */
+function renderTbodyFilas(tbody: HTMLElement, dias: CronogramaDiaHeader[], filas: CronogramaVehiculoRow[]) {
+  if (filas.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" class="py-12 text-center text-muted">
+          <p class="font-bold text-navy text-sm">No se encontraron vehículos registrados</p>
+          <p class="text-xs">Registre unidades en la sección de Vehículos para comenzar a despachar comisiones.</p>
+        </td>
+      </tr>
+    `
+    return
+  }
+
+  let html = ''
+  filas.forEach((v) => {
+    const isTaller = v.estadoVehiculo === 'en_taller'
+
+    html += `
+      <tr
+        class="group hover:bg-gray-50/40 transition-colors fila-vehiculo"
+        data-patente="${v.patente.toLowerCase()}"
+        data-modelo="${v.marca.toLowerCase()} ${v.modelo.toLowerCase()}"
+        data-estado="${v.estadoVehiculo}"
+      >
+        <td class="sticky left-0 z-10 bg-white group-hover:bg-gray-50/90 transition-colors px-4 py-3.5 border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)] align-top">
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between gap-1">
+              <span class="inline-flex items-center rounded border border-navy/20 bg-navy/5 px-2 py-0.5 font-mono text-xs font-bold text-navy">
+                ${v.patente}
+              </span>
+              ${isTaller ? `
+                <span class="inline-flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800">
+                  <span>En taller</span>
+                </span>
+              ` : `
+                <span class="text-[10px] font-medium text-muted">
+                  ${v.capacidadPasajeros} pas.
+                </span>
+              `}
+            </div>
+            <div>
+              <p class="font-bold text-navy leading-tight">${v.marca} ${v.modelo}</p>
+              <p class="text-[10px] text-muted">${v.tipoVehiculo} · ${v.odometroActual.toLocaleString('es-AR')} km</p>
+            </div>
+          </div>
+        </td>
+    `
+
+    dias.forEach((d) => {
+      const comisiones = v.comisionesPorDia[d.fecha] || []
+      const hasComisiones = comisiones.length > 0
+      const tdClass = `${d.esHoy ? 'bg-blue/[0.02]' : ''} ${isTaller ? 'bg-amber-50/20' : ''}`
+
+      html += `<td class="px-2 py-2 border-r border-gray-200 align-top transition-colors ${tdClass}">`
+
+      if (isTaller) {
+        html += `
+          <div class="flex flex-col items-center justify-center rounded-lg border border-dashed border-amber-300 bg-amber-50/60 p-2 text-center text-amber-800">
+            <span class="text-[10px] font-bold">En Servicio Técnico</span>
+            <span class="text-[9px] text-amber-700/80">No disponible</span>
+          </div>
+        `
+      } else if (hasComisiones) {
+        html += '<div class="space-y-2">'
+        comisiones.forEach((c: any) => {
+          const isEnCurso = c.estado === 'en_curso'
+          const isProgramada = c.estado === 'programada'
+          const isFinalizada = c.estado === 'finalizada'
+
+          const cardStyle = isEnCurso
+            ? 'border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50/60 text-amber-950 ring-1 ring-amber-400/30'
+            : isProgramada
+            ? 'border-blue/30 bg-blue/5 text-navy hover:border-blue'
+            : 'border-emerald-200 bg-emerald-50/50 text-emerald-950'
+
+          const badgeHtml = isEnCurso
+            ? '<span class="inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-1.5 py-0.5 text-[9px] font-bold text-amber-800 border border-amber-500/30 animate-pulse">En viaje</span>'
+            : isProgramada
+            ? '<span class="inline-flex items-center gap-1 rounded-full bg-blue/15 px-1.5 py-0.5 text-[9px] font-bold text-blue">Programada</span>'
+            : '<span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold text-emerald-700">Finalizada</span>'
+
+          const horaSalida = new Date(c.fechaSalidaProgramada).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+
+          html += `
+            <div
+              class="group/card relative rounded-xl border p-2.5 transition-all cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5 card-comision ${cardStyle}"
+              data-comision-id="${c.id}"
+              data-chofer="${c.choferNombre.toLowerCase()} ${c.choferApellido.toLowerCase()}"
+              data-destino="${c.destino.toLowerCase()}"
+              data-estado="${c.estado}"
+              title="Click para ver hoja de ruta y opciones"
+            >
+              <div class="flex items-center justify-between gap-1 mb-1.5">
+                <span class="font-mono text-[9px] font-bold text-muted">${c.codigoComision}</span>
+                ${badgeHtml}
+              </div>
+              <div class="flex items-start gap-1 font-bold text-navy text-[11px] leading-tight mb-1">
+                <span class="line-clamp-1">${c.destino}</span>
+              </div>
+              <div class="flex items-center gap-1 text-[10px] text-gray-700 font-medium mb-1">
+                <span class="truncate">${c.choferNombre} ${c.choferApellido}</span>
+              </div>
+              <div class="flex items-center justify-between text-[9px] text-muted border-t border-black/5 pt-1 mt-1">
+                <span class="truncate">${c.dependenciaNombre.replace('Dirección de ', 'Dir. ')}</span>
+                <span class="font-bold text-navy">${horaSalida} hs</span>
+              </div>
+            </div>
+          `
+        })
+
+        html += `
+          <button
+            type="button"
+            class="w-full rounded-lg border border-dashed border-gray-200 py-1 text-[10px] font-semibold text-gray-400 hover:border-blue hover:text-blue hover:bg-blue/5 transition cursor-pointer flex items-center justify-center gap-1 btn-asignar-celda"
+            data-vehiculo-id="${v.vehiculoId}"
+            data-vehiculo-patente="${v.patente}"
+            data-fecha="${d.fecha}"
+            title="Asignar otro servicio para este día"
+          >
+            <span>+ Otro viaje</span>
+          </button>
+        </div>`
+      } else {
+        html += `
+          <button
+            type="button"
+            class="group/slot flex h-24 w-full flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-transparent text-gray-300 hover:border-blue/60 hover:bg-blue/[0.04] hover:text-blue transition-all cursor-pointer btn-asignar-celda"
+            data-vehiculo-id="${v.vehiculoId}"
+            data-vehiculo-patente="${v.patente}"
+            data-fecha="${d.fecha}"
+            title="Asignar comisión a ${v.patente} el ${d.diaNombre} ${d.diaNumero}"
+          >
+            <div class="flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 group-hover/slot:bg-blue group-hover/slot:text-white transition-colors mb-1 font-bold">
+              +
+            </div>
+            <span class="text-[10px] font-bold opacity-0 group-hover/slot:opacity-100 transition-opacity">
+              Asignar
+            </span>
+            <span class="text-[9px] text-gray-400 group-hover/slot:opacity-0 transition-opacity">
+              Disponible
+            </span>
+          </button>
+        `
+      }
+
+      html += '</td>'
+    })
+
+    html += '</tr>'
+  })
+
+  tbody.innerHTML = html
 }
 
 /**
@@ -77,50 +399,52 @@ function initCronogramaNav() {
 function initCronogramaFilters() {
   const inputFiltro = document.getElementById('input-filtro-cronograma') as HTMLInputElement | null
   const selectEstado = document.getElementById('select-estado-filtro') as HTMLSelectElement | null
+
+  inputFiltro?.addEventListener('input', aplicarFiltrosActivos)
+  selectEstado?.addEventListener('change', aplicarFiltrosActivos)
+}
+
+function aplicarFiltrosActivos() {
+  const inputFiltro = document.getElementById('input-filtro-cronograma') as HTMLInputElement | null
+  const selectEstado = document.getElementById('select-estado-filtro') as HTMLSelectElement | null
   const filasVehiculo = document.querySelectorAll<HTMLTableRowElement>('.fila-vehiculo')
 
-  const aplicarFiltros = () => {
-    const query = inputFiltro?.value.toLowerCase().trim() || ''
-    const estadoFiltro = selectEstado?.value || 'todos'
+  const query = inputFiltro?.value.toLowerCase().trim() || ''
+  const estadoFiltro = selectEstado?.value || 'todos'
 
-    filasVehiculo.forEach((fila) => {
-      const patente = fila.dataset.patente || ''
-      const modelo = fila.dataset.modelo || ''
-      const cards = fila.querySelectorAll<HTMLElement>('.card-comision')
+  filasVehiculo.forEach((fila) => {
+    const patente = fila.dataset.patente || ''
+    const modelo = fila.dataset.modelo || ''
+    const cards = fila.querySelectorAll<HTMLElement>('.card-comision')
 
-      let filaCoincideTexto = patente.includes(query) || modelo.includes(query)
-      let tieneComisionVisible = false
+    let filaCoincideTexto = patente.includes(query) || modelo.includes(query)
+    let tieneComisionVisible = false
 
-      if (cards.length > 0) {
-        cards.forEach((card) => {
-          const chofer = card.dataset.chofer || ''
-          const destino = card.dataset.destino || ''
-          const estado = card.dataset.estado || ''
+    if (cards.length > 0) {
+      cards.forEach((card) => {
+        const chofer = card.dataset.chofer || ''
+        const destino = card.dataset.destino || ''
+        const estado = card.dataset.estado || ''
 
-          const cardCoincideTexto = !query || query.length === 0 || chofer.includes(query) || destino.includes(query) || patente.includes(query)
-          const cardCoincideEstado = estadoFiltro === 'todos' || estado === estadoFiltro
+        const cardCoincideTexto = !query || query.length === 0 || chofer.includes(query) || destino.includes(query) || patente.includes(query)
+        const cardCoincideEstado = estadoFiltro === 'todos' || estado === estadoFiltro
 
-          if (cardCoincideTexto && cardCoincideEstado) {
-            card.style.display = ''
-            tieneComisionVisible = true
-            filaCoincideTexto = true
-          } else {
-            card.style.display = 'none'
-          }
-        })
-      }
+        if (cardCoincideTexto && cardCoincideEstado) {
+          card.style.display = ''
+          tieneComisionVisible = true
+          filaCoincideTexto = true
+        } else {
+          card.style.display = 'none'
+        }
+      })
+    }
 
-      // Si se filtró por estado específico (no todos), solo mostrar filas con comisiones de ese estado
-      if (estadoFiltro !== 'todos') {
-        fila.style.display = tieneComisionVisible ? '' : 'none'
-      } else {
-        fila.style.display = (!query || filaCoincideTexto) ? '' : 'none'
-      }
-    })
-  }
-
-  inputFiltro?.addEventListener('input', aplicarFiltros)
-  selectEstado?.addEventListener('change', aplicarFiltros)
+    if (estadoFiltro !== 'todos') {
+      fila.style.display = tieneComisionVisible ? '' : 'none'
+    } else {
+      fila.style.display = (!query || filaCoincideTexto) ? '' : 'none'
+    }
+  })
 }
 
 /**
@@ -135,7 +459,6 @@ function initDispatchModal() {
   const errorMsg = document.getElementById('dispatch-error-msg')
   const errorText = document.getElementById('dispatch-error-text')
 
-  const selectVehiculo = document.getElementById('dispatch-vehiculo') as HTMLSelectElement | null
   const selectDepto = document.getElementById('dispatch-depto') as HTMLSelectElement | null
   const inputDestino = document.getElementById('dispatch-destino') as HTMLInputElement | null
   const inputSalida = document.getElementById('dispatch-salida') as HTMLInputElement | null
@@ -155,7 +478,6 @@ function initDispatchModal() {
 
   btnOpen?.addEventListener('click', () => {
     form?.reset()
-    // Pre-cargar fecha de hoy a las 08:00
     const now = new Date()
     const pad = (n: number) => String(n).padStart(2, '0')
     const hoyStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
@@ -166,28 +488,6 @@ function initDispatchModal() {
 
   btnClose?.addEventListener('click', closeModal)
   btnCancel?.addEventListener('click', closeModal)
-
-  // Abrir al hacer click en cualquier celda "+ Asignar"
-  document.querySelectorAll<HTMLElement>('.btn-asignar-celda').forEach((btn) => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation()
-      form?.reset()
-
-      const vehiculoId = btn.dataset.vehiculoId
-      const fecha = btn.dataset.fecha
-
-      if (selectVehiculo && vehiculoId) {
-        selectVehiculo.value = vehiculoId
-      }
-
-      if (fecha) {
-        if (inputSalida) inputSalida.value = `${fecha}T08:00`
-        if (inputRegreso) inputRegreso.value = `${fecha}T17:00`
-      }
-
-      openModal()
-    })
-  })
 
   // Sincronizar selector de Departamento con input de destino
   selectDepto?.addEventListener('change', () => {
@@ -237,13 +537,13 @@ function initDispatchModal() {
       })
 
       const data = await res.json()
-
       if (!res.ok || !data.success) {
         throw new Error(data.error || 'Error al despachar la comisión')
       }
 
       closeModal()
-      window.location.reload()
+      // Recargar la semana de inmediato sin recargar toda la página
+      cargarSemana(fechaSemanaActiva)
     } catch (err: any) {
       if (errorMsg && errorText) {
         errorText.innerText = err.message || 'Error al procesar la solicitud'
@@ -256,18 +556,155 @@ function initDispatchModal() {
       }
     }
   })
+
+  bindGridEvents()
+}
+
+/**
+ * Vincula los eventos de click en las celdas y cards de la grilla
+ */
+function bindGridEvents() {
+  const modalDispatch = document.getElementById('modal-dispatch')
+  const form = document.getElementById('form-dispatch') as HTMLFormElement | null
+  const selectVehiculo = document.getElementById('dispatch-vehiculo') as HTMLSelectElement | null
+  const inputSalida = document.getElementById('dispatch-salida') as HTMLInputElement | null
+  const inputRegreso = document.getElementById('dispatch-regreso') as HTMLInputElement | null
+
+  // 1. Click en botones "+ Asignar" o "+ Otro viaje"
+  document.querySelectorAll<HTMLElement>('.btn-asignar-celda').forEach((btn) => {
+    btn.onclick = (e) => {
+      e.stopPropagation()
+      form?.reset()
+
+      const vehiculoId = btn.dataset.vehiculoId
+      const fecha = btn.dataset.fecha
+
+      if (selectVehiculo && vehiculoId) {
+        selectVehiculo.value = vehiculoId
+      }
+
+      if (fecha) {
+        if (inputSalida) inputSalida.value = `${fecha}T08:00`
+        if (inputRegreso) inputRegreso.value = `${fecha}T17:00`
+      }
+
+      if (modalDispatch) {
+        modalDispatch.classList.remove('opacity-0', 'pointer-events-none')
+      }
+    }
+  })
+
+  // 2. Click en tarjetas de comisión
+  document.querySelectorAll<HTMLElement>('.card-comision').forEach((card) => {
+    card.onclick = () => {
+      const id = card.dataset.comisionId
+      if (id) {
+        openDetailModalForId(parseInt(id, 10))
+      }
+    }
+  })
 }
 
 /**
  * 4. Modal de Detalle y Hoja de Ruta
  */
+let detailModalInitialized = false
+let currentComisionId: number | null = null
+
 function initDetailModal() {
+  if (detailModalInitialized) return
+  detailModalInitialized = true
+
   const modal = document.getElementById('modal-detail')
   const btnClose = document.getElementById('btn-close-detail-modal')
   const btnCloseFooter = document.getElementById('btn-close-detail-modal-footer')
-  const feedbackMsg = document.getElementById('detail-feedback-msg')
+  const btnConfirmarSalida = document.getElementById('btn-confirmar-salida')
+  const btnConfirmarRegreso = document.getElementById('btn-confirmar-regreso')
+  const btnCancelarComision = document.getElementById('btn-cancelar-comision')
+  const btnImprimirHoja = document.getElementById('btn-imprimir-hoja-ruta')
+  const inputOdoSalida = document.getElementById('input-odo-salida') as HTMLInputElement | null
+  const inputOdoRegreso = document.getElementById('input-odo-regreso') as HTMLInputElement | null
 
-  // Elementos de contenido
+  const closeModal = () => {
+    if (!modal) return
+    modal.classList.add('opacity-0', 'pointer-events-none')
+    currentComisionId = null
+  }
+
+  btnClose?.addEventListener('click', closeModal)
+  btnCloseFooter?.addEventListener('click', closeModal)
+
+  btnConfirmarSalida?.addEventListener('click', async () => {
+    if (!currentComisionId) return
+    const odo = inputOdoSalida?.value ? parseInt(inputOdoSalida.value, 10) : undefined
+
+    try {
+      const res = await fetch(`/api/cronograma/${currentComisionId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado: 'en_curso', odometroSalida: odo }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) throw new Error(data.error || 'Error al registrar salida')
+      closeModal()
+      cargarSemana(fechaSemanaActiva)
+    } catch (err: any) {
+      alert(err.message || 'Error al registrar salida')
+    }
+  })
+
+  btnConfirmarRegreso?.addEventListener('click', async () => {
+    if (!currentComisionId) return
+    const odo = inputOdoRegreso?.value ? parseInt(inputOdoRegreso.value, 10) : undefined
+    if (!odo) {
+      alert('Por favor ingrese el odómetro de llegada para cerrar la hoja de ruta.')
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/cronograma/${currentComisionId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado: 'finalizada', odometroRegreso: odo }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) throw new Error(data.error || 'Error al registrar regreso')
+      closeModal()
+      cargarSemana(fechaSemanaActiva)
+    } catch (err: any) {
+      alert(err.message || 'Error al registrar regreso')
+    }
+  })
+
+  btnCancelarComision?.addEventListener('click', async () => {
+    if (!currentComisionId) return
+    if (!confirm('¿Está seguro de que desea cancelar esta comisión oficial?')) return
+
+    try {
+      const res = await fetch(`/api/cronograma/${currentComisionId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado: 'cancelada' }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) throw new Error(data.error || 'Error al cancelar comisión')
+      closeModal()
+      cargarSemana(fechaSemanaActiva)
+    } catch (err: any) {
+      alert(err.message || 'Error al cancelar comisión')
+    }
+  })
+
+  btnImprimirHoja?.addEventListener('click', () => {
+    window.print()
+  })
+}
+
+async function openDetailModalForId(id: number) {
+  const modal = document.getElementById('modal-detail')
+  currentComisionId = id
+  if (modal) modal.classList.remove('opacity-0', 'pointer-events-none')
+
   const elCodigo = document.getElementById('detail-codigo')
   const elBadgeEstado = document.getElementById('detail-badge-estado')
   const elVehiculoPatente = document.getElementById('detail-vehiculo-patente')
@@ -289,28 +726,12 @@ function initDetailModal() {
   const elKmTotal = document.getElementById('detail-km-total')
   const elObservaciones = document.getElementById('detail-observaciones')
 
-  // Secciones operativas
   const secAcciones = document.getElementById('section-acciones-operativas')
   const formSalida = document.getElementById('form-marcar-salida')
   const formRegreso = document.getElementById('form-marcar-regreso')
   const inputOdoSalida = document.getElementById('input-odo-salida') as HTMLInputElement | null
   const inputOdoRegreso = document.getElementById('input-odo-regreso') as HTMLInputElement | null
-  const btnConfirmarSalida = document.getElementById('btn-confirmar-salida')
-  const btnConfirmarRegreso = document.getElementById('btn-confirmar-regreso')
   const btnCancelarComision = document.getElementById('btn-cancelar-comision')
-  const btnImprimirHoja = document.getElementById('btn-imprimir-hoja-ruta')
-
-  let currentComisionId: number | null = null
-
-  const closeModal = () => {
-    if (!modal) return
-    modal.classList.add('opacity-0', 'pointer-events-none')
-    currentComisionId = null
-    if (feedbackMsg) feedbackMsg.classList.add('hidden')
-  }
-
-  btnClose?.addEventListener('click', closeModal)
-  btnCloseFooter?.addEventListener('click', closeModal)
 
   const formatFechaHora = (isoStr: string | null) => {
     if (!isoStr) return 'No registrado'
@@ -324,155 +745,74 @@ function initDetailModal() {
     })
   }
 
-  // Click en cualquier card de comisión
-  document.querySelectorAll<HTMLElement>('.card-comision').forEach((card) => {
-    card.addEventListener('click', async () => {
-      const id = card.dataset.comisionId
-      if (!id) return
+  try {
+    const res = await fetch(`/api/cronograma/${id}`)
+    if (!res.ok) throw new Error('Error al obtener datos de la comisión')
+    const c = await res.json()
 
-      currentComisionId = parseInt(id, 10)
-      if (modal) modal.classList.remove('opacity-0', 'pointer-events-none')
+    if (elCodigo) elCodigo.innerText = c.codigoComision
+    if (elVehiculoPatente) elVehiculoPatente.innerText = c.vehiculoPatente
+    if (elVehiculoModelo) elVehiculoModelo.innerText = c.vehiculoModelo
+    if (elChoferNombre) elChoferNombre.innerText = `${c.choferNombre} ${c.choferApellido}`
+    if (elDependenciaNombre) elDependenciaNombre.innerText = c.dependenciaNombre
+    if (elOrigen) elOrigen.innerText = c.origen
+    if (elDestino) elDestino.innerText = c.destino
+    if (elMotivo) elMotivo.innerText = c.motivo
+    if (elSolicitante) elSolicitante.innerText = c.solicitanteNombre || 'No especificado'
+    if (elPasajeros) elPasajeros.innerText = `${c.cantidadPasajeros} personas`
 
-      try {
-        const res = await fetch(`/api/cronograma/${id}`)
-        if (!res.ok) throw new Error('Error al obtener datos de la comisión')
-        const c = await res.json()
+    if (elSalidaProg) elSalidaProg.innerText = formatFechaHora(c.fechaSalidaProgramada)
+    if (elSalidaReal) elSalidaReal.innerText = formatFechaHora(c.fechaSalidaReal)
+    if (elOdoSalida) elOdoSalida.innerText = c.odometroSalida ? c.odometroSalida.toLocaleString('es-AR') : '--'
 
-        if (elCodigo) elCodigo.innerText = c.codigoComision
-        if (elVehiculoPatente) elVehiculoPatente.innerText = c.vehiculoPatente
-        if (elVehiculoModelo) elVehiculoModelo.innerText = c.vehiculoModelo
-        if (elChoferNombre) elChoferNombre.innerText = `${c.choferNombre} ${c.choferApellido}`
-        if (elDependenciaNombre) elDependenciaNombre.innerText = c.dependenciaNombre
-        if (elOrigen) elOrigen.innerText = c.origen
-        if (elDestino) elDestino.innerText = c.destino
-        if (elMotivo) elMotivo.innerText = c.motivo
-        if (elSolicitante) elSolicitante.innerText = c.solicitanteNombre || 'No especificado'
-        if (elPasajeros) elPasajeros.innerText = `${c.cantidadPasajeros} personas`
+    if (elRegresoEstimado) elRegresoEstimado.innerText = formatFechaHora(c.fechaRegresoEstimada)
+    if (elRegresoReal) elRegresoReal.innerText = formatFechaHora(c.fechaRegresoReal)
+    if (elOdoRegreso) elOdoRegreso.innerText = c.odometroRegreso ? c.odometroRegreso.toLocaleString('es-AR') : '--'
 
-        if (elSalidaProg) elSalidaProg.innerText = formatFechaHora(c.fechaSalidaProgramada)
-        if (elSalidaReal) elSalidaReal.innerText = formatFechaHora(c.fechaSalidaReal)
-        if (elOdoSalida) elOdoSalida.innerText = c.odometroSalida ? c.odometroSalida.toLocaleString('es-AR') : '--'
+    if (elObservaciones) elObservaciones.innerText = c.observaciones || 'Sin observaciones registradas.'
 
-        if (elRegresoEstimado) elRegresoEstimado.innerText = formatFechaHora(c.fechaRegresoEstimada)
-        if (elRegresoReal) elRegresoReal.innerText = formatFechaHora(c.fechaRegresoReal)
-        if (elOdoRegreso) elOdoRegreso.innerText = c.odometroRegreso ? c.odometroRegreso.toLocaleString('es-AR') : '--'
-
-        if (elObservaciones) elObservaciones.innerText = c.observaciones || 'Sin observaciones registradas.'
-
-        // Badge de estado
-        if (elBadgeEstado) {
-          if (c.estado === 'en_curso') {
-            elBadgeEstado.className = 'inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-300 border border-amber-500/40'
-            elBadgeEstado.innerText = 'En Viaje'
-          } else if (c.estado === 'programada') {
-            elBadgeEstado.className = 'inline-flex items-center gap-1 rounded-full bg-blue/20 px-2 py-0.5 text-[10px] font-bold text-blue-300 border border-blue/40'
-            elBadgeEstado.innerText = 'Programada'
-          } else if (c.estado === 'finalizada') {
-            elBadgeEstado.className = 'inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300 border border-emerald-500/40'
-            elBadgeEstado.innerText = 'Finalizada'
-          } else {
-            elBadgeEstado.className = 'inline-flex items-center gap-1 rounded-full bg-red-500/20 px-2 py-0.5 text-[10px] font-bold text-red-300 border border-red-500/40'
-            elBadgeEstado.innerText = 'Cancelada'
-          }
-        }
-
-        // Sección de KM
-        if (elKmSection && elKmTotal) {
-          if (c.kmRecorridos !== null && c.kmRecorridos !== undefined) {
-            elKmTotal.innerText = `${c.kmRecorridos.toLocaleString('es-AR')} km`
-            elKmSection.classList.remove('hidden')
-          } else {
-            elKmSection.classList.add('hidden')
-          }
-        }
-
-        // Configuración de botones según el estado
-        if (c.estado === 'programada') {
-          secAcciones?.classList.remove('hidden')
-          formSalida?.classList.remove('hidden')
-          formRegreso?.classList.add('hidden')
-          btnCancelarComision?.classList.remove('hidden')
-          if (inputOdoSalida && c.odometroSalida) inputOdoSalida.value = c.odometroSalida
-        } else if (c.estado === 'en_curso') {
-          secAcciones?.classList.remove('hidden')
-          formSalida?.classList.add('hidden')
-          formRegreso?.classList.remove('hidden')
-          btnCancelarComision?.classList.remove('hidden')
-          if (inputOdoRegreso && c.odometroSalida) inputOdoRegreso.value = c.odometroSalida
-        } else {
-          secAcciones?.classList.add('hidden')
-          btnCancelarComision?.classList.add('hidden')
-        }
-      } catch (err: any) {
-        alert(err.message || 'Error al cargar detalles')
-        closeModal()
+    if (elBadgeEstado) {
+      if (c.estado === 'en_curso') {
+        elBadgeEstado.className = 'inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-300 border border-amber-500/40'
+        elBadgeEstado.innerText = 'En Viaje'
+      } else if (c.estado === 'programada') {
+        elBadgeEstado.className = 'inline-flex items-center gap-1 rounded-full bg-blue/20 px-2 py-0.5 text-[10px] font-bold text-blue-300 border border-blue/40'
+        elBadgeEstado.innerText = 'Programada'
+      } else if (c.estado === 'finalizada') {
+        elBadgeEstado.className = 'inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300 border border-emerald-500/40'
+        elBadgeEstado.innerText = 'Finalizada'
+      } else {
+        elBadgeEstado.className = 'inline-flex items-center gap-1 rounded-full bg-red-500/20 px-2 py-0.5 text-[10px] font-bold text-red-300 border border-red-500/40'
+        elBadgeEstado.innerText = 'Cancelada'
       }
-    })
-  })
-
-  // Confirmar salida
-  btnConfirmarSalida?.addEventListener('click', async () => {
-    if (!currentComisionId) return
-    const odo = inputOdoSalida?.value ? parseInt(inputOdoSalida.value, 10) : undefined
-
-    try {
-      const res = await fetch(`/api/cronograma/${currentComisionId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estado: 'en_curso', odometroSalida: odo }),
-      })
-      const data = await res.json()
-      if (!res.ok || !data.success) throw new Error(data.error || 'Error al registrar salida')
-      window.location.reload()
-    } catch (err: any) {
-      alert(err.message || 'Error al registrar salida')
-    }
-  })
-
-  // Confirmar regreso
-  btnConfirmarRegreso?.addEventListener('click', async () => {
-    if (!currentComisionId) return
-    const odo = inputOdoRegreso?.value ? parseInt(inputOdoRegreso.value, 10) : undefined
-    if (!odo) {
-      alert('Por favor ingrese el odómetro de llegada para cerrar la hoja de ruta.')
-      return
     }
 
-    try {
-      const res = await fetch(`/api/cronograma/${currentComisionId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estado: 'finalizada', odometroRegreso: odo }),
-      })
-      const data = await res.json()
-      if (!res.ok || !data.success) throw new Error(data.error || 'Error al registrar regreso')
-      window.location.reload()
-    } catch (err: any) {
-      alert(err.message || 'Error al registrar regreso')
+    if (elKmSection && elKmTotal) {
+      if (c.kmRecorridos !== null && c.kmRecorridos !== undefined) {
+        elKmTotal.innerText = `${c.kmRecorridos.toLocaleString('es-AR')} km`
+        elKmSection.classList.remove('hidden')
+      } else {
+        elKmSection.classList.add('hidden')
+      }
     }
-  })
 
-  // Cancelar comisión
-  btnCancelarComision?.addEventListener('click', async () => {
-    if (!currentComisionId) return
-    if (!confirm('¿Está seguro de que desea cancelar esta comisión oficial?')) return
-
-    try {
-      const res = await fetch(`/api/cronograma/${currentComisionId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estado: 'cancelada' }),
-      })
-      const data = await res.json()
-      if (!res.ok || !data.success) throw new Error(data.error || 'Error al cancelar comisión')
-      window.location.reload()
-    } catch (err: any) {
-      alert(err.message || 'Error al cancelar comisión')
+    if (c.estado === 'programada') {
+      secAcciones?.classList.remove('hidden')
+      formSalida?.classList.remove('hidden')
+      formRegreso?.classList.add('hidden')
+      btnCancelarComision?.classList.remove('hidden')
+      if (inputOdoSalida && c.odometroSalida) inputOdoSalida.value = c.odometroSalida
+    } else if (c.estado === 'en_curso') {
+      secAcciones?.classList.remove('hidden')
+      formSalida?.classList.add('hidden')
+      formRegreso?.classList.remove('hidden')
+      btnCancelarComision?.classList.remove('hidden')
+      if (inputOdoRegreso && c.odometroSalida) inputOdoRegreso.value = c.odometroSalida
+    } else {
+      secAcciones?.classList.add('hidden')
+      btnCancelarComision?.classList.add('hidden')
     }
-  })
-
-  // Imprimir hoja de ruta
-  btnImprimirHoja?.addEventListener('click', () => {
-    window.print()
-  })
+  } catch (err: any) {
+    alert(err.message || 'Error al cargar detalles')
+  }
 }
