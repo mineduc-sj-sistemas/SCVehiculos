@@ -11,12 +11,12 @@ interface Props {
 const { vehicles } = Astro.props
 ---
 
-<section class="card overflow-hidden shadow-sm">
+<section id="fleet-table-container" class="card overflow-hidden shadow-sm hidden mb-8">
   <div class="flex items-center justify-between border-b border-line px-6 py-4">
     <div>
       <h3 class="font-display text-base font-bold text-navy">Parque Automotor Registrado</h3>
       <p class="text-xs text-muted">
-        Mostrando <span id="visible-count" class="font-bold text-navy">{vehicles.length}</span> de {vehicles.length} unidades oficiales
+        Vista de tabla detallada para auditoría y control de unidades
       </p>
     </div>
   </div>
@@ -45,6 +45,12 @@ const { vehicles } = Astro.props
             data-marca={v.marca.toLowerCase()}
             data-modelo={v.modelo.toLowerCase()}
             data-cedula={v.numeroCedula ? v.numeroCedula.toLowerCase() : ''}
+            data-titular={v.titularNombre ? v.titularNombre.toLowerCase() : ''}
+            data-registro={v.registroSeccional ? v.registroSeccional.toLowerCase() : ''}
+            data-color={v.color ? v.color.toLowerCase() : ''}
+            data-tiene08={v.tiene08 ? '1' : '0'}
+            data-estado08={v.estado08}
+            data-semaforo08={v.estado08Semaforo}
             data-estado={v.estado}
             data-tipo={v.tipoNombre}
             data-dependencia={v.dependenciaNombre}

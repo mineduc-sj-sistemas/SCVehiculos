@@ -1,16 +1,18 @@
 ---
-import { AlertTriangle, Route, ShieldAlert, ShieldCheck, Truck, Wrench } from 'lucide-astro'
+import { AlertTriangle, FileCheck2, Route, ShieldAlert, ShieldCheck, Truck, Wrench } from 'lucide-astro'
 import type { DashboardStats } from '../../backend/types'
 
 interface Props {
   stats: DashboardStats
   rtoAlertsCount: number
+  total08Count?: number
+  alerts08Count?: number
 }
 
-const { stats, rtoAlertsCount } = Astro.props
+const { stats, rtoAlertsCount, total08Count = 0, alerts08Count = 0 } = Astro.props
 ---
 
-<section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5 mb-6">
+<section class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4 mb-6">
   <!-- Total Flota -->
   <div class="card p-4 flex items-center justify-between">
     <div>
@@ -66,10 +68,30 @@ const { stats, rtoAlertsCount } = Astro.props
       <p class={`mt-1 font-display text-2xl font-bold ${rtoAlertsCount > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
         {String(rtoAlertsCount).padStart(2, '0')}
       </p>
-      <p class="text-[10px] text-muted">Vencidas o próx. a vencer</p>
+      <p class="text-[10px] text-muted">Vencidas o próx.</p>
     </div>
     <div class={`flex h-10 w-10 items-center justify-center rounded-xl ${rtoAlertsCount > 0 ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`}>
       <ShieldAlert size={20} />
+    </div>
+  </div>
+
+  <!-- Formularios 08 -->
+  <div class="card p-4 flex items-center justify-between">
+    <div>
+      <p class="text-[11px] font-bold text-muted uppercase tracking-wider">Formularios 08</p>
+      <p class="mt-1 font-display text-2xl font-bold text-navy">
+        {String(total08Count).padStart(2, '0')}
+      </p>
+      <p class="text-[10px] text-muted">
+        {alerts08Count > 0 ? (
+          <span class="text-amber-600 font-bold">{alerts08Count} en alerta</span>
+        ) : (
+          'Al día'
+        )}
+      </p>
+    </div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+      <FileCheck2 size={20} />
     </div>
   </div>
 </section>

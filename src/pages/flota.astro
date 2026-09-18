@@ -3,6 +3,7 @@ import { Plus } from 'lucide-astro'
 import DashboardLayout from '../frontend/layouts/DashboardLayout.astro'
 import VehicleKpiCards from '../frontend/components/flota/VehicleKpiCards.astro'
 import VehicleFilters from '../frontend/components/flota/VehicleFilters.astro'
+import VehicleCardGrid from '../frontend/components/flota/VehicleCardGrid.astro'
 import VehicleTable from '../frontend/components/flota/VehicleTable.astro'
 import VehicleDetailModal from '../frontend/components/flota/VehicleDetailModal.astro'
 import VehicleFormModal from '../frontend/components/flota/VehicleFormModal.astro'
@@ -18,6 +19,12 @@ const [vehicles, types, dependencias, stats] = await Promise.all([
 
 // Cálculo de alertas RTO
 const rtoAlertsCount = vehicles.filter((v) => v.vtvStatus === 'proxima' || v.vtvStatus === 'vencida').length
+
+// Cálculo de métricas Formulario 08
+const total08Count = vehicles.filter((v) => v.tiene08).length
+const alerts08Count = vehicles.filter(
+  (v) => v.tiene08 && (v.estado08Semaforo === 'proximo' || v.estado08Semaforo === 'vencido')
+).length
 ---
 
 <DashboardLayout activeNav="flota" title="Vehículos y Flota · Movilidades · Ministerio de Educación">
@@ -32,7 +39,7 @@ const rtoAlertsCount = vehicles.filter((v) => v.vtvStatus === 'proxima' || v.vtv
         <span>Parque Automotor</span>
       </div>
       <h2 class="font-display text-[26px] font-bold tracking-tight text-navy">Gestión de Unidades</h2>
-      <p class="mt-0.5 text-xs text-muted">Control de patentes, cédulas, RTO, historial mecánico y comisiones de viaje.</p>
+      <p class="mt-0.5 text-xs text-muted">Control de patentes, titularidad, Formulario 08, RTO e historial operativo.</p>
     </div>
     
     <div class="flex items-center gap-2">
@@ -47,13 +54,29 @@ const rtoAlertsCount = vehicles.filter((v) => v.vtvStatus === 'proxima' || v.vtv
   </div>
 
   <!-- Tarjetas KPI del Parque Automotor (Componente de Frontend) -->
-  <VehicleKpiCards stats={stats} rtoAlertsCount={rtoAlertsCount} />
+  <VehicleKpiCards stats={stats} rtoAlertsCount={rtoAlertsCount} total08Count={total08Count} alerts08Count={alerts08Count} />
 
-  <!-- Buscador y Filtros desplegables (Componente de Frontend) -->
+  <!-- Buscador, Filtros desplegables y Conmutador Cards/Tabla -->
   <VehicleFilters types={types} dependencias={dependencias} />
 
-  <!-- Tabla Principal de la Flota (Componente de Frontend) -->
+  <!-- Encabezado de Resultados -->
+  <div class="flex items-center justify-between mb-4 px-1">
+    <p class="text-xs text-muted">
+      Mostrando <span id="visible-count" class="font-bold text-navy">{vehicles.length}</span> de {vehicles.length} unidades registradas
+    </p>
+  </div>
+
+  <!-- VISTA 1: GRID DE TARJETAS (CARDS) DE VEHÍCULOS (DEFAULT) -->
+  <VehicleCardGrid vehicles={vehicles} />
+
+  <!-- VISTA 2: TABLA PRINCIPAL DE LA FLOTA (CONMUTABLE) -->
   <VehicleTable vehicles={vehicles} />
+
+  <!-- Mensaje cuando no hay resultados en los filtros -->
+  <div id="no-results" class="hidden card p-10 text-center my-6">
+    <p class="font-display text-base font-bold text-navy">No se encontraron vehículos con los filtros aplicados</p>
+    <p class="text-xs text-muted mt-1">Prueba modificando los criterios de búsqueda o limpiando los filtros.</p>
+  </div>
 
   <!-- Modales integrados en el slot específico del body -->
   <Fragment slot="modals">

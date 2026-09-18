@@ -1,0 +1,191 @@
+---
+import { ChevronRight, Edit3, FileCheck2, Fuel, Gauge, MapPin, Plus, ShieldCheck, Truck } from 'lucide-astro'
+import VehicleGraphic from './VehicleGraphic.astro'
+import type { VehicleFull } from '../../backend/types'
+
+interface Props {
+  vehicles: VehicleFull[]
+}
+
+const { vehicles } = Astro.props
+---
+
+<div id="fleet-card-container">
+  {vehicles.length === 0 ? (
+    <div class="card p-12 text-center flex flex-col items-center justify-center max-w-lg mx-auto my-6 border-dashed border-2">
+      <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-sky text-blue mb-4 shadow-xs">
+        <Truck size={32} />
+      </div>
+      <h3 class="font-display text-lg font-bold text-navy">Sin unidades en el parque automotor</h3>
+      <p class="text-xs text-muted mt-1 max-w-sm mb-6">
+        Comienza registrando la primera unidad oficial del Ministerio de Educación. Podrás cargar patente, titular, Formulario 08, RTO y documentación oficial.
+      </p>
+      <button
+        type="button"
+        onclick="window.openVehicleCreateModal && window.openVehicleCreateModal()"
+        class="flex items-center gap-2 rounded-xl bg-blue px-6 py-3 text-xs font-bold text-white shadow-md shadow-blue/20 hover:opacity-90 transition cursor-pointer"
+      >
+        <Plus size={16} strokeWidth={2.5} />
+        <span>Registrar primera unidad</span>
+      </button>
+    </div>
+  ) : (
+    <div id="fleet-card-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
+      {vehicles.map((v) => (
+        <div
+          class="card relative flex flex-col justify-between overflow-hidden p-5 transition-all duration-200 hover:shadow-lg hover:border-blue/40 cursor-pointer group vehicle-card"
+          data-id={v.id}
+          data-patente={v.patente.toLowerCase()}
+          data-marca={v.marca.toLowerCase()}
+          data-modelo={v.modelo.toLowerCase()}
+          data-cedula={v.numeroCedula ? v.numeroCedula.toLowerCase() : ''}
+          data-titular={v.titularNombre ? v.titularNombre.toLowerCase() : ''}
+          data-registro={v.registroSeccional ? v.registroSeccional.toLowerCase() : ''}
+          data-color={v.color ? v.color.toLowerCase() : ''}
+          data-tiene08={v.tiene08 ? '1' : '0'}
+          data-estado08={v.estado08}
+          data-semaforo08={v.estado08Semaforo}
+          data-estado={v.estado}
+          data-tipo={v.tipoNombre}
+          data-dependencia={v.dependenciaNombre}
+          onclick={`window.openVehicleDetailModal && window.openVehicleDetailModal(${v.id})`}
+        >
+          <!-- Encabezado de la Tarjeta: Patente, Color y Estado -->
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <div class="flex items-center gap-2">
+              <span class="rounded-lg border-2 border-navy/20 bg-white px-2.5 py-1 font-mono text-sm font-extrabold tracking-wider text-navy shadow-2xs group-hover:border-blue transition">
+                {v.patente}
+              </span>
+              {v.color && (
+                <span class="flex items-center gap-1 text-[11px] text-muted font-semibold">
+                  <span class="inline-block h-2.5 w-2.5 rounded-full border border-line bg-slate-300" />
+                  <span class="hidden sm:inline">{v.color}</span>
+                </span>
+              )}
+            </div>
+
+            <div class="flex items-center gap-1.5">
+              <span
+                class:list={[
+                  'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold shadow-2xs',
+                  v.tone === 'green' ? 'bg-[#e8f7ef] text-[#20864f] border border-[#20864f]/20' : '',
+                  v.tone === 'blue' ? 'bg-sky text-blue border border-blue/20' : '',
+                  v.tone === 'orange' ? 'bg-[#fff0e4] text-[#bf6e32] border border-[#bf6e32]/20' : '',
+                  v.tone === 'gray' ? 'bg-paper text-muted border border-line' : '',
+                ]}
+              >
+                <span
+                  class:list={[
+                    'h-2 w-2 rounded-full',
+                    v.tone === 'green' ? 'bg-[#20864f] animate-pulse' : '',
+                    v.tone === 'blue' ? 'bg-blue' : '',
+                    v.tone === 'orange' ? 'bg-[#bf6e32]' : '',
+                    v.tone === 'gray' ? 'bg-muted' : '',
+                  ]}
+                />
+                {v.estadoLabel}
+              </span>
+
+              <button
+                type="button"
+                class="btn-edit-vehicle rounded-lg p-1.5 text-muted hover:bg-paper hover:text-navy border border-transparent hover:border-line transition cursor-pointer"
+                data-id={v.id}
+                onclick={`event.stopPropagation(); window.openVehicleEditModal && window.openVehicleEditModal(${v.id});`}
+                title="Editar datos del vehículo"
+              >
+                <Edit3 size={15} />
+              </button>
+            </div>
+          </div>
+
+          <!-- Marca, Modelo y Versión -->
+          <div class="mb-2">
+            <h4 class="font-display text-base font-bold text-navy group-hover:text-blue transition">
+              {v.marca} {v.modelo}
+            </h4>
+            <p class="text-xs text-muted">
+              {v.tipoNombre} {v.version ? `· ${v.version}` : ''} {v.anio ? `· ${v.anio}` : ''}
+            </p>
+          </div>
+
+          <!-- Gráfico o Fotografía del Vehículo -->
+          <VehicleGraphic
+            tipoNombre={v.tipoNombre}
+            fotoUrl={v.fotoUrl}
+            color={v.color}
+            marca={v.marca}
+            modelo={v.modelo}
+            className="h-36 w-full my-2 border border-line/60"
+          />
+
+          <!-- Métricas técnicas (Odómetro, Combustible, 08, RTO) -->
+          <div class="mt-3 grid grid-cols-2 gap-2 text-xs pt-3 border-t border-line">
+            <div class="flex items-center gap-1.5 text-muted">
+              <Gauge size={14} class="text-blue shrink-0" />
+              <span class="font-bold text-navy">{v.odometroFormatted}</span>
+            </div>
+            <div class="flex items-center gap-1.5 text-muted">
+              <Fuel size={14} class="text-blue shrink-0" />
+              <span class="truncate">{v.tipoCombustibleLabel}</span>
+            </div>
+
+            <!-- Formulario 08 -->
+            <div class="flex items-center gap-1.5 truncate">
+              <FileCheck2
+                size={14}
+                class={
+                  v.estado08Semaforo === 'vigente' || v.estado08 === 'inscripto'
+                    ? 'text-[#20864f]'
+                    : v.estado08Semaforo === 'proximo'
+                      ? 'text-amber-600'
+                      : v.estado08Semaforo === 'vencido'
+                        ? 'text-rose-600'
+                        : 'text-muted'
+                }
+              />
+              <span
+                class:list={[
+                  'rounded px-1.5 py-0.5 text-[10px] font-bold truncate',
+                  v.estado08Semaforo === 'vigente' || v.estado08 === 'inscripto' ? 'bg-[#e8f7ef] text-[#20864f]' : '',
+                  v.estado08Semaforo === 'proximo' ? 'bg-amber-100 text-amber-800 animate-pulse' : '',
+                  v.estado08Semaforo === 'vencido' ? 'bg-rose-100 text-rose-700' : '',
+                  (!v.estado08Semaforo || v.estado08Semaforo === 'neutral' || v.estado08 === 'no_aplica')
+                    ? 'bg-paper text-muted'
+                    : '',
+                ]}
+              >
+                {v.estado08Label}
+              </span>
+            </div>
+
+            <!-- RTO / VTV -->
+            <div class="flex items-center gap-1.5 text-muted truncate">
+              <ShieldCheck
+                size={14}
+                class={
+                  v.vtvStatus === 'vigente'
+                    ? 'text-[#20864f]'
+                    : v.vtvStatus === 'proxima'
+                      ? 'text-amber-600'
+                      : 'text-rose-600'
+                }
+              />
+              <span class="text-[11px] truncate">RTO: {v.vtvFormatted}</span>
+            </div>
+          </div>
+
+          <!-- Pie de tarjeta: Área asignada y Acceso a Ficha 360° -->
+          <div class="mt-3 pt-2.5 border-t border-line flex items-center justify-between text-xs">
+            <div class="flex items-center gap-1 text-blue font-semibold truncate max-w-[200px]" title={v.dependenciaNombre}>
+              <MapPin size={13} class="shrink-0" />
+              <span class="truncate">{v.dependenciaNombre}</span>
+            </div>
+            <span class="text-[11px] font-bold text-muted group-hover:text-blue transition flex items-center gap-0.5">
+              Ficha 360° <ChevronRight size={13} />
+            </span>
+          </div>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
