@@ -19,3 +19,13 @@ export { default as VehicleFilters } from './components/flota/VehicleFilters.ast
 export { default as VehicleTable } from './components/flota/VehicleTable.astro'
 export { default as VehicleDetailModal } from './components/flota/VehicleDetailModal.astro'
 export { default as VehicleFormModal } from './components/flota/VehicleFormModal.astro'
+
+// Componentes del módulo de Choferes
+export { default as ChoferKpiCards } from './components/choferes/ChoferKpiCards.astro'
+export { default as ChoferFilters } from './components/choferes/ChoferFilters.astro'
+export { default as ChoferTable } from './components/choferes/ChoferTable.astro'
+export { default as ChoferDetailModal } from './components/choferes/ChoferDetailModal.astro'
+export { default as ChoferFormModal } from './components/choferes/ChoferFormModal.astro'
+export { default as ChoferLicenciaFormModal } from './components/choferes/ChoferLicenciaFormModal.astro'
+export * from './scripts/choferesController'
+

@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import 'flatpickr/dist/flatpickr.min.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -40,9 +41,85 @@ button, input, select, textarea { font: inherit; }
   box-shadow: 0 5px 16px rgba(20, 43, 74, .035); 
 }
 
+.mobile-overlay { display: none; }
+
 @media (max-width: 900px) {
   .sidebar { transform: translateX(-100%); transition: transform .2s ease; }
   .sidebar.open { transform: translateX(0); }
-  .mobile-overlay { display: none; }
   .mobile-overlay.open { display: block; }
 }
+
+/* ============================================================= */
+/* Modern Custom Flatpickr Calendar Styling                      */
+/* ============================================================= */
+
+.flatpickr-calendar {
+  background: #ffffff !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 15px 30px -5px rgba(20, 43, 74, 0.15), 0 5px 15px -3px rgba(20, 43, 74, 0.08) !important;
+  font-family: 'Nunito Sans', sans-serif !important;
+  z-index: 99999 !important;
+}
+
+.flatpickr-months {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 4px;
+}
+
+.flatpickr-current-month {
+  font-family: 'Nunito Sans', sans-serif;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.flatpickr-current-month .cur-month {
+  font-weight: 800;
+  color: var(--navy);
+}
+
+.flatpickr-current-month input.cur-year {
+  font-weight: 800;
+  color: var(--navy);
+}
+
+.flatpickr-months .flatpickr-prev-month:hover svg, 
+.flatpickr-months .flatpickr-next-month:hover svg {
+  fill: var(--blue) !important;
+}
+
+span.flatpickr-weekday {
+  color: var(--muted) !important;
+  font-weight: 800 !important;
+  font-size: 11px !important;
+}
+
+.flatpickr-day {
+  border-radius: 8px !important;
+  color: var(--navy) !important;
+  font-weight: 600 !important;
+  transition: all 0.15s ease !important;
+}
+
+.flatpickr-day:hover {
+  background: var(--sky) !important;
+  color: var(--blue) !important;
+  border-color: transparent !important;
+}
+
+.flatpickr-day.today {
+  border: 1.5px solid var(--blue) !important;
+  color: var(--blue) !important;
+  background: transparent !important;
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange {
+  background: var(--blue) !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  border-color: var(--blue) !important;
+  box-shadow: 0 4px 8px rgba(23, 105, 170, 0.35) !important;
+}
+

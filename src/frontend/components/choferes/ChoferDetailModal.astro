@@ -1,0 +1,280 @@
+---
+import { Calendar, CalendarDays, CheckCircle2, ChevronRight, FileBadge, FileText, Mail, MapPin, Phone, Route, ShieldAlert, ShieldCheck, User, X } from 'lucide-astro'
+---
+
+<div id="chofer-detail-modal" class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-navy/60 p-4 backdrop-blur-sm transition-opacity" style="display: none;">
+  <div class="relative w-full max-w-4xl rounded-2xl bg-white shadow-2xl border border-line flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between border-b border-line bg-paper px-6 py-4">
+      <div class="flex items-center gap-3">
+        <div id="modal-chofer-avatar" class="flex h-11 w-11 items-center justify-center rounded-xl bg-blue text-white font-display text-base font-bold shadow-xs">
+          CH
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 id="modal-chofer-nombre" class="font-display text-lg font-bold text-navy">Ficha del Chofer</h2>
+            <span id="modal-chofer-cat" class="rounded border border-line bg-white px-2 py-0.5 font-mono text-xs font-bold text-blue shadow-xs">
+              Cat. B2
+            </span>
+            <span id="modal-chofer-status" class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold bg-emerald-50 text-emerald-600">
+              Disponible
+            </span>
+          </div>
+          <p id="modal-chofer-subtitulo" class="text-xs text-muted">Datos de filiación, licencia nacional de conducir y comisiones</p>
+        </div>
+      </div>
+      <button id="close-chofer-detail-modal" class="rounded-lg p-2 text-muted hover:bg-sky hover:text-navy transition cursor-pointer" aria-label="Cerrar modal">
+        <X size={20} />
+      </button>
+    </div>
+
+    <!-- Modal Tabs Navigation -->
+    <div class="flex border-b border-line bg-white px-6 overflow-x-auto">
+      <button data-tab="info" class="tab-btn active border-b-2 border-blue px-4 py-3 text-xs font-bold text-blue flex items-center gap-2 transition whitespace-nowrap cursor-pointer">
+        <User size={15} /> Datos Personales y Licencia
+      </button>
+      <button data-tab="viajes" class="tab-btn border-b-2 border-transparent px-4 py-3 text-xs font-bold text-muted hover:text-navy flex items-center gap-2 transition whitespace-nowrap cursor-pointer">
+        <Route size={15} /> Historial de Viajes <span id="badge-count-viajes" class="rounded-full bg-paper px-2 py-0.5 text-[10px] text-muted">0</span>
+      </button>
+      <button data-tab="licencias" class="tab-btn border-b-2 border-transparent px-4 py-3 text-xs font-bold text-muted hover:text-navy flex items-center gap-2 transition whitespace-nowrap cursor-pointer">
+        <CalendarDays size={15} /> Licencias y Ausencias <span id="badge-count-licencias" class="rounded-full bg-paper px-2 py-0.5 text-[10px] text-muted">0</span>
+      </button>
+    </div>
+
+    <!-- Modal Content Scrollable -->
+    <div class="p-6 overflow-y-auto flex-1 bg-paper/30">
+      
+      <!-- TAB 1: DATOS PERSONALES Y LICENCIA -->
+      <div id="tab-content-info" class="tab-pane space-y-6">
+        
+        <!-- Bloque Tarjetas Clave -->
+        <div class="grid gap-4 sm:grid-cols-3">
+          <div class="rounded-xl border border-line bg-white p-4 shadow-xs">
+            <div class="flex items-center justify-between text-muted mb-2">
+              <span class="text-[11px] font-bold uppercase tracking-wider">Documento Nacional</span>
+              <User size={16} class="text-blue" />
+            </div>
+            <p id="info-dni" class="font-mono text-base font-bold text-navy">28.456.123</p>
+            <p id="info-cuil" class="mt-1 text-[11px] text-muted font-mono font-semibold">CUIL: 20-28456123-7</p>
+          </div>
+
+          <div class="rounded-xl border border-line bg-white p-4 shadow-xs">
+            <div class="flex items-center justify-between text-muted mb-2">
+              <span class="text-[11px] font-bold uppercase tracking-wider">Carnet de Conducir</span>
+              <FileBadge size={16} class="text-blue" />
+            </div>
+            <p id="info-licencia-num" class="font-mono text-base font-bold text-navy">SJ-28456123</p>
+            <div id="info-categorias-container" class="flex flex-wrap gap-1 my-1.5">
+              <!-- Se puebla con badges de cada categoría -->
+            </div>
+            <p id="info-licencia-venc" class="mt-1 text-[11px] font-semibold text-emerald-600 flex items-center gap-1">
+              <ShieldCheck size={13} /> Vence: 15/12/2026
+            </p>
+          </div>
+
+          <div class="rounded-xl border border-line bg-white p-4 shadow-xs">
+            <div class="flex items-center justify-between text-muted mb-2">
+              <span class="text-[11px] font-bold uppercase tracking-wider">Actividad Histórica</span>
+              <Route size={16} class="text-blue" />
+            </div>
+            <p id="info-total-viajes" class="text-base font-bold text-navy">12 comisiones</p>
+            <p id="info-total-km" class="mt-1 text-[11px] text-muted font-mono">4.520 km recorridos</p>
+          </div>
+        </div>
+
+        <!-- Ficha de Datos de Contacto y Residencia -->
+        <div class="rounded-xl border border-line bg-white p-5 shadow-xs">
+          <h3 class="font-display text-sm font-bold text-navy mb-4 flex items-center gap-2">
+            <User size={16} class="text-blue" /> Filiación y Contacto Directo
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+            <div class="p-3 bg-paper rounded-lg">
+              <p class="text-[10px] font-bold uppercase text-muted">Nombre Completo</p>
+              <p id="info-nombre-completo" class="mt-1 font-bold text-navy">Martín Rojas</p>
+            </div>
+            <div class="p-3 bg-paper rounded-lg">
+              <p class="text-[10px] font-bold uppercase text-muted">Teléfono de Contacto</p>
+              <p id="info-telefono" class="mt-1 font-bold text-navy flex items-center gap-1">
+                <Phone size={13} class="text-blue" /> 264-4112233
+              </p>
+            </div>
+            <div class="p-3 bg-paper rounded-lg">
+              <p class="text-[10px] font-bold uppercase text-muted">Correo Electrónico</p>
+              <p id="info-email" class="mt-1 font-bold text-navy flex items-center gap-1">
+                <Mail size={13} class="text-blue" /> martin.rojas@gmail.com
+              </p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs mt-3">
+            <div class="p-3 bg-paper rounded-lg">
+              <p class="text-[10px] font-bold uppercase text-muted">Domicilio / Residencia</p>
+              <p id="info-direccion" class="mt-1 font-semibold text-navy flex items-center gap-1">
+                <MapPin size={13} class="text-muted" /> Capital, San Juan
+              </p>
+            </div>
+            <div class="p-3 bg-paper rounded-lg">
+              <p class="text-[10px] font-bold uppercase text-muted">Observaciones del Conductor</p>
+              <p id="info-observaciones" class="mt-1 font-semibold text-navy">
+                Sin novedades registradas.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Documentos Digitalizados (DNI y Carnet Escaneados) -->
+        <div class="rounded-xl border border-line bg-white p-5 shadow-xs">
+          <h3 class="font-display text-sm font-bold text-navy mb-3 flex items-center gap-2">
+            <FileBadge size={16} class="text-blue" /> Documentación Digitalizada del Conductor
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            <!-- Bloque DNI -->
+            <div class="p-3.5 bg-paper rounded-xl border border-line flex flex-col justify-between">
+              <div>
+                <p class="font-bold text-navy text-xs flex items-center gap-1.5 mb-1">
+                  <FileText size={14} class="text-blue" /> DNI Digitalizado
+                </p>
+                <p class="text-[11px] text-muted mb-3" id="status-docs-dni">Verificando archivos adjuntos...</p>
+              </div>
+              <div class="flex items-center gap-2" id="btn-container-docs-dni">
+                <!-- Se inyectan botones para ver frente y dorso -->
+              </div>
+            </div>
+
+            <!-- Bloque Carnet -->
+            <div class="p-3.5 bg-paper rounded-xl border border-line flex flex-col justify-between">
+              <div>
+                <p class="font-bold text-navy text-xs flex items-center gap-1.5 mb-1">
+                  <FileBadge size={14} class="text-blue" /> Carnet de Conducir
+                </p>
+                <p class="text-[11px] text-muted mb-3" id="status-docs-lic">Verificando archivos adjuntos...</p>
+              </div>
+              <div class="flex items-center gap-2" id="btn-container-docs-lic">
+                <!-- Se inyectan botones para ver frente y dorso -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resumen de Días de Licencia Consumidos -->
+        <div class="rounded-xl border border-line bg-white p-5 shadow-xs">
+          <h3 class="font-display text-sm font-bold text-navy mb-3 flex items-center gap-2">
+            <CalendarDays size={16} class="text-blue" /> Balance de Ausencias y Descansos del Período
+          </h3>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+            <div class="p-3 rounded-lg bg-sky/50 border border-sky">
+              <p class="font-display text-xl font-bold text-blue" id="dias-vacaciones">0</p>
+              <p class="text-[11px] font-semibold text-muted">Días Vacaciones</p>
+            </div>
+            <div class="p-3 rounded-lg bg-amber-50 border border-amber-100">
+              <p class="font-display text-xl font-bold text-amber-700" id="dias-enfermedad">0</p>
+              <p class="text-[11px] font-semibold text-muted">Días Enfermedad</p>
+            </div>
+            <div class="p-3 rounded-lg bg-emerald-50 border border-emerald-100">
+              <p class="font-display text-xl font-bold text-emerald-700" id="dias-compensatorio">0</p>
+              <p class="text-[11px] font-semibold text-muted">Francos Compensa.</p>
+            </div>
+            <div class="p-3 rounded-lg bg-paper border border-line">
+              <p class="font-display text-xl font-bold text-navy" id="dias-otros">0</p>
+              <p class="text-[11px] font-semibold text-muted">Otros Motivos</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: HISTORIAL DE VIAJES -->
+      <div id="tab-content-viajes" class="tab-pane space-y-4 hidden">
+        <div id="viajes-empty" class="text-center py-8 text-muted hidden">
+          <Route size={32} class="mx-auto mb-2 opacity-40" />
+          <p class="text-xs font-semibold">No se registran viajes o comisiones oficiales asignadas a este chofer.</p>
+        </div>
+
+        <div id="viajes-table-container" class="overflow-x-auto rounded-xl border border-line bg-white shadow-xs">
+          <table class="w-full text-left text-xs">
+            <thead>
+              <tr class="border-b border-line bg-paper text-[10px] font-bold uppercase tracking-wider text-muted">
+                <th class="px-4 py-3">Código</th>
+                <th class="px-3 py-3">Destino</th>
+                <th class="px-3 py-3">Área Solicitante</th>
+                <th class="px-3 py-3">Vehículo</th>
+                <th class="px-3 py-3">Fecha Salida</th>
+                <th class="px-3 py-3">Recorrido</th>
+                <th class="px-4 py-3 text-right">Estado</th>
+              </tr>
+            </thead>
+            <tbody id="viajes-tbody" class="divide-y divide-line">
+              <!-- Se puebla dinámicamente -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 3: LICENCIAS Y AUSENCIAS -->
+      <div id="tab-content-licencias" class="tab-pane space-y-4 hidden">
+        <div class="flex items-center justify-between">
+          <p class="text-xs text-muted">Historial de descansos, francos compensatorios y licencias médicas</p>
+          <button
+            id="btn-add-licencia-from-modal"
+            class="flex items-center gap-1.5 rounded-lg bg-blue px-3 py-1.5 text-xs font-bold text-white hover:opacity-90 transition cursor-pointer"
+          >
+            <Calendar size={14} />
+            <span>Registrar nueva licencia</span>
+          </button>
+        </div>
+
+        <div id="licencias-empty" class="text-center py-8 text-muted hidden">
+          <CalendarDays size={32} class="mx-auto mb-2 opacity-40" />
+          <p class="text-xs font-semibold">Sin licencias ni ausencias registradas para este chofer.</p>
+        </div>
+
+        <div id="licencias-table-container" class="overflow-x-auto rounded-xl border border-line bg-white shadow-xs">
+          <table class="w-full text-left text-xs">
+            <thead>
+              <tr class="border-b border-line bg-paper text-[10px] font-bold uppercase tracking-wider text-muted">
+                <th class="px-4 py-3">Tipo de Ausencia</th>
+                <th class="px-3 py-3">Desde</th>
+                <th class="px-3 py-3">Hasta</th>
+                <th class="px-3 py-3">Días Hábiles</th>
+                <th class="px-3 py-3">Motivo / Justificación</th>
+                <th class="px-3 py-3">Aprobado Por</th>
+                <th class="px-4 py-3 text-right">Estado</th>
+              </tr>
+            </thead>
+            <tbody id="licencias-tbody" class="divide-y divide-line">
+              <!-- Se puebla dinámicamente -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="flex items-center justify-between border-t border-line bg-paper px-6 py-3">
+      <div class="text-[11px] text-muted flex items-center gap-1.5">
+        <ShieldCheck size={14} class="text-emerald-600" /> Registro de Personal Oficial · Ministerio de Educación
+      </div>
+      <button id="btn-close-detail" class="rounded-lg border border-line bg-white px-4 py-2 text-xs font-bold text-navy hover:bg-paper transition cursor-pointer">
+        Cerrar Ficha
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal Visor de Documento Escaneado (Zoom) -->
+<div id="doc-viewer-modal" class="fixed inset-0 z-60 flex items-center justify-center bg-navy/80 p-4 backdrop-blur-md" style="display: none;">
+  <div class="relative max-w-2xl w-full bg-white rounded-2xl overflow-hidden shadow-2xl border border-line p-4 flex flex-col items-center">
+    <div class="w-full flex items-center justify-between mb-3 border-b border-line pb-2">
+      <h3 id="doc-viewer-title" class="text-xs font-bold text-navy">Documento Digitalizado</h3>
+      <button id="close-doc-viewer" class="rounded-lg p-1.5 text-muted hover:bg-paper hover:text-navy transition cursor-pointer">
+        <X size={18} />
+      </button>
+    </div>
+    <div class="max-h-[70vh] overflow-auto flex items-center justify-center w-full">
+      <img id="doc-viewer-img" src="" alt="Documento" class="max-h-[65vh] w-auto rounded-lg shadow-sm border border-line object-contain" />
+    </div>
+  </div>
+</div>
+

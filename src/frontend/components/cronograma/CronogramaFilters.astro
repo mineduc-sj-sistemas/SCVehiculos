@@ -1,0 +1,51 @@
+---
+import { Filter, Printer, RefreshCw, Search } from 'lucide-astro'
+---
+
+<div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
+  <!-- Búsqueda rápida -->
+  <div class="relative flex-1">
+    <Search size={16} class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+    <input
+      type="text"
+      id="input-filtro-cronograma"
+      placeholder="Filtrar por patente, modelo, chofer o departamento de San Juan (ej: Jáchal, Kangoo)..."
+      class="w-full rounded-lg border border-gray-200 bg-gray-50/50 py-2 pl-10 pr-4 text-xs text-navy placeholder:text-gray-400 focus:border-blue focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue transition"
+    />
+  </div>
+
+  <!-- Selector de estado y acciones -->
+  <div class="flex items-center gap-2">
+    <div class="flex items-center gap-1.5 border-r border-gray-200 pr-2">
+      <Filter size={14} class="text-gray-400 hidden sm:inline-block" />
+      <select
+        id="select-estado-filtro"
+        class="rounded-lg border border-gray-200 bg-gray-50/50 px-2.5 py-2 text-xs font-semibold text-navy focus:border-blue focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue transition cursor-pointer"
+      >
+        <option value="todos">Todos los estados</option>
+        <option value="en_curso">En viaje (En curso)</option>
+        <option value="programada">Programadas</option>
+        <option value="finalizada">Finalizadas</option>
+      </select>
+    </div>
+
+    <!-- Botón Refrescar -->
+    <button
+      id="btn-recargar-cronograma"
+      class="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-100 hover:text-navy transition cursor-pointer"
+      title="Actualizar datos"
+    >
+      <RefreshCw size={14} />
+    </button>
+
+    <!-- Botón Imprimir / Planilla -->
+    <button
+      id="btn-imprimir-cronograma"
+      class="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 hover:text-navy transition cursor-pointer"
+      title="Imprimir vista de cronograma semanal"
+    >
+      <Printer size={14} />
+      <span class="hidden md:inline">Imprimir Planilla</span>
+    </button>
+  </div>
+</div>

@@ -1,0 +1,46 @@
+---
+import DashboardLayout from '../frontend/layouts/DashboardLayout.astro'
+import CronogramaHeader from '../frontend/components/cronograma/CronogramaHeader.astro'
+import CronogramaFilters from '../frontend/components/cronograma/CronogramaFilters.astro'
+import CronogramaGrid from '../frontend/components/cronograma/CronogramaGrid.astro'
+import CronogramaDispatchModal from '../frontend/components/cronograma/CronogramaDispatchModal.astro'
+import CronogramaDetailModal from '../frontend/components/cronograma/CronogramaDetailModal.astro'
+import { getCronogramaSemanal, getDatosAuxiliaresDespacho } from '../backend/index'
+
+// Carga en servidor a través del backend
+const [cronogramaData, datosAuxiliares] = await Promise.all([
+  getCronogramaSemanal(),
+  getDatosAuxiliaresDespacho(),
+])
+---
+
+<DashboardLayout activeNav="cronograma" title="Cronograma Semanal de Despacho · Movilidades · Ministerio de Educación">
+  <h1 slot="header-title" class="font-display text-xl font-bold text-navy sm:text-2xl">
+    Cronograma de Despacho
+  </h1>
+
+  <!-- Encabezado con navegación de semanas y KPIs -->
+  <CronogramaHeader
+    stats={cronogramaData.stats}
+    rangoLabel={cronogramaData.rangoSemana.label}
+    fechaInicio={cronogramaData.rangoSemana.inicio}
+  />
+
+  <CronogramaFilters />
+
+  <CronogramaGrid
+    dias={cronogramaData.dias}
+    filas={cronogramaData.filas}
+  />
+
+  <!-- Modales fuera del flujo principal -->
+  <Fragment slot="modals">
+    <CronogramaDispatchModal datosAuxiliares={datosAuxiliares} />
+    <CronogramaDetailModal />
+  </Fragment>
+</DashboardLayout>
+
+<!-- Lógica interactiva en cliente -->
+<script>
+  import '../frontend/scripts/cronogramaController'
+</script>

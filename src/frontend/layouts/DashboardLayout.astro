@@ -6,7 +6,7 @@ import '../styles/global.css'
 
 interface Props {
   title?: string
-  activeNav?: 'panel' | 'flota' | 'choferes' | 'viajes' | 'mantenimientos' | 'combustible' | 'configuracion'
+  activeNav?: 'panel' | 'flota' | 'choferes' | 'cronograma' | 'viajes' | 'mantenimientos' | 'combustible' | 'configuracion'
 }
 
 const {
@@ -26,7 +26,7 @@ const {
   <body class="bg-paper text-ink antialiased">
     <div class="min-h-screen bg-paper">
       <!-- Overlay móvil para cuando el menú lateral está abierto -->
-      <div id="mobile-overlay" class="mobile-overlay fixed inset-0 z-30 bg-navy/30"></div>
+      <div id="mobile-overlay" class="mobile-overlay fixed inset-0 z-30 bg-navy/30 hidden"></div>
       
       <!-- Barra lateral de navegación -->
       <Sidebar activeNav={activeNav} />

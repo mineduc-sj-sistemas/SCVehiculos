@@ -1,0 +1,233 @@
+---
+import {
+  AlertCircle,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  FileText,
+  MapPin,
+  Printer,
+  Radio,
+  Send,
+  Truck,
+  User,
+  X,
+} from 'lucide-astro'
+---
+
+<div
+  id="modal-detail"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/60 backdrop-blur-xs opacity-0 pointer-events-none transition-opacity duration-200"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="modal-detail-codigo"
+>
+  <div class="relative w-full max-w-2xl rounded-2xl bg-white shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95">
+    <!-- Cabecera -->
+    <div class="flex items-center justify-between border-b border-gray-100 bg-navy px-6 py-4 text-white">
+      <div class="flex items-center gap-3">
+        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-gold text-navy shadow-sm">
+          <FileText size={18} strokeWidth={2.5} />
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-mono text-base font-bold text-gold" id="detail-codigo">COM-2026-0000</span>
+            <span id="detail-badge-estado" class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold">
+              Programada
+            </span>
+          </div>
+          <p class="text-[11px] text-white/60">Hoja de Ruta y Despacho Oficial</p>
+        </div>
+      </div>
+      <button
+        id="btn-close-detail-modal"
+        type="button"
+        class="flex h-8 w-8 items-center justify-center rounded-lg text-white/70 hover:bg-white/10 hover:text-white transition cursor-pointer"
+        aria-label="Cerrar modal"
+      >
+        <X size={18} />
+      </button>
+    </div>
+
+    <!-- Contenido del Detalle -->
+    <div class="overflow-y-auto p-6 space-y-5 text-xs">
+      <div id="detail-feedback-msg" class="hidden rounded-xl p-3 text-xs flex items-center gap-2"></div>
+
+      <!-- Tarjeta Móvil y Chofer -->
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 rounded-xl border border-gray-100 bg-gray-50/60 p-4">
+        <!-- Móvil -->
+        <div class="space-y-1">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-muted flex items-center gap-1">
+            <Truck size={12} class="text-blue" />
+            <span>Movilidad Asignada</span>
+          </span>
+          <p class="font-bold text-navy text-sm" id="detail-vehiculo-patente">--</p>
+          <p class="text-gray-600" id="detail-vehiculo-modelo">--</p>
+        </div>
+
+        <!-- Chofer -->
+        <div class="space-y-1">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-muted flex items-center gap-1">
+            <User size={12} class="text-blue" />
+            <span>Chofer Oficial</span>
+          </span>
+          <p class="font-bold text-navy text-sm" id="detail-chofer-nombre">--</p>
+          <p class="text-gray-600" id="detail-dependencia-nombre">--</p>
+        </div>
+      </div>
+
+      <!-- Itinerario y Destino -->
+      <div class="space-y-3">
+        <h4 class="font-bold text-navy text-[13px] border-b border-gray-100 pb-1 flex items-center gap-1.5">
+          <MapPin size={15} class="text-blue" />
+          <span>Itinerario y Misión</span>
+        </h4>
+
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <span class="text-[10px] font-bold uppercase text-muted">Origen</span>
+            <p class="font-medium text-navy" id="detail-origen">Ministerio de Educación - Centro Cívico</p>
+          </div>
+          <div>
+            <span class="text-[10px] font-bold uppercase text-muted">Destino Departamental</span>
+            <p class="font-bold text-navy text-sm" id="detail-destino">--</p>
+          </div>
+        </div>
+
+        <div>
+          <span class="text-[10px] font-bold uppercase text-muted">Motivo / Misión Oficial</span>
+          <p class="mt-0.5 rounded-lg bg-gray-50 border border-gray-200 p-2.5 text-navy font-medium leading-relaxed" id="detail-motivo">
+            --
+          </p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <span class="text-[10px] font-bold uppercase text-muted">Solicitante Responsable</span>
+            <p class="font-medium text-navy" id="detail-solicitante">--</p>
+          </div>
+          <div>
+            <span class="text-[10px] font-bold uppercase text-muted">Pasajeros Previstos</span>
+            <p class="font-medium text-navy" id="detail-pasajeros">--</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cronograma y Odómetros -->
+      <div class="space-y-3">
+        <h4 class="font-bold text-navy text-[13px] border-b border-gray-100 pb-1 flex items-center gap-1.5">
+          <Clock size={15} class="text-blue" />
+          <span>Horarios y Odómetros</span>
+        </h4>
+
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <!-- Salida -->
+          <div class="rounded-xl border border-gray-200 p-3 space-y-1">
+            <span class="text-[10px] font-bold uppercase text-blue">Salida</span>
+            <p class="text-navy font-medium"><span class="text-muted">Prog:</span> <span id="detail-salida-prog">--</span></p>
+            <p class="text-navy font-medium"><span class="text-muted">Real:</span> <span id="detail-salida-real" class="font-bold">--</span></p>
+            <p class="text-navy font-medium"><span class="text-muted">Odómetro:</span> <span id="detail-odo-salida" class="font-mono">--</span> km</p>
+          </div>
+
+          <!-- Regreso -->
+          <div class="rounded-xl border border-gray-200 p-3 space-y-1">
+            <span class="text-[10px] font-bold uppercase text-emerald-700">Regreso</span>
+            <p class="text-navy font-medium"><span class="text-muted">Estimado:</span> <span id="detail-regreso-estimado">--</span></p>
+            <p class="text-navy font-medium"><span class="text-muted">Real:</span> <span id="detail-regreso-real" class="font-bold">--</span></p>
+            <p class="text-navy font-medium"><span class="text-muted">Odómetro:</span> <span id="detail-odo-regreso" class="font-mono">--</span> km</p>
+          </div>
+        </div>
+
+        <!-- Recorrido total si finalizó -->
+        <div id="detail-km-section" class="hidden rounded-xl bg-emerald-50 border border-emerald-200 p-3 flex items-center justify-between">
+          <span class="font-bold text-emerald-900">Distancia Total Recorrida:</span>
+          <span class="font-mono text-sm font-bold text-emerald-800" id="detail-km-total">0 km</span>
+        </div>
+      </div>
+
+      <!-- Observaciones -->
+      <div id="detail-obs-container">
+        <span class="text-[10px] font-bold uppercase text-muted">Observaciones del Viaje</span>
+        <p class="mt-0.5 text-gray-700 italic" id="detail-observaciones">Sin observaciones registradas.</p>
+      </div>
+
+      <!-- Zona de Despacho Operativo In-Modal -->
+      <div id="section-acciones-operativas" class="rounded-xl border border-blue/20 bg-blue/5 p-4 space-y-3">
+        <h5 class="font-bold text-navy text-xs flex items-center gap-1.5">
+          <Radio size={14} class="text-blue" />
+          <span>Acciones de Despacho y Registro</span>
+        </h5>
+
+        <!-- Form Salida -->
+        <div id="form-marcar-salida" class="space-y-2">
+          <p class="text-navy text-[11px]">La comisión está programada. Puede registrar la partida oficial del móvil:</p>
+          <div class="flex items-center gap-2">
+            <input
+              type="number"
+              id="input-odo-salida"
+              placeholder="Odómetro al salir (km)"
+              class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs text-navy focus:border-blue focus:outline-none w-48 font-mono"
+            />
+            <button
+              type="button"
+              id="btn-confirmar-salida"
+              class="rounded-lg bg-blue px-4 py-1.5 text-xs font-bold text-white hover:opacity-90 transition cursor-pointer"
+            >
+              Registrar Salida (En Ruta)
+            </button>
+          </div>
+        </div>
+
+        <!-- Form Regreso -->
+        <div id="form-marcar-regreso" class="space-y-2 hidden">
+          <p class="text-amber-900 text-[11px] font-medium">El móvil se encuentra actualmente en comisión. Registre el arribo oficial:</p>
+          <div class="flex items-center gap-2">
+            <input
+              type="number"
+              id="input-odo-regreso"
+              placeholder="Odómetro de llegada (km)"
+              class="rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs text-navy focus:border-blue focus:outline-none w-48 font-mono"
+            />
+            <button
+              type="button"
+              id="btn-confirmar-regreso"
+              class="rounded-lg bg-emerald-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 transition cursor-pointer"
+            >
+              Registrar Arribo (Finalizar)
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pie del Modal -->
+    <div class="flex items-center justify-between border-t border-gray-100 bg-gray-50/50 px-6 py-3">
+      <button
+        type="button"
+        id="btn-cancelar-comision"
+        class="text-xs font-bold text-red-600 hover:text-red-700 hover:underline transition cursor-pointer"
+      >
+        Cancelar Comisión
+      </button>
+
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          id="btn-imprimir-hoja-ruta"
+          class="flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-xs font-bold text-gray-700 hover:bg-gray-100 transition cursor-pointer"
+        >
+          <Printer size={14} />
+          <span>Imprimir Hoja de Ruta</span>
+        </button>
+
+        <button
+          type="button"
+          id="btn-close-detail-modal-footer"
+          class="rounded-xl bg-navy px-4 py-2 text-xs font-bold text-white hover:opacity-90 transition cursor-pointer"
+        >
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

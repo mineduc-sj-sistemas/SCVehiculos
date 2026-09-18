@@ -1,0 +1,70 @@
+---
+import { Plus } from 'lucide-astro'
+import DashboardLayout from '../frontend/layouts/DashboardLayout.astro'
+import ChoferKpiCards from '../frontend/components/choferes/ChoferKpiCards.astro'
+import ChoferFilters from '../frontend/components/choferes/ChoferFilters.astro'
+import ChoferTable from '../frontend/components/choferes/ChoferTable.astro'
+import ChoferDetailModal from '../frontend/components/choferes/ChoferDetailModal.astro'
+import ChoferFormModal from '../frontend/components/choferes/ChoferFormModal.astro'
+import ChoferLicenciaFormModal from '../frontend/components/choferes/ChoferLicenciaFormModal.astro'
+import { getChoferesFullList, getChoferesStats } from '../backend/index'
+
+// Carga de datos en servidor a través de la capa de Backend
+const [choferes, stats] = await Promise.all([
+  getChoferesFullList(),
+  getChoferesStats(),
+])
+
+// Extracción de categorías únicas presentes para el filtro
+const rawCats = choferes.map((c) => c.categoriaLicencia).filter(Boolean)
+const categoriasUnicas = Array.from(new Set(rawCats.length > 0 ? rawCats : ['B1', 'B2', 'C1', 'D1'])).sort()
+---
+
+<DashboardLayout activeNav="choferes" title="Choferes y Conductores · Movilidades · Ministerio de Educación">
+  <h1 slot="header-title" class="font-display text-xl font-bold text-navy sm:text-2xl">Gestión de Choferes</h1>
+
+  <!-- Encabezado de sección -->
+  <div class="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+    <div>
+      <div class="flex items-center gap-2 text-xs font-semibold text-blue mb-1">
+        <span>Ministerio de Educación</span>
+        <span>·</span>
+        <span>Personal y Conducción Oficial</span>
+      </div>
+      <h2 class="font-display text-[26px] font-bold tracking-tight text-navy">Conductores Oficiales</h2>
+      <p class="mt-0.5 text-xs text-muted">Administración de legajos, categorías de carnet, vigencias y control de ausencias laborales.</p>
+    </div>
+    
+    <div class="flex items-center gap-2">
+      <button
+        id="btn-open-create-chofer"
+        class="flex items-center gap-2 rounded-lg bg-blue px-4 py-2.5 text-xs font-bold text-white shadow-sm shadow-blue/20 hover:opacity-90 transition cursor-pointer"
+      >
+        <Plus size={16} strokeWidth={2.5} />
+        <span>Registrar nuevo chofer</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Tarjetas KPI de Choferes -->
+  <ChoferKpiCards stats={stats} />
+
+  <!-- Barra de Búsqueda y Filtros -->
+  <ChoferFilters categorias={categoriasUnicas} />
+
+  <!-- Tabla Principal de Choferes -->
+  <ChoferTable choferes={choferes} />
+
+  <!-- Modales fuera del flujo de layout principal -->
+  <Fragment slot="modals">
+    <ChoferDetailModal />
+    <ChoferFormModal />
+    <ChoferLicenciaFormModal />
+  </Fragment>
+</DashboardLayout>
+
+<!-- Inicialización de comportamiento del cliente -->
+<script>
+  import '../frontend/scripts/choferesController'
+</script>
+

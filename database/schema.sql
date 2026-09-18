@@ -84,9 +84,13 @@ CREATE TABLE `choferes` (
   `telefono` VARCHAR(50) NULL,
   `email` VARCHAR(150) NULL,
   `direccion` VARCHAR(255) NULL,
+  `foto_dni_frente` LONGTEXT NULL,
+  `foto_dni_dorso` LONGTEXT NULL,
   `numero_licencia` VARCHAR(50) NOT NULL,
-  `categoria_licencia` VARCHAR(30) NOT NULL,
+  `categoria_licencia` VARCHAR(100) NOT NULL,
   `fecha_vencimiento_licencia` DATE NOT NULL,
+  `foto_licencia_frente` LONGTEXT NULL,
+  `foto_licencia_dorso` LONGTEXT NULL,
   `estado` ENUM('disponible', 'en_comision', 'licencia', 'inactivo') NOT NULL DEFAULT 'disponible',
   `observaciones` TEXT NULL,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -282,5 +286,34 @@ CREATE TABLE `auditoria_estados_vehiculo` (
   CONSTRAINT `fk_auditoria_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON UPDATE CASCADE ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ---------------------------------------------------------------------
+-- 11. Tabla: licencias_chofer (Licencias Laborales y Ausencias de Choferes)
+-- ---------------------------------------------------------------------
+DROP TABLE IF EXISTS `licencias_chofer`;
+CREATE TABLE `licencias_chofer` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `chofer_id` INT UNSIGNED NOT NULL,
+  `tipo` ENUM('vacaciones', 'enfermedad', 'particular', 'capacitacion', 'franco_compensatorio', 'otra') NOT NULL DEFAULT 'otra',
+  `fecha_inicio` DATE NOT NULL,
+  `fecha_fin` DATE NOT NULL,
+  `dias_habiles` SMALLINT UNSIGNED NOT NULL DEFAULT 1,
+  `motivo` VARCHAR(255) NULL,
+  `estado` ENUM('aprobada', 'pendiente', 'rechazada', 'cancelada') NOT NULL DEFAULT 'pendiente',
+  `aprobado_por_id` INT UNSIGNED NULL,
+  `observaciones` TEXT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_licencias_chofer_fecha` (`chofer_id`, `fecha_inicio`),
+  KEY `idx_licencias_estado` (`estado`, `fecha_inicio`),
+  CONSTRAINT `fk_licencias_chofer`
+    FOREIGN KEY (`chofer_id`) REFERENCES `choferes` (`id`)
+    ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT `fk_licencias_aprobador`
+    FOREIGN KEY (`aprobado_por_id`) REFERENCES `usuarios` (`id`)
+    ON UPDATE CASCADE ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Reactivar chequeo de foreign keys
 SET FOREIGN_KEY_CHECKS = 1;
+

@@ -1,0 +1,168 @@
+---
+import {
+  AlertCircle,
+  Calendar,
+  CalendarDays,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Plus,
+  Truck,
+} from 'lucide-astro'
+import type { CronogramaStats } from '../../types/cronograma.types'
+
+interface Props {
+  stats: CronogramaStats
+  rangoLabel: string
+  fechaInicio: string
+}
+
+const { stats, rangoLabel, fechaInicio } = Astro.props
+---
+
+<div class="mb-6 space-y-6">
+  <!-- Barra de Título y Navegación de Semanas -->
+  <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+    <div>
+      <div class="flex items-center gap-2 text-xs font-semibold text-blue mb-1">
+        <span>Ministerio de Educación</span>
+        <span>·</span>
+        <span>Planificación de Movilidades y Hojas de Ruta</span>
+      </div>
+      <h2 class="font-display text-2xl sm:text-[28px] font-bold tracking-tight text-navy">
+        Cronograma Semanal de Despacho
+      </h2>
+      <p class="mt-0.5 text-xs text-muted">
+        Asignación de movilidades oficiales, seguimiento de comisiones interdepartamentales y control de viajes.
+      </p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <!-- Navegador de Semana -->
+      <div class="flex items-center rounded-xl border border-gray-200 bg-white p-1 shadow-sm">
+        <button
+          id="btn-semana-prev"
+          class="flex h-9 w-9 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100 hover:text-navy transition cursor-pointer"
+          title="Semana anterior"
+          aria-label="Semana anterior"
+        >
+          <ChevronLeft size={18} strokeWidth={2.5} />
+        </button>
+
+        <button
+          id="btn-semana-hoy"
+          class="px-3.5 py-1.5 text-xs font-bold text-navy hover:bg-gray-100 rounded-lg transition cursor-pointer flex items-center gap-1.5"
+        >
+          <Calendar size={14} class="text-blue" />
+          <span>Esta semana</span>
+        </button>
+
+        <button
+          id="btn-semana-next"
+          class="flex h-9 w-9 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100 hover:text-navy transition cursor-pointer"
+          title="Semana siguiente"
+          aria-label="Semana siguiente"
+        >
+          <ChevronRight size={18} strokeWidth={2.5} />
+        </button>
+
+        <div class="h-5 w-px bg-gray-200 mx-1"></div>
+
+        <!-- Selector de fecha rápida -->
+        <label class="relative flex items-center pr-2 cursor-pointer" title="Seleccionar fecha específica">
+          <input
+            type="date"
+            id="input-fecha-picker"
+            value={fechaInicio}
+            class="sr-only"
+          />
+          <span class="flex items-center gap-1 text-xs font-medium text-blue hover:underline pl-1 cursor-pointer">
+            <CalendarDays size={15} />
+            <span>Ir a fecha</span>
+          </span>
+        </label>
+      </div>
+
+      <!-- Botón Nueva Comisión -->
+      <button
+        id="btn-abrir-nueva-comision"
+        class="flex items-center gap-2 rounded-xl bg-blue px-4 py-2.5 text-xs font-bold text-white shadow-sm shadow-blue/20 hover:opacity-95 transition cursor-pointer active:scale-98"
+      >
+        <Plus size={16} strokeWidth={2.5} />
+        <span>Despachar Comisión</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Indicador del Rango Activo -->
+  <div class="flex items-center justify-between rounded-xl bg-navy/5 border border-navy/10 px-4 py-2.5 text-xs">
+    <div class="flex items-center gap-2 text-navy font-medium">
+      <CalendarDays size={16} class="text-blue" />
+      <span>Semana activa:</span>
+      <span class="font-bold text-navy text-sm" id="label-semana-activa">{rangoLabel}</span>
+    </div>
+    <span class="hidden sm:inline-block text-[11px] text-muted">
+      Planilla digital sincronizada con base de datos ministerial
+    </span>
+  </div>
+
+  <!-- Tarjetas KPI Rápidas de la Semana -->
+  <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+    <!-- Comisiones Totales -->
+    <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+      <div class="flex items-center justify-between">
+        <span class="text-[11px] font-semibold uppercase tracking-wider text-muted">Comisiones Semana</span>
+        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue/10 text-blue">
+          <Calendar size={16} />
+        </div>
+      </div>
+      <p class="mt-2 text-2xl font-bold tracking-tight text-navy" id="kpi-total-semana">
+        {stats.totalComisionesSemana}
+      </p>
+      <p class="mt-0.5 text-[11px] text-muted">Total asignadas en la semana</p>
+    </div>
+
+    <!-- En Curso Hoy -->
+    <div class="rounded-xl border border-amber-200 bg-amber-50/50 p-4 shadow-sm">
+      <div class="flex items-center justify-between">
+        <span class="text-[11px] font-semibold uppercase tracking-wider text-amber-800">En Ruta Hoy</span>
+        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+          <AlertCircle size={16} />
+        </div>
+      </div>
+      <p class="mt-2 text-2xl font-bold tracking-tight text-amber-900" id="kpi-en-curso">
+        {stats.enCursoHoy}
+      </p>
+      <p class="mt-0.5 text-[11px] text-amber-700">Vehículos transitando ahora</p>
+    </div>
+
+    <!-- Programadas -->
+    <div class="rounded-xl border border-blue/20 bg-blue/5 p-4 shadow-sm">
+      <div class="flex items-center justify-between">
+        <span class="text-[11px] font-semibold uppercase tracking-wider text-blue">Programadas</span>
+        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue/15 text-blue">
+          <Clock size={16} />
+        </div>
+      </div>
+      <p class="mt-2 text-2xl font-bold tracking-tight text-blue" id="kpi-programadas">
+        {stats.programadasSemana}
+      </p>
+      <p class="mt-0.5 text-[11px] text-blue/80">Listas para salir</p>
+    </div>
+
+    <!-- Flota Operativa -->
+    <div class="rounded-xl border border-emerald-200 bg-emerald-50/40 p-4 shadow-sm">
+      <div class="flex items-center justify-between">
+        <span class="text-[11px] font-semibold uppercase tracking-wider text-emerald-800">Móviles Asignados</span>
+        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+          <Truck size={16} />
+        </div>
+      </div>
+      <p class="mt-2 text-2xl font-bold tracking-tight text-emerald-950" id="kpi-moviles">
+        {stats.vehiculosAsignadosSemana} <span class="text-xs font-normal text-muted">/ {stats.vehiculosOperativos} disp.</span>
+      </p>
+      <p class="mt-0.5 text-[11px] text-emerald-700">Móviles con servicios asignados</p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,473 @@
+---
+import { Calendar, Camera, Check, FileBadge, FileText, Image, QrCode, Save, Scan, Trash2, Upload, User, X, Zap } from 'lucide-astro'
+
+const categoriasParticulares = ['A1', 'A2.1', 'A2.2', 'A3', 'B1', 'B2']
+const categoriasPasajeros = ['D1', 'D2', 'D3', 'D4']
+const categoriasCarga = ['C1', 'C2', 'C3', 'E1', 'E2', 'E3']
+
+const departamentosSanJuan = [
+  { grupo: 'Gran San Juan y Cercanías', items: ['Capital', 'Rawson', 'Rivadavia', 'Chimbas', 'Santa Lucía', 'Pocito'] },
+  { grupo: 'Departamentos de San Juan', items: ['Albardón', 'Angaco', 'Caucete', '9 de Julio', 'San Martín', '25 de Mayo', 'Sarmiento', 'Ullum', 'Zonda', 'Calingasta', 'Iglesia', 'Jáchal', 'Valle Fértil'] }
+]
+---
+
+<div id="chofer-form-modal" class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-navy/60 p-4 backdrop-blur-sm transition-opacity" style="display: none;">
+  <div class="relative w-full max-w-3xl rounded-2xl bg-white shadow-2xl border border-line flex flex-col max-h-[92vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between border-b border-line bg-paper px-6 py-3.5">
+      <div class="flex items-center gap-3">
+        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue text-white font-bold shadow-xs">
+          <User size={20} />
+        </div>
+        <div>
+          <h2 id="chofer-form-title" class="font-display text-base font-bold text-navy">Registrar Nuevo Chofer</h2>
+          <p class="text-xs text-muted">Ingreso manual, escaneo de documentos o carga rápida con lector/pistola.</p>
+        </div>
+      </div>
+      <button id="close-chofer-form-modal" class="rounded-lg p-2 text-muted hover:bg-sky hover:text-navy transition cursor-pointer" aria-label="Cerrar modal">
+        <X size={20} />
+      </button>
+    </div>
+
+    <!-- Banner Lector / Pistola de Código de Barras (PDF417 DNI) -->
+    <div class="bg-sky/60 border-b border-sky px-6 py-3">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
+        <div class="flex items-center gap-2 text-navy">
+          <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-blue text-white shrink-0 shadow-xs">
+            <Zap size={15} />
+          </div>
+          <div>
+            <p class="text-xs font-bold leading-tight">Pistola Lectora de DNI (PDF417)</p>
+            <p class="text-[10px] text-muted leading-tight">Dispará al código de barras del DNI para auto-completar datos, CUIL y carnet</p>
+          </div>
+        </div>
+
+        <div class="relative w-full sm:w-72">
+          <Scan size={15} class="absolute left-2.5 top-1/2 -translate-y-1/2 text-blue" />
+          <input
+            type="text"
+            id="scanner-gun-input"
+            autocomplete="off"
+            placeholder="Clic acá y dispará con la pistola..."
+            class="h-8 w-full rounded-lg border-2 border-dashed border-blue/40 bg-white pl-8 pr-2 text-xs font-mono font-semibold text-navy outline-none focus:border-blue focus:ring-2 focus:ring-blue/20 transition placeholder:text-muted/70"
+          />
+        </div>
+      </div>
+      <div id="scanner-feedback" class="hidden mt-2 rounded-md bg-emerald-100 text-emerald-800 px-3 py-1 text-[11px] font-bold flex items-center gap-1.5 animate-in fade-in">
+        <Check size={13} /> <span id="scanner-feedback-text">Documento leído correctamente</span>
+      </div>
+    </div>
+
+    <!-- Form Container -->
+    <form id="chofer-form" autocomplete="off" class="p-6 overflow-y-auto overflow-x-hidden flex-1 space-y-6 text-xs">
+      <input type="hidden" id="chofer-id" name="id" value="" />
+
+      <!-- SECCIÓN 1: DATOS PERSONALES Y CONTACTO -->
+      <div>
+        <p class="font-bold text-navy uppercase tracking-wider text-[11px] mb-3 flex items-center gap-2">
+          <span class="flex h-5 w-5 items-center justify-center rounded-full bg-sky text-blue text-[10px]">1</span>
+          Datos Personales y Filiación
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="font-bold text-muted block mb-1">Nombre(s) *</label>
+            <input
+              type="text"
+              id="form-chofer-nombre"
+              name="nombre"
+              required
+              class="w-full h-9 rounded-lg border border-line bg-paper px-3 font-semibold focus:border-blue focus:bg-white outline-none"
+            />
+          </div>
+          <div>
+            <label class="font-bold text-muted block mb-1">Apellido(s) *</label>
+            <input
+              type="text"
+              id="form-chofer-apellido"
+              name="apellido"
+              required
+              class="w-full h-9 rounded-lg border border-line bg-paper px-3 font-semibold focus:border-blue focus:bg-white outline-none"
+            />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
+          <div>
+            <label class="font-bold text-muted block mb-1">DNI (Sin puntos) *</label>
+            <input
+              type="text"
+              id="form-chofer-dni"
+              name="dni"
+              required
+              class="w-full h-9 rounded-lg border border-line bg-paper px-3 font-mono font-bold focus:border-blue focus:bg-white outline-none"
+            />
+          </div>
+          <div>
+            <label class="font-bold text-muted block mb-1">CUIL</label>
+            <input
+              type="text"
+              id="form-chofer-cuil"
+              name="cuil"
+              class="w-full h-9 rounded-lg border border-line bg-paper px-3 font-mono focus:border-blue focus:bg-white outline-none"
+            />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
+          <div>
+            <label class="font-bold text-muted block mb-1">Teléfono Móvil</label>
+            <input
+              type="tel"
+              id="form-chofer-telefono"
+              name="telefono"
+              class="w-full h-9 rounded-lg border border-line bg-paper px-3 focus:border-blue focus:bg-white outline-none"
+            />
+          </div>
+          <div>
+            <label class="font-bold text-muted block mb-1">Correo Electrónico</label>
+            <input
+              type="email"
+              id="form-chofer-email"
+              name="email"
+              class="w-full h-9 rounded-lg border border-line bg-paper px-3 focus:border-blue focus:bg-white outline-none"
+            />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
+          <div>
+            <label class="font-bold text-muted block mb-1">Departamento (San Juan)</label>
+            <select
+              id="form-chofer-departamento"
+              class="w-full h-9 rounded-lg border border-line bg-paper px-2.5 font-semibold text-navy focus:border-blue focus:bg-white outline-none cursor-pointer"
+            >
+              <option value="">Seleccionar departamento...</option>
+              {departamentosSanJuan.map((grp) => (
+                <optgroup label={grp.grupo}>
+                  {grp.items.map((depto) => (
+                    <option value={depto}>{depto}</option>
+                  ))}
+                </optgroup>
+              ))}
+              <option value="Otro">Otro / Fuera de San Juan</option>
+            </select>
+          </div>
+          <div>
+            <label class="font-bold text-muted block mb-1">Calle / Barrio / Domicilio</label>
+            <input
+              type="text"
+              id="form-chofer-calle"
+              class="w-full h-9 rounded-lg border border-line bg-paper px-3 focus:border-blue focus:bg-white outline-none"
+            />
+          </div>
+        </div>
+
+        <!-- Input hidden que envía la dirección completa unificada a la base de datos -->
+        <input type="hidden" id="form-chofer-direccion" name="direccion" value="" />
+      </div>
+
+      <!-- SECCIÓN 2: LICENCIA NACIONAL Y MÚLTIPLES CATEGORÍAS -->
+      <div class="pt-3 border-t border-line">
+        <p class="font-bold text-navy uppercase tracking-wider text-[11px] mb-3 flex items-center gap-2">
+          <span class="flex h-5 w-5 items-center justify-center rounded-full bg-sky text-blue text-[10px]">2</span>
+          Licencia Nacional de Conducir y Categorías Habilitadas
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
+          <div>
+            <label class="font-bold text-muted block mb-1 flex items-center justify-between">
+              <span>N° de Licencia / Carnet *</span>
+              <span class="text-[10px] text-blue font-semibold font-sans bg-blue/10 px-1.5 py-0.5 rounded">Mismo que el DNI</span>
+            </label>
+            <input
+              type="text"
+              id="form-chofer-licencia"
+              name="numeroLicencia"
+              autocomplete="off"
+              data-lpignore="true"
+              data-form-type="other"
+              required
+              class="w-full h-9 rounded-lg border border-line bg-paper px-3 font-mono font-bold uppercase focus:border-blue focus:bg-white outline-none"
+            />
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="font-bold text-muted block">Vigencia del Carnet (Hasta) *</label>
+              <span class="text-[10px] text-blue font-semibold">Vencimiento</span>
+            </div>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-muted">
+                <Calendar size={15} />
+              </div>
+              <input
+                type="text"
+                id="form-chofer-vencimiento"
+                name="fechaVencimientoLicencia"
+                readonly
+                autocomplete="off"
+                data-lpignore="true"
+                data-form-type="other"
+                required
+                class="w-full h-9 rounded-lg border border-line bg-paper pl-8 pr-3 text-xs font-semibold text-navy focus:border-blue focus:bg-white outline-none transition cursor-pointer"
+              />
+            </div>
+            <!-- Botones de Acceso Rápido por Años -->
+            <div class="flex items-center gap-1.5 mt-1.5">
+              <span class="text-[10px] font-bold text-muted">Sumar:</span>
+              <button
+                type="button"
+                class="btn-preset-venc px-2 py-0.5 rounded-md bg-white border border-line hover:border-blue hover:text-blue hover:bg-sky text-navy text-[10px] font-bold transition shadow-2xs cursor-pointer"
+                data-years="1"
+              >
+                +1 Año
+              </button>
+              <button
+                type="button"
+                class="btn-preset-venc px-2 py-0.5 rounded-md bg-white border border-line hover:border-blue hover:text-blue hover:bg-sky text-navy text-[10px] font-bold transition shadow-2xs cursor-pointer"
+                data-years="2"
+              >
+                +2 Años
+              </button>
+              <button
+                type="button"
+                class="btn-preset-venc px-2 py-0.5 rounded-md bg-white border border-line hover:border-blue hover:text-blue hover:bg-sky text-navy text-[10px] font-bold transition shadow-2xs cursor-pointer"
+                data-years="3"
+              >
+                +3 Años
+              </button>
+              <button
+                type="button"
+                class="btn-preset-venc px-2 py-0.5 rounded-md bg-sky/80 border border-blue/30 text-blue hover:bg-blue hover:text-white text-[10px] font-bold transition shadow-2xs cursor-pointer"
+                data-years="5"
+                title="Vigencia estándar 5 años"
+              >
+                +5 Años
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Selector de Múltiples Categorías con Badges Clickeables -->
+        <div class="rounded-xl border border-line bg-paper/50 p-3.5 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-navy text-[11px]">Seleccionar Categorías Habilitadas:</span>
+            <span id="badge-categorias-resumen" class="font-mono text-[11px] font-bold text-blue bg-white border border-line px-2 py-0.5 rounded-md">
+              Ninguna seleccionada
+            </span>
+          </div>
+
+          <!-- Input oculto que almacena las categorías unificadas -->
+          <input type="hidden" id="form-chofer-categoria" name="categoriaLicencia" value="B1" required />
+
+          <!-- Grupo: Profesionales Pasajeros (D1, D2, D3, D4) -->
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-blue block mb-1.5">Transporte de Pasajeros (Profesionales)</span>
+            <div class="flex flex-wrap gap-1.5">
+              {categoriasPasajeros.map((cat) => (
+                <button
+                  type="button"
+                  data-cat={cat}
+                  class="btn-toggle-cat px-3 py-1 rounded-lg text-xs font-mono font-bold border border-line bg-white text-navy hover:border-blue/50 transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <span>{cat}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <!-- Grupo: Profesionales Carga Pesada (C1, C2, C3, E1, E2, E3) -->
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-amber-700 block mb-1.5">Carga y Articulados (Profesionales)</span>
+            <div class="flex flex-wrap gap-1.5">
+              {categoriasCarga.map((cat) => (
+                <button
+                  type="button"
+                  data-cat={cat}
+                  class="btn-toggle-cat px-3 py-1 rounded-lg text-xs font-mono font-bold border border-line bg-white text-navy hover:border-amber-400 transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <span>{cat}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <!-- Grupo: Particulares y Livianos (A1..B2) -->
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-muted block mb-1.5">Particulares y Livianos</span>
+            <div class="flex flex-wrap gap-1.5">
+              {categoriasParticulares.map((cat) => (
+                <button
+                  type="button"
+                  data-cat={cat}
+                  class="btn-toggle-cat px-3 py-1 rounded-lg text-xs font-mono font-bold border border-line bg-white text-navy hover:border-blue/40 transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <span>{cat}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECCIÓN 3: ESCANEO Y DIGITALIZACIÓN DE DOCUMENTOS (DNI Y CARNET) -->
+      <div class="pt-3 border-t border-line">
+        <p class="font-bold text-navy uppercase tracking-wider text-[11px] mb-3 flex items-center gap-2">
+          <span class="flex h-5 w-5 items-center justify-center rounded-full bg-sky text-blue text-[10px]">3</span>
+          Digitalización de Documentos (Archivos o Cámara)
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Documento DNI -->
+          <div class="rounded-xl border border-line bg-paper/40 p-3 space-y-2.5">
+            <div class="flex items-center justify-between text-navy">
+              <span class="font-bold text-xs flex items-center gap-1.5">
+                <FileText size={15} class="text-blue" /> DNI Digitalizado
+              </span>
+              <span class="text-[10px] text-muted">Frente y Dorso</span>
+            </div>
+
+            <!-- Inputs ocultos para base64 -->
+            <input type="hidden" id="form-foto-dni-frente" name="fotoDniFrente" value="" />
+            <input type="hidden" id="form-foto-dni-dorso" name="fotoDniDorso" value="" />
+
+            <div class="grid grid-cols-2 gap-2">
+              <!-- DNI Frente -->
+              <div class="doc-upload-box relative rounded-lg border border-dashed border-line bg-white p-2.5 text-center flex flex-col items-center justify-center min-h-[95px] hover:border-blue/50 transition">
+                <input type="file" id="file-dni-frente" accept="image/*,application/pdf" capture="environment" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10" />
+                <div id="preview-dni-frente-container" class="hidden w-full h-full flex flex-col items-center">
+                  <img id="preview-dni-frente" class="h-14 w-auto rounded object-cover border border-line mb-1" />
+                  <span class="text-[9px] text-emerald-600 font-bold">Frente cargado</span>
+                </div>
+                <div id="placeholder-dni-frente" class="text-muted flex flex-col items-center">
+                  <Upload size={18} class="mb-1 text-blue/70" />
+                  <span class="text-[10px] font-bold text-navy">Frente DNI</span>
+                  <span class="text-[9px] text-muted">Foto o PDF</span>
+                </div>
+              </div>
+
+              <!-- DNI Dorso -->
+              <div class="doc-upload-box relative rounded-lg border border-dashed border-line bg-white p-2.5 text-center flex flex-col items-center justify-center min-h-[95px] hover:border-blue/50 transition">
+                <input type="file" id="file-dni-dorso" accept="image/*,application/pdf" capture="environment" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10" />
+                <div id="preview-dni-dorso-container" class="hidden w-full h-full flex flex-col items-center">
+                  <img id="preview-dni-dorso" class="h-14 w-auto rounded object-cover border border-line mb-1" />
+                  <span class="text-[9px] text-emerald-600 font-bold">Dorso cargado</span>
+                </div>
+                <div id="placeholder-dni-dorso" class="text-muted flex flex-col items-center">
+                  <Upload size={18} class="mb-1 text-blue/70" />
+                  <span class="text-[10px] font-bold text-navy">Dorso DNI</span>
+                  <span class="text-[9px] text-muted">Foto o PDF</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Documento Carnet de Conducir -->
+          <div class="rounded-xl border border-line bg-paper/40 p-3 space-y-2.5">
+            <div class="flex items-center justify-between text-navy">
+              <span class="font-bold text-xs flex items-center gap-1.5">
+                <FileBadge size={15} class="text-blue" /> Carnet de Conducir
+              </span>
+              <span class="text-[10px] text-muted">Frente y Dorso</span>
+            </div>
+
+            <!-- Inputs ocultos para base64 -->
+            <input type="hidden" id="form-foto-lic-frente" name="fotoLicenciaFrente" value="" />
+            <input type="hidden" id="form-foto-lic-dorso" name="fotoLicenciaDorso" value="" />
+
+            <div class="grid grid-cols-2 gap-2">
+              <!-- Licencia Frente -->
+              <div class="doc-upload-box relative rounded-lg border border-dashed border-line bg-white p-2.5 text-center flex flex-col items-center justify-center min-h-[95px] hover:border-blue/50 transition">
+                <input type="file" id="file-lic-frente" accept="image/*,application/pdf" capture="environment" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10" />
+                <div id="preview-lic-frente-container" class="hidden w-full h-full flex flex-col items-center">
+                  <img id="preview-lic-frente" class="h-14 w-auto rounded object-cover border border-line mb-1" />
+                  <span class="text-[9px] text-emerald-600 font-bold">Frente cargado</span>
+                </div>
+                <div id="placeholder-lic-frente" class="text-muted flex flex-col items-center">
+                  <Upload size={18} class="mb-1 text-blue/70" />
+                  <span class="text-[10px] font-bold text-navy">Frente Carnet</span>
+                  <span class="text-[9px] text-muted">Foto o PDF</span>
+                </div>
+              </div>
+
+              <!-- Licencia Dorso -->
+              <div class="doc-upload-box relative rounded-lg border border-dashed border-line bg-white p-2.5 text-center flex flex-col items-center justify-center min-h-[95px] hover:border-blue/50 transition">
+                <input type="file" id="file-lic-dorso" accept="image/*,application/pdf" capture="environment" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10" />
+                <div id="preview-lic-dorso-container" class="hidden w-full h-full flex flex-col items-center">
+                  <img id="preview-lic-dorso" class="h-14 w-auto rounded object-cover border border-line mb-1" />
+                  <span class="text-[9px] text-emerald-600 font-bold">Dorso cargado</span>
+                </div>
+                <div id="placeholder-lic-dorso" class="text-muted flex flex-col items-center">
+                  <Upload size={18} class="mb-1 text-blue/70" />
+                  <span class="text-[10px] font-bold text-navy">Dorso Carnet</span>
+                  <span class="text-[9px] text-muted">Foto o PDF</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECCIÓN 4: ESTADO Y OBSERVACIONES -->
+      <div class="pt-3 border-t border-line">
+        <p class="font-bold text-navy uppercase tracking-wider text-[11px] mb-3 flex items-center gap-2">
+          <span class="flex h-5 w-5 items-center justify-center rounded-full bg-sky text-blue text-[10px]">4</span>
+          Estado Operativo y Observaciones
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="font-bold text-muted block mb-1">Estado Operativo</label>
+            <select
+              id="form-chofer-estado"
+              name="estado"
+              class="w-full h-9 rounded-lg border border-line bg-paper px-2 focus:border-blue focus:bg-white outline-none cursor-pointer"
+            >
+              <option value="disponible">Disponible para comisiones</option>
+              <option value="en_comision">En comisión oficial</option>
+              <option value="licencia">De licencia / descanso</option>
+            </select>
+          </div>
+          <div>
+            <label class="font-bold text-muted block mb-1">Observaciones</label>
+            <input
+              type="text"
+              id="form-chofer-observaciones"
+              name="observaciones"
+              class="w-full h-9 rounded-lg border border-line bg-paper px-3 focus:border-blue focus:bg-white outline-none"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Mensaje de error/estado -->
+      <div id="chofer-form-alert" class="hidden rounded-lg p-3 text-xs font-semibold"></div>
+
+      <!-- Footer Buttons -->
+      <div class="flex items-center justify-between pt-3 border-t border-line">
+        <span class="text-[11px] text-muted flex items-center gap-1">
+          <Check size={13} class="text-emerald-600" /> Los campos con * son obligatorios
+        </span>
+        <div class="flex items-center gap-2.5">
+          <button
+            type="button"
+            id="btn-cancel-chofer-form"
+            class="rounded-lg border border-line bg-white px-4 py-2 text-xs font-bold text-muted hover:text-navy hover:bg-paper transition cursor-pointer"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            id="btn-submit-chofer"
+            class="flex items-center gap-2 rounded-lg bg-blue px-5 py-2 text-xs font-bold text-white shadow-sm shadow-blue/20 hover:opacity-90 transition cursor-pointer"
+          >
+            <Save size={15} />
+            <span id="btn-submit-chofer-text">Guardar Chofer</span>
+          </button>
+        </div>
+      </div>
+    </form>
+
+  </div>
+</div>

@@ -14,6 +14,7 @@ TRUNCATE TABLE `mantenimientos`;
 TRUNCATE TABLE `comisiones`;
 TRUNCATE TABLE `vehiculos`;
 TRUNCATE TABLE `tipos_vehiculo`;
+TRUNCATE TABLE `licencias_chofer`;
 TRUNCATE TABLE `choferes`;
 TRUNCATE TABLE `usuarios`;
 TRUNCATE TABLE `dependencias`;
@@ -87,3 +88,10 @@ INSERT INTO `auditoria_estados_vehiculo` (`id`, `vehiculo_id`, `estado_anterior`
 (1, 1, 'disponible', 'en_comision', 'Inicio de comisión a Valle Fértil COM-2024-0089', 1, NULL, 1, DATE_SUB(NOW(), INTERVAL 2 HOUR)),
 (2, 5, 'disponible', 'en_comision', 'Inicio de comisión a Jáchal COM-2024-0090', 2, NULL, 1, DATE_SUB(NOW(), INTERVAL 5 HOUR)),
 (3, 3, 'disponible', 'en_taller', 'Ingreso a servicio mecánico de 60.000 km', NULL, 1, 1, TIMESTAMP(CURDATE(), '09:30:00'));
+
+-- 11. Licencias y Ausencias de Choferes
+INSERT INTO `licencias_chofer` (`id`, `chofer_id`, `tipo`, `fecha_inicio`, `fecha_fin`, `dias_habiles`, `motivo`, `estado`, `aprobado_por_id`, `observaciones`) VALUES
+(1, 1, 'franco_compensatorio', CURDATE(), DATE_ADD(CURDATE(), INTERVAL 1 DAY), 2, 'Franco compensatorio por comisión a Valle Fértil en fin de semana', 'aprobada', 1, 'Autorizado por Dirección'),
+(2, 3, 'particular', DATE_SUB(CURDATE(), INTERVAL 20 DAY), DATE_SUB(CURDATE(), INTERVAL 18 DAY), 3, 'Trámite particular y renovación de carnet', 'aprobada', 1, 'Presentó constancia oficial'),
+(3, 4, 'capacitacion', DATE_ADD(CURDATE(), INTERVAL 5 DAY), DATE_ADD(CURDATE(), INTERVAL 6 DAY), 2, 'Curso de manejo defensivo y primeros auxilios en ruta', 'aprobada', 1, 'Organizado por Seguridad Vial San Juan');
+

@@ -1,8 +1,8 @@
 ---
-import { Bus, ChevronDown, Fuel, LayoutDashboard, Route, Settings, Truck, UsersRound, Wrench } from 'lucide-astro'
+import { Bus, CalendarDays, ChevronDown, Fuel, LayoutDashboard, Route, Settings, Truck, UsersRound, Wrench } from 'lucide-astro'
 
 interface Props {
-  activeNav?: 'panel' | 'flota' | 'choferes' | 'viajes' | 'mantenimientos' | 'combustible' | 'configuracion'
+  activeNav?: 'panel' | 'flota' | 'choferes' | 'cronograma' | 'viajes' | 'mantenimientos' | 'combustible' | 'configuracion'
 }
 
 const { activeNav = 'panel' } = Astro.props
@@ -10,12 +10,14 @@ const { activeNav = 'panel' } = Astro.props
 const navItems = [
   { id: 'panel', label: 'Panel principal', href: '/', icon: LayoutDashboard },
   { id: 'flota', label: 'Vehículos / Flota', href: '/flota', icon: Truck },
-  { id: 'choferes', label: 'Choferes', href: '/#choferes', icon: UsersRound },
+  { id: 'choferes', label: 'Choferes', href: '/choferes', icon: UsersRound },
+  { id: 'cronograma', label: 'Cronograma', href: '/cronograma', icon: CalendarDays },
   { id: 'viajes', label: 'Viajes / Hojas de ruta', href: '/#viajes', icon: Route },
   { id: 'mantenimientos', label: 'Mantenimientos', href: '/#mantenimientos', icon: Wrench },
   { id: 'combustible', label: 'Combustible', href: '/#combustible', icon: Fuel },
 ]
 ---
+
 
 <aside id="sidebar" class="sidebar fixed inset-y-0 left-0 z-40 flex w-[258px] flex-col bg-navy text-white shadow-xl">
   <!-- Identificación institucional -->

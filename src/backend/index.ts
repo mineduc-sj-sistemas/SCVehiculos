@@ -7,3 +7,6 @@ export * from './types/index'
 // Servicios de dominio
 export * from './services/dashboardService'
 export * from './services/vehicleService'
+export * from './services/choferService'
+export * from './services/cronogramaService'
+

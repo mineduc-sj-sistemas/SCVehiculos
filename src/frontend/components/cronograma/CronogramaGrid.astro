@@ -1,0 +1,250 @@
+---
+import {
+  Calendar,
+  CheckCircle,
+  Clock,
+  MapPin,
+  Plus,
+  Radio,
+  User,
+  Wrench,
+} from 'lucide-astro'
+import type { CronogramaDiaHeader, CronogramaVehiculoRow } from '../../types/cronograma.types'
+import PlateBadge from '../ui/PlateBadge.astro'
+
+interface Props {
+  dias: CronogramaDiaHeader[]
+  filas: CronogramaVehiculoRow[]
+}
+
+const { dias, filas } = Astro.props
+---
+
+<div class="relative rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+  <!-- Grilla con Scroll Horizontal fluido -->
+  <div class="overflow-x-auto min-w-full">
+    <table class="w-full border-collapse text-left text-xs min-w-[1050px]" id="tabla-cronograma">
+      <!-- Encabezado de la Grilla (Días de la Semana) -->
+      <thead>
+        <tr class="border-b border-gray-200 bg-gray-50/75">
+          <!-- Columna Móvil -->
+          <th class="sticky left-0 z-20 w-[240px] min-w-[240px] bg-gray-50/95 px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-navy shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)] border-r border-gray-200">
+            <div class="flex items-center justify-between">
+              <span>Móvil / Vehículo</span>
+              <span class="text-[10px] font-normal text-muted lowercase">({filas.length} móviles)</span>
+            </div>
+          </th>
+
+          <!-- 7 Columnas de Días -->
+          {dias.map((d) => (
+            <th
+              class:list={[
+                'w-[180px] min-w-[170px] px-3 py-3 text-center border-r border-gray-200 transition-colors',
+                d.esHoy ? 'bg-blue/10 border-blue/30' : (d.esFinDeSemana ? 'bg-gray-100/50' : 'bg-gray-50/50')
+              ]}
+            >
+              <div class="flex flex-col items-center justify-center gap-0.5">
+                <span class:list={[
+                  'text-[11px] uppercase tracking-wider font-bold',
+                  d.esHoy ? 'text-blue' : 'text-gray-600'
+                ]}>
+                  {d.diaNombre}
+                </span>
+
+                <div class="flex items-center gap-1.5">
+                  <span class:list={[
+                    'inline-flex items-center justify-center h-6 w-6 rounded-full text-xs font-bold transition',
+                    d.esHoy ? 'bg-blue text-white shadow-sm' : 'text-navy'
+                  ]}>
+                    {d.diaNumero}
+                  </span>
+                  <span class="text-[10px] font-medium text-muted">{d.mesNombre}</span>
+                </div>
+
+                {d.esHoy && (
+                  <span class="inline-flex items-center rounded-full bg-gold/25 px-2 py-0.5 text-[9px] font-bold text-navy mt-0.5 border border-gold/40">
+                    HOY
+                  </span>
+                )}
+              </div>
+            </th>
+          ))}
+        </tr>
+      </thead>
+
+      <!-- Filas de Vehículos y sus Asignaciones -->
+      <tbody class="divide-y divide-gray-100" id="tbody-cronograma">
+        {filas.map((v) => {
+          const isTaller = v.estadoVehiculo === 'en_taller'
+          return (
+            <tr
+              class="group hover:bg-gray-50/40 transition-colors fila-vehiculo"
+              data-patente={v.patente.toLowerCase()}
+              data-modelo={`${v.marca} ${v.modelo}`.toLowerCase()}
+              data-estado={v.estadoVehiculo}
+            >
+              <!-- Celda fija de Vehículo -->
+              <td class="sticky left-0 z-10 bg-white group-hover:bg-gray-50/90 transition-colors px-4 py-3.5 border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)] align-top">
+                <div class="space-y-1.5">
+                  <div class="flex items-center justify-between gap-1">
+                    <PlateBadge patente={v.patente} />
+                    {isTaller ? (
+                      <span class="inline-flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800">
+                        <Wrench size={11} />
+                        <span>En taller</span>
+                      </span>
+                    ) : (
+                      <span class="text-[10px] font-medium text-muted">
+                        {v.capacidadPasajeros} pas.
+                      </span>
+                    )}
+                  </div>
+
+                  <div>
+                    <p class="font-bold text-navy leading-tight">{v.marca} {v.modelo}</p>
+                    <p class="text-[10px] text-muted">{v.tipoVehiculo} · {v.odometroActual.toLocaleString('es-AR')} km</p>
+                  </div>
+                </div>
+              </td>
+
+              <!-- 7 Celdas de Días para este vehículo -->
+              {dias.map((d) => {
+                const comisiones = v.comisionesPorDia[d.fecha] || []
+                const hasComisiones = comisiones.length > 0
+
+                return (
+                  <td
+                    class:list={[
+                      'px-2 py-2 border-r border-gray-200 align-top transition-colors',
+                      d.esHoy ? 'bg-blue/[0.02]' : '',
+                      isTaller ? 'bg-amber-50/20' : ''
+                    ]}
+                  >
+                    {isTaller ? (
+                      <div class="flex flex-col items-center justify-center rounded-lg border border-dashed border-amber-300 bg-amber-50/60 p-2 text-center text-amber-800">
+                        <Wrench size={13} class="text-amber-600 mb-0.5" />
+                        <span class="text-[10px] font-bold">En Servicio Técnico</span>
+                        <span class="text-[9px] text-amber-700/80">No disponible</span>
+                      </div>
+                    ) : hasComisiones ? (
+                      <div class="space-y-2">
+                        {comisiones.map((c) => {
+                          const isEnCurso = c.estado === 'en_curso'
+                          const isProgramada = c.estado === 'programada'
+                          const isFinalizada = c.estado === 'finalizada'
+
+                          return (
+                            <div
+                              class:list={[
+                                'group/card relative rounded-xl border p-2.5 transition-all cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5 card-comision',
+                                isEnCurso
+                                  ? 'border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50/60 text-amber-950 ring-1 ring-amber-400/30'
+                                  : isProgramada
+                                  ? 'border-blue/30 bg-blue/5 text-navy hover:border-blue'
+                                  : 'border-emerald-200 bg-emerald-50/50 text-emerald-950'
+                              ]}
+                              data-comision-id={c.id}
+                              data-chofer={`${c.choferNombre} ${c.choferApellido}`.toLowerCase()}
+                              data-destino={c.destino.toLowerCase()}
+                              data-estado={c.estado}
+                              title="Click para ver hoja de ruta y opciones"
+                            >
+                              <div class="flex items-center justify-between gap-1 mb-1.5">
+                                <span class="font-mono text-[9px] font-bold text-muted">
+                                  {c.codigoComision}
+                                </span>
+
+                                {isEnCurso && (
+                                  <span class="inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-1.5 py-0.5 text-[9px] font-bold text-amber-800 border border-amber-500/30 animate-pulse">
+                                    <Radio size={9} />
+                                    <span>En viaje</span>
+                                  </span>
+                                )}
+
+                                {isProgramada && (
+                                  <span class="inline-flex items-center gap-1 rounded-full bg-blue/15 px-1.5 py-0.5 text-[9px] font-bold text-blue">
+                                    <Clock size={9} />
+                                    <span>Programada</span>
+                                  </span>
+                                )}
+
+                                {isFinalizada && (
+                                  <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold text-emerald-700">
+                                    <CheckCircle size={9} />
+                                    <span>Finalizada</span>
+                                  </span>
+                                )}
+                              </div>
+
+                              <div class="flex items-start gap-1 font-bold text-navy text-[11px] leading-tight mb-1">
+                                <MapPin size={12} class="text-blue shrink-0 mt-0.5" />
+                                <span class="line-clamp-1">{c.destino}</span>
+                              </div>
+
+                              <div class="flex items-center gap-1 text-[10px] text-gray-700 font-medium mb-1">
+                                <User size={11} class="text-gray-400 shrink-0" />
+                                <span class="truncate">{c.choferNombre} {c.choferApellido}</span>
+                              </div>
+
+                              <div class="flex items-center justify-between text-[9px] text-muted border-t border-black/5 pt-1 mt-1">
+                                <span class="truncate">{c.dependenciaNombre.replace('Dirección de ', 'Dir. ')}</span>
+                                <span class="font-bold text-navy">
+                                  {new Date(c.fechaSalidaProgramada).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs
+                                </span>
+                              </div>
+                            </div>
+                          )
+                        })}
+
+                        <button
+                          type="button"
+                          class="w-full rounded-lg border border-dashed border-gray-200 py-1 text-[10px] font-semibold text-gray-400 hover:border-blue hover:text-blue hover:bg-blue/5 transition cursor-pointer flex items-center justify-center gap-1 btn-asignar-celda"
+                          data-vehiculo-id={v.vehiculoId}
+                          data-vehiculo-patente={v.patente}
+                          data-fecha={d.fecha}
+                          title="Asignar otro servicio para este día"
+                        >
+                          <Plus size={11} />
+                          <span>Otro viaje</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        class="group/slot flex h-24 w-full flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-transparent text-gray-300 hover:border-blue/60 hover:bg-blue/[0.04] hover:text-blue transition-all cursor-pointer btn-asignar-celda"
+                        data-vehiculo-id={v.vehiculoId}
+                        data-vehiculo-patente={v.patente}
+                        data-fecha={d.fecha}
+                        title={`Asignar comisión a ${v.patente} el ${d.diaNombre} ${d.diaNumero}`}
+                      >
+                        <div class="flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 group-hover/slot:bg-blue group-hover/slot:text-white transition-colors mb-1">
+                          <Plus size={14} strokeWidth={2.5} />
+                        </div>
+                        <span class="text-[10px] font-bold opacity-0 group-hover/slot:opacity-100 transition-opacity">
+                          Asignar
+                        </span>
+                        <span class="text-[9px] text-gray-400 group-hover/slot:opacity-0 transition-opacity">
+                          Disponible
+                        </span>
+                      </button>
+                    )}
+                  </td>
+                )
+              })}
+            </tr>
+          )
+        })}
+
+        {filas.length === 0 && (
+          <tr>
+            <td colspan="8" class="py-12 text-center text-muted">
+              <Calendar size={32} class="mx-auto text-gray-300 mb-2" />
+              <p class="font-bold text-navy text-sm">No se encontraron vehículos registrados</p>
+              <p class="text-xs">Registre unidades en la sección de Vehículos para comenzar a despachar comisiones.</p>
+            </td>
+          </tr>
+        )}
+      </tbody>
+    </table>
+  </div>
+</div>

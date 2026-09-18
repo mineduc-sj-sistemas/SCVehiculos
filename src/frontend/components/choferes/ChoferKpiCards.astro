@@ -1,0 +1,74 @@
+---
+import { AlertTriangle, CalendarDays, Route, ShieldAlert, ShieldCheck, UsersRound } from 'lucide-astro'
+import type { ChoferStats } from '../../../backend/types'
+
+interface Props {
+  stats: ChoferStats
+}
+
+const { stats } = Astro.props
+---
+
+<section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5 mb-6">
+  <!-- Total Choferes -->
+  <div class="card p-4 flex items-center justify-between">
+    <div>
+      <p class="text-[11px] font-bold text-muted uppercase tracking-wider">Plantel Choferes</p>
+      <p class="mt-1 font-display text-2xl font-bold text-navy">{String(stats.totalDrivers).padStart(2, '0')}</p>
+      <p class="text-[10px] text-muted">Conductores activos</p>
+    </div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-sky text-blue">
+      <UsersRound size={20} />
+    </div>
+  </div>
+
+  <!-- Disponibles -->
+  <div class="card p-4 flex items-center justify-between">
+    <div>
+      <p class="text-[11px] font-bold text-muted uppercase tracking-wider">Disponibles</p>
+      <p class="mt-1 font-display text-2xl font-bold text-emerald-600">{String(stats.availableDrivers).padStart(2, '0')}</p>
+      <p class="text-[10px] text-muted">{stats.availablePercent}% de operatividad</p>
+    </div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+      <ShieldCheck size={20} />
+    </div>
+  </div>
+
+  <!-- En Comisión -->
+  <div class="card p-4 flex items-center justify-between">
+    <div>
+      <p class="text-[11px] font-bold text-muted uppercase tracking-wider">En Comisión</p>
+      <p class="mt-1 font-display text-2xl font-bold text-blue">{String(stats.onTravelDrivers).padStart(2, '0')}</p>
+      <p class="text-[10px] text-muted">En viaje oficial</p>
+    </div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-sky text-blue">
+      <Route size={20} />
+    </div>
+  </div>
+
+  <!-- De Licencia / Ausentes -->
+  <div class="card p-4 flex items-center justify-between">
+    <div>
+      <p class="text-[11px] font-bold text-muted uppercase tracking-wider">De Licencia</p>
+      <p class="mt-1 font-display text-2xl font-bold text-amber-600">{String(stats.onLeaveDrivers).padStart(2, '0')}</p>
+      <p class="text-[10px] text-muted">Ausencia o descanso</p>
+    </div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+      <CalendarDays size={20} />
+    </div>
+  </div>
+
+  <!-- Alertas de Carnet -->
+  <div class="card p-4 flex items-center justify-between">
+    <div>
+      <p class="text-[11px] font-bold text-muted uppercase tracking-wider">Alertas Carnet</p>
+      <p class={`mt-1 font-display text-2xl font-bold ${stats.expiringLicenses > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+        {String(stats.expiringLicenses).padStart(2, '0')}
+      </p>
+      <p class="text-[10px] text-muted">Vencen en ≤ 30 días</p>
+    </div>
+    <div class={`flex h-10 w-10 items-center justify-center rounded-xl ${stats.expiringLicenses > 0 ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`}>
+      <ShieldAlert size={20} />
+    </div>
+  </div>
+</section>
