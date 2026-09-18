@@ -1,15 +1,18 @@
 ---
-import { Bus, Calendar, ChevronRight, Clock, FileText, Fuel, Gauge, MapPin, ShieldAlert, ShieldCheck, Truck, User, Wrench, X } from 'lucide-astro'
+import { Bus, Calendar, ChevronRight, Clock, FileCheck2, FileText, Fuel, Gauge, Image as ImageIcon, MapPin, ShieldAlert, ShieldCheck, Truck, User, UserCheck, Wrench, X } from 'lucide-astro'
 ---
 
 <div id="vehicle-detail-modal" class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-navy/60 p-4 backdrop-blur-sm transition-opacity" style="display: none;">
-  <div class="relative w-full max-w-4xl rounded-2xl bg-white shadow-2xl border border-line flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+  <div class="relative w-full max-w-4xl rounded-2xl bg-white shadow-2xl border border-line flex flex-col max-h-[92vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
     
     <!-- Modal Header -->
     <div class="flex items-center justify-between border-b border-line bg-paper px-6 py-4">
       <div class="flex items-center gap-3">
-        <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-sky text-blue font-bold">
-          <Truck size={22} />
+        <div id="modal-vehicle-photo-container" class="relative h-12 w-16 overflow-hidden rounded-xl border border-line bg-white flex items-center justify-center text-muted shrink-0 shadow-xs">
+          <img id="modal-vehicle-photo" src="" alt="Foto vehículo" class="hidden h-full w-full object-contain p-0.5" />
+          <div id="modal-vehicle-photo-fallback" class="flex h-full w-full items-center justify-center bg-sky text-blue font-bold">
+            <Truck size={22} />
+          </div>
         </div>
         <div>
           <div class="flex items-center gap-2">
@@ -21,10 +24,16 @@ import { Bus, Calendar, ChevronRight, Clock, FileText, Fuel, Gauge, MapPin, Shie
               Disponible
             </span>
           </div>
-          <p id="modal-vehicle-subtitle" class="text-xs text-muted">Detalles técnicos, documentación e historial operativo</p>
+          <p id="modal-vehicle-subtitle" class="text-xs text-muted">Detalles técnicos, titularidad, 08 e historial operativo</p>
         </div>
       </div>
-      <button id="close-detail-modal" class="rounded-lg p-2 text-muted hover:bg-sky hover:text-navy transition" aria-label="Cerrar modal">
+      <button
+        type="button"
+        id="close-detail-modal"
+        onclick="window.closeVehicleDetailModal && window.closeVehicleDetailModal()"
+        class="rounded-lg p-2 text-muted hover:bg-sky hover:text-navy transition cursor-pointer"
+        aria-label="Cerrar modal"
+      >
         <X size={20} />
       </button>
     </div>
@@ -51,35 +60,74 @@ import { Bus, Calendar, ChevronRight, Clock, FileText, Fuel, Gauge, MapPin, Shie
       <!-- TAB 1: INFORMACIÓN BÁSICA, CÉDULA Y RTO -->
       <div id="tab-content-info" class="tab-pane space-y-6">
         
-        <!-- Bloque Documentación Oficial Clave -->
-        <div class="grid gap-4 sm:grid-cols-3">
+        <!-- Bloque Documentación Oficial Clave (4 Tarjetas) -->
+        <div class="grid gap-4 sm:grid-cols-4">
+          <!-- Tarjeta 1: Cédula -->
           <div class="rounded-xl border border-line bg-white p-4 shadow-xs">
             <div class="flex items-center justify-between text-muted mb-2">
-              <span class="text-[11px] font-bold uppercase tracking-wider">Cédula Oficial</span>
+              <span class="text-[10px] font-bold uppercase tracking-wider">Cédula Oficial</span>
               <FileText size={16} class="text-blue" />
             </div>
-            <p id="info-cedula" class="font-mono text-base font-bold text-navy">CV-09412356</p>
-            <p class="mt-1 text-[11px] text-[#20864f] font-semibold flex items-center gap-1">
-              <ShieldCheck size={13} /> Identificación Oficial Vigente
+            <p id="info-cedula" class="font-mono text-sm font-bold text-navy">CV-09412356</p>
+            <p id="info-cedula-venc" class="mt-1 text-[11px] text-[#20864f] font-semibold flex items-center gap-1">
+              <ShieldCheck size={13} /> Identificación Oficial
             </p>
           </div>
 
+          <!-- Tarjeta 2: RTO / VTV -->
           <div class="rounded-xl border border-line bg-white p-4 shadow-xs">
             <div class="flex items-center justify-between text-muted mb-2">
-              <span class="text-[11px] font-bold uppercase tracking-wider">RTO / VTV</span>
+              <span class="text-[10px] font-bold uppercase tracking-wider">RTO / VTV</span>
               <ShieldCheck size={16} class="text-blue" />
             </div>
-            <p id="info-rto" class="font-mono text-base font-bold text-navy">RTO-SJ-2024-8841</p>
+            <p id="info-rto" class="font-mono text-sm font-bold text-navy">RTO-SJ-2024-8841</p>
             <p id="info-rto-venc" class="mt-1 text-[11px] font-semibold text-muted">Vence: 12/10/2026</p>
           </div>
 
+          <!-- Tarjeta 3: Formulario 08 -->
           <div class="rounded-xl border border-line bg-white p-4 shadow-xs">
             <div class="flex items-center justify-between text-muted mb-2">
-              <span class="text-[11px] font-bold uppercase tracking-wider">Póliza Seguro</span>
+              <span class="text-[10px] font-bold uppercase tracking-wider">Formulario 08</span>
+              <FileCheck2 size={16} class="text-blue" />
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span id="info-08-estado-badge" class="rounded px-2 py-0.5 text-[10px] font-bold bg-[#e8f7ef] text-[#20864f]">
+                Inscripto
+              </span>
+              <span id="info-08-control" class="font-mono text-xs text-muted truncate">08-S/D</span>
+            </div>
+            <p id="info-08-venc" class="mt-1 text-[11px] font-semibold text-muted">No aplica</p>
+          </div>
+
+          <!-- Tarjeta 4: Seguro -->
+          <div class="rounded-xl border border-line bg-white p-4 shadow-xs">
+            <div class="flex items-center justify-between text-muted mb-2">
+              <span class="text-[10px] font-bold uppercase tracking-wider">Póliza Seguro</span>
               <ShieldAlert size={16} class="text-blue" />
             </div>
-            <p id="info-seguro-cia" class="text-sm font-bold text-navy">Nación Seguros</p>
-            <p id="info-seguro-poliza" class="mt-1 text-[11px] text-muted font-mono">Póliza: POL-784512-SJ</p>
+            <p id="info-seguro-cia" class="text-xs font-bold text-navy truncate">Nación Seguros</p>
+            <p id="info-seguro-poliza" class="mt-1 text-[11px] text-muted font-mono truncate">POL-784512-SJ</p>
+          </div>
+        </div>
+
+        <!-- Bloque Titularidad y Situación Registral -->
+        <div class="rounded-xl border border-line bg-white p-5 shadow-xs">
+          <h3 class="font-display text-sm font-bold text-navy mb-3 flex items-center gap-2">
+            <UserCheck size={16} class="text-blue" /> Titularidad y Radicación Registral
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+            <div class="p-3 bg-paper rounded-lg">
+              <p class="text-[10px] font-bold uppercase text-muted">Titular Registral (A nombre de)</p>
+              <p id="info-titular-nombre" class="mt-1 font-bold text-navy">Ministerio de Educación · Gob. de San Juan</p>
+            </div>
+            <div class="p-3 bg-paper rounded-lg">
+              <p class="text-[10px] font-bold uppercase text-muted">CUIT / CUIL / DNI</p>
+              <p id="info-titular-cuit" class="mt-1 font-mono font-bold text-navy">30-99901234-7</p>
+            </div>
+            <div class="p-3 bg-paper rounded-lg">
+              <p class="text-[10px] font-bold uppercase text-muted">Registro Seccional / Radicación</p>
+              <p id="info-registro-seccional" class="mt-1 font-bold text-navy">San Juan N° 1</p>
+            </div>
           </div>
         </div>
 
@@ -96,6 +144,13 @@ import { Bus, Calendar, ChevronRight, Clock, FileText, Fuel, Gauge, MapPin, Shie
             <div class="p-3 bg-paper rounded-lg">
               <p class="text-[10px] font-bold uppercase text-muted">Versión / Año</p>
               <p id="info-version-anio" class="mt-1 font-bold text-navy">DX 2.4 TDI · 2021</p>
+            </div>
+            <div class="p-3 bg-paper rounded-lg">
+              <p class="text-[10px] font-bold uppercase text-muted">Color de Carrocería</p>
+              <p id="info-color" class="mt-1 font-bold text-navy flex items-center gap-1.5">
+                <span id="info-color-pill" class="inline-block h-3 w-3 rounded-full border border-line bg-gray-300"></span>
+                <span id="info-color-text">Blanco Polar</span>
+              </p>
             </div>
             <div class="p-3 bg-paper rounded-lg">
               <p class="text-[10px] font-bold uppercase text-muted">Tipo de Vehículo</p>
@@ -117,19 +172,19 @@ import { Bus, Calendar, ChevronRight, Clock, FileText, Fuel, Gauge, MapPin, Shie
               <p class="text-[10px] font-bold uppercase text-muted">Capacidad Pasajeros</p>
               <p id="info-pasajeros" class="mt-1 font-bold text-navy">5 ocupantes</p>
             </div>
-            <div class="p-3 bg-paper rounded-lg">
-              <p class="text-[10px] font-bold uppercase text-muted">Área Asignada</p>
-              <p id="info-dependencia" class="mt-1 font-bold text-navy truncate">Educación Rural</p>
-            </div>
           </div>
 
-          <div class="mt-4 pt-4 border-t border-line grid sm:grid-cols-2 gap-4 text-xs">
+          <div class="mt-4 pt-4 border-t border-line grid sm:grid-cols-3 gap-4 text-xs">
             <div class="flex items-center justify-between p-3 bg-paper rounded-lg">
-              <span class="text-[11px] font-bold text-muted">Número de Chasis (VIN):</span>
+              <span class="text-[11px] font-bold text-muted">Área Asignada:</span>
+              <span id="info-dependencia" class="font-bold text-navy truncate">Educación Rural</span>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-paper rounded-lg">
+              <span class="text-[11px] font-bold text-muted">N° Chasis (VIN):</span>
               <span id="info-chasis" class="font-mono font-bold text-navy">8AJHA3CD5M1001234</span>
             </div>
             <div class="flex items-center justify-between p-3 bg-paper rounded-lg">
-              <span class="text-[11px] font-bold text-muted">Número de Motor:</span>
+              <span class="text-[11px] font-bold text-muted">N° de Motor:</span>
               <span id="info-motor" class="font-mono font-bold text-navy">2GD4567890</span>
             </div>
           </div>
@@ -246,7 +301,12 @@ import { Bus, Calendar, ChevronRight, Clock, FileText, Fuel, Gauge, MapPin, Shie
     <!-- Modal Footer -->
     <div class="flex items-center justify-between border-t border-line bg-paper px-6 py-3.5">
       <span class="text-xs text-muted">Ministerio de Educación · Ficha Oficial de Movilidad</span>
-      <button id="btn-close-detail" class="rounded-lg border border-line bg-white px-4 py-2 text-xs font-bold text-navy hover:bg-paper transition">
+      <button
+        type="button"
+        id="btn-close-detail"
+        onclick="window.closeVehicleDetailModal && window.closeVehicleDetailModal()"
+        class="rounded-lg border border-line bg-white px-4 py-2 text-xs font-bold text-navy hover:bg-paper transition cursor-pointer"
+      >
         Cerrar
       </button>
     </div>
@@ -254,34 +314,268 @@ import { Bus, Calendar, ChevronRight, Clock, FileText, Fuel, Gauge, MapPin, Shie
   </div>
 </div>
 
-<script>
-  // Control de pestañas dentro del modal
-  const tabBtns = document.querySelectorAll('#vehicle-detail-modal .tab-btn')
-  const tabPanes = document.querySelectorAll('#vehicle-detail-modal .tab-pane')
+<script is:inline>
+  window.closeVehicleDetailModal = function () {
+    var modal = document.getElementById('vehicle-detail-modal');
+    if (modal) modal.style.display = 'none';
+  };
 
-  tabBtns.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const targetTab = btn.getAttribute('data-tab')
-      tabBtns.forEach((b) => {
-        b.classList.remove('active', 'border-blue', 'text-blue')
-        b.classList.add('border-transparent', 'text-muted')
-      })
-      btn.classList.add('active', 'border-blue', 'text-blue')
-      btn.classList.remove('border-transparent', 'text-muted')
+  window.openVehicleDetailModal = async function (id) {
+    if (!id) return;
+    var modal = document.getElementById('vehicle-detail-modal');
+    try {
+      var res = await fetch('/api/vehiculos?id=' + id);
+      if (!res.ok) throw new Error('No se pudo cargar el vehículo');
+      var data = await res.json();
+      var v = data.vehicle;
+      if (!v) return;
 
-      tabPanes.forEach((pane) => pane.classList.add('hidden'))
-      document.querySelector(`#tab-content-${targetTab}`)?.classList.remove('hidden')
-    })
-  })
+      // Encabezado
+      var titleEl = document.getElementById('modal-vehicle-title');
+      var plateEl = document.getElementById('modal-vehicle-plate');
+      var statusEl = document.getElementById('modal-vehicle-status');
+      var photoImg = document.getElementById('modal-vehicle-photo');
+      var photoFallback = document.getElementById('modal-vehicle-photo-fallback');
 
-  // Cierre del modal
-  const modal = document.querySelector('#vehicle-detail-modal') as HTMLElement | null
-  const closeModal = () => {
-    if (modal) modal.style.display = 'none'
-  }
-  document.querySelector('#close-detail-modal')?.addEventListener('click', closeModal)
-  document.querySelector('#btn-close-detail')?.addEventListener('click', closeModal)
-  modal?.addEventListener('click', (e) => {
-    if (e.target === modal) closeModal()
-  })
+      if (titleEl) titleEl.textContent = v.marca + ' ' + v.modelo;
+      if (plateEl) plateEl.textContent = v.patente;
+      if (statusEl) {
+        statusEl.textContent = v.estadoLabel;
+        statusEl.className = 'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold ' +
+          (v.tone === 'green' ? 'bg-[#e8f7ef] text-[#20864f]' : (v.tone === 'blue' ? 'bg-sky text-blue' : 'bg-[#fff0e4] text-[#bf6e32]'));
+      }
+
+      var defaultPhoto = '/vehiculos/camioneta.png';
+      var tipoNorm = (v.tipoNombre || '').toLowerCase();
+      if (tipoNorm.includes('auto') || tipoNorm.includes('sedan')) defaultPhoto = '/vehiculos/auto.png';
+      else if (tipoNorm.includes('suv') || tipoNorm.includes('utilitario') || tipoNorm.includes('furgon')) defaultPhoto = '/vehiculos/suv.png';
+      else if (tipoNorm.includes('combi') || tipoNorm.includes('minibus') || tipoNorm.includes('bus')) defaultPhoto = '/vehiculos/combi.png';
+      else if (tipoNorm.includes('camion') && !tipoNorm.includes('camioneta')) defaultPhoto = '/vehiculos/camion.png';
+
+      var effectivePhoto = v.fotoUrl || defaultPhoto;
+      if (effectivePhoto && photoImg) {
+        photoImg.src = effectivePhoto;
+        photoImg.classList.remove('hidden');
+        if (photoFallback) photoFallback.classList.add('hidden');
+      } else {
+        if (photoImg) photoImg.classList.add('hidden');
+        if (photoFallback) photoFallback.classList.remove('hidden');
+      }
+
+      // Pestaña 1
+      var cedulaEl = document.getElementById('info-cedula');
+      var cedulaVencEl = document.getElementById('info-cedula-venc');
+      var rtoEl = document.getElementById('info-rto');
+      var rtoVencEl = document.getElementById('info-rto-venc');
+      var badge08 = document.getElementById('info-08-estado-badge');
+      var control08 = document.getElementById('info-08-control');
+      var venc08 = document.getElementById('info-08-venc');
+
+      if (cedulaEl) cedulaEl.textContent = v.numeroCedula || 'CV-S/D';
+      if (cedulaVencEl) {
+        cedulaVencEl.textContent = v.fechaVencimientoCedula ? 'Vence: ' + v.fechaVencimientoCedula.split('T')[0] : 'Identificación Oficial';
+      }
+      if (rtoEl) rtoEl.textContent = v.numeroRto || 'RTO-S/D';
+      if (rtoVencEl) rtoVencEl.textContent = 'Vence: ' + v.vtvFormatted;
+
+      if (badge08) {
+        badge08.textContent = v.estado08Label;
+        if (v.estado08Semaforo === 'vigente' || v.estado08 === 'inscripto') badge08.className = 'rounded px-2 py-0.5 text-[10px] font-bold bg-[#e8f7ef] text-[#20864f]';
+        else if (v.estado08Semaforo === 'proxima') badge08.className = 'rounded px-2 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-800 animate-pulse';
+        else if (v.estado08Semaforo === 'vencida') badge08.className = 'rounded px-2 py-0.5 text-[10px] font-bold bg-red-100 text-red-700';
+        else badge08.className = 'rounded px-2 py-0.5 text-[10px] font-bold bg-paper text-muted';
+      }
+      if (control08) control08.textContent = v.numeroControl08 ? 'N° ' + v.numeroControl08 : (v.tiene08 ? '08 S/N' : 'No aplica');
+      if (venc08) {
+        if (v.vencimiento08Formatted) {
+          venc08.textContent = 'Vence: ' + v.vencimiento08Formatted + (v.diasVencimiento08 != null && v.diasVencimiento08 >= 0 ? ' (' + v.diasVencimiento08 + ' d.)' : ' (Vencido)');
+        } else {
+          venc08.textContent = v.tiene08 ? 'Sin vencimiento cargado' : 'No requiere 08';
+        }
+      }
+
+      // Titularidad y Registro Seccional
+      var titularEl = document.getElementById('info-titular-nombre');
+      var cuitEl = document.getElementById('info-titular-cuit');
+      var registroEl = document.getElementById('info-registro-seccional');
+      if (titularEl) titularEl.textContent = v.titularNombre || 'Ministerio de Educación · Gob. de San Juan';
+      if (cuitEl) cuitEl.textContent = v.titularCuitCuil || '30-99901234-7';
+      if (registroEl) registroEl.textContent = v.registroSeccional || 'San Juan N° 1';
+
+      // Color
+      var colorTextEl = document.getElementById('info-color-text');
+      if (colorTextEl) colorTextEl.textContent = v.color || 'No especificado';
+
+      // Ficha Técnica Completa
+      var seguroCiaEl = document.getElementById('info-seguro-cia');
+      var seguroPolizaEl = document.getElementById('info-seguro-poliza');
+      var marcaModeloEl = document.getElementById('info-marca-modelo');
+      var versionAnioEl = document.getElementById('info-version-anio');
+      var tipoEl = document.getElementById('info-tipo');
+      var odometroEl = document.getElementById('info-odometro');
+      var combustibleEl = document.getElementById('info-combustible');
+      var tanqueEl = document.getElementById('info-tanque');
+      var pasajerosEl = document.getElementById('info-pasajeros');
+      var dependenciaEl = document.getElementById('info-dependencia');
+      var chasisEl = document.getElementById('info-chasis');
+      var motorEl = document.getElementById('info-motor');
+      var obsEl = document.getElementById('info-observaciones');
+
+      if (seguroCiaEl) seguroCiaEl.textContent = v.companiaSeguro || 'Nación Seguros';
+      if (seguroPolizaEl) seguroPolizaEl.textContent = 'Póliza: ' + (v.numeroPoliza || 'S/D');
+      if (marcaModeloEl) marcaModeloEl.textContent = v.marca + ' ' + v.modelo;
+      if (versionAnioEl) versionAnioEl.textContent = (v.version || 'Base') + ' · ' + (v.anio || 'S/D');
+      if (tipoEl) tipoEl.textContent = v.tipoNombre;
+      if (odometroEl) odometroEl.textContent = v.odometroFormatted;
+      if (combustibleEl) combustibleEl.textContent = v.tipoCombustibleLabel;
+      if (tanqueEl) tanqueEl.textContent = v.capacidadTanqueLitros ? v.capacidadTanqueLitros + ' L' : 'S/D';
+      if (pasajerosEl) pasajerosEl.textContent = v.capacidadPasajeros + ' personas';
+      if (dependenciaEl) dependenciaEl.textContent = v.dependenciaNombre;
+      if (chasisEl) chasisEl.textContent = v.numeroChasis || 'S/D';
+      if (motorEl) motorEl.textContent = v.numeroMotor || 'S/D';
+      if (obsEl) obsEl.textContent = v.observaciones || 'Sin novedades registradas.';
+
+      // Pestaña 2: Historial Mecánico
+      var badgeMecanico = document.getElementById('badge-count-mecanico');
+      if (badgeMecanico) badgeMecanico.textContent = String(data.mantenimientos.length);
+      var mecanicoEmpty = document.getElementById('mecanico-empty');
+      var mecanicoTable = document.getElementById('mecanico-table-container');
+      var mecanicoTbody = document.getElementById('mecanico-tbody');
+      if (mecanicoTbody) {
+        mecanicoTbody.innerHTML = '';
+        if (data.mantenimientos.length === 0) {
+          if (mecanicoEmpty) mecanicoEmpty.classList.remove('hidden');
+          if (mecanicoTable) mecanicoTable.classList.add('hidden');
+        } else {
+          if (mecanicoEmpty) mecanicoEmpty.classList.add('hidden');
+          if (mecanicoTable) mecanicoTable.classList.remove('hidden');
+          data.mantenimientos.forEach(function (m) {
+            var tr = document.createElement('tr');
+            tr.className = 'hover:bg-paper/40';
+            tr.innerHTML =
+              '<td class="px-4 py-3 font-bold text-navy">' + m.titulo + '</td>' +
+              '<td class="px-3 py-3 text-muted">' + m.tipo + '</td>' +
+              '<td class="px-3 py-3 text-muted">' + m.taller + '</td>' +
+              '<td class="px-3 py-3 font-mono">' + m.odometro + '</td>' +
+              '<td class="px-3 py-3 text-muted">' + m.fecha + '</td>' +
+              '<td class="px-3 py-3 font-bold text-navy text-right">' + m.costoTotal + '</td>' +
+              '<td class="px-4 py-3 text-right"><span class="rounded px-2 py-0.5 text-[9px] font-bold ' +
+              (m.estado === 'En taller' ? 'bg-sky text-blue' : 'bg-paper text-muted') + '">' + m.estado + '</span></td>';
+            mecanicoTbody.appendChild(tr);
+          });
+        }
+      }
+
+      // Pestaña 3: Historial de Viajes
+      var badgeViajes = document.getElementById('badge-count-viajes');
+      if (badgeViajes) badgeViajes.textContent = String(data.viajes.length);
+      var viajesEmpty = document.getElementById('viajes-empty');
+      var viajesTable = document.getElementById('viajes-table-container');
+      var viajesTbody = document.getElementById('viajes-tbody');
+      if (viajesTbody) {
+        viajesTbody.innerHTML = '';
+        if (data.viajes.length === 0) {
+          if (viajesEmpty) viajesEmpty.classList.remove('hidden');
+          if (viajesTable) viajesTable.classList.add('hidden');
+        } else {
+          if (viajesEmpty) viajesEmpty.classList.add('hidden');
+          if (viajesTable) viajesTable.classList.remove('hidden');
+          data.viajes.forEach(function (vj) {
+            var tr = document.createElement('tr');
+            tr.className = 'hover:bg-paper/40';
+            tr.innerHTML =
+              '<td class="px-4 py-3 font-mono font-bold text-navy">' + vj.codigo + '</td>' +
+              '<td class="px-3 py-3 font-bold text-navy">' + vj.destino + '</td>' +
+              '<td class="px-3 py-3 text-blue truncate max-w-[150px]">' + vj.area + '</td>' +
+              '<td class="px-3 py-3 text-muted">' + vj.chofer + '</td>' +
+              '<td class="px-3 py-3 text-muted">' + vj.fechaSalida + '</td>' +
+              '<td class="px-3 py-3 font-mono">' + vj.kmRecorridos + '</td>' +
+              '<td class="px-4 py-3 text-right"><span class="rounded px-2 py-0.5 text-[9px] font-bold ' +
+              (vj.estado === 'En viaje' ? 'bg-[#fff6df] text-[#b17b09]' : 'bg-[#e8f7ef] text-[#20864f]') + '">' + vj.estado + '</span></td>';
+            viajesTbody.appendChild(tr);
+          });
+        }
+      }
+
+      // Pestaña 4: Combustible
+      var badgeCombustible = document.getElementById('badge-count-combustible');
+      if (badgeCombustible) badgeCombustible.textContent = String(data.cargasCombustible.length);
+      var combustibleEmpty = document.getElementById('combustible-empty');
+      var combustibleTable = document.getElementById('combustible-table-container');
+      var combustibleTbody = document.getElementById('combustible-tbody');
+      if (combustibleTbody) {
+        combustibleTbody.innerHTML = '';
+        if (data.cargasCombustible.length === 0) {
+          if (combustibleEmpty) combustibleEmpty.classList.remove('hidden');
+          if (combustibleTable) combustibleTable.classList.add('hidden');
+        } else {
+          if (combustibleEmpty) combustibleEmpty.classList.add('hidden');
+          if (combustibleTable) combustibleTable.classList.remove('hidden');
+          data.cargasCombustible.forEach(function (c) {
+            var tr = document.createElement('tr');
+            tr.className = 'hover:bg-paper/40';
+            tr.innerHTML =
+              '<td class="px-4 py-3 text-muted">' + c.fecha + '</td>' +
+              '<td class="px-3 py-3 font-bold text-navy">' + c.estacion + '</td>' +
+              '<td class="px-3 py-3 font-mono">' + c.litros + '</td>' +
+              '<td class="px-3 py-3 font-bold text-navy">' + c.importe + '</td>' +
+              '<td class="px-3 py-3 font-mono text-muted">' + c.odometro + '</td>' +
+              '<td class="px-4 py-3 text-right font-bold text-[#20864f]">' + c.rendimiento + '</td>';
+            combustibleTbody.appendChild(tr);
+          });
+        }
+      }
+
+      // Reset tabs
+      var tabBtns = document.querySelectorAll('#vehicle-detail-modal .tab-btn');
+      var tabPanes = document.querySelectorAll('#vehicle-detail-modal .tab-pane');
+      tabBtns.forEach(function (b, idx) {
+        if (idx === 0) {
+          b.classList.add('active', 'border-blue', 'text-blue');
+          b.classList.remove('border-transparent', 'text-muted');
+        } else {
+          b.classList.remove('active', 'border-blue', 'text-blue');
+          b.classList.add('border-transparent', 'text-muted');
+        }
+      });
+      tabPanes.forEach(function (p, idx) {
+        if (idx === 0) p.classList.remove('hidden');
+        else p.classList.add('hidden');
+      });
+
+      if (modal) {
+        modal.style.display = 'flex';
+        modal.classList.remove('hidden');
+      }
+    } catch (err) {
+      alert('Error al obtener la ficha del vehículo: ' + (err.message || err));
+    }
+  };
+
+  // Tabs dentro del modal
+  document.querySelectorAll('#vehicle-detail-modal .tab-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var targetTab = this.getAttribute('data-tab');
+      var tabBtns = document.querySelectorAll('#vehicle-detail-modal .tab-btn');
+      var tabPanes = document.querySelectorAll('#vehicle-detail-modal .tab-pane');
+
+      tabBtns.forEach(function (b) {
+        b.classList.remove('active', 'border-blue', 'text-blue');
+        b.classList.add('border-transparent', 'text-muted');
+      });
+      this.classList.add('active', 'border-blue', 'text-blue');
+      this.classList.remove('border-transparent', 'text-muted');
+
+      tabPanes.forEach(function (pane) {
+        pane.classList.add('hidden');
+      });
+      var targetPane = document.getElementById('tab-content-' + targetTab);
+      if (targetPane) targetPane.classList.remove('hidden');
+    });
+  });
+
+  // Click en backdrop
+  document.getElementById('vehicle-detail-modal')?.addEventListener('click', function (e) {
+    if (e.target === this) window.closeVehicleDetailModal();
+  });
 </script>

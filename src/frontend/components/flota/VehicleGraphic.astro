@@ -1,0 +1,155 @@
+---
+interface Props {
+  tipoNombre?: string
+  fotoUrl?: string | null
+  color?: string | null
+  marca?: string
+  modelo?: string
+  className?: string
+}
+
+const {
+  tipoNombre = 'Camioneta',
+  fotoUrl = null,
+  color = null,
+  marca = '',
+  modelo = '',
+  className = 'h-36 w-full',
+} = Astro.props
+
+const normalizedTipo = (tipoNombre || '').toLowerCase()
+
+let defaultPhoto = '/vehiculos/camioneta.png'
+if (normalizedTipo.includes('auto') || normalizedTipo.includes('sedan')) {
+  defaultPhoto = '/vehiculos/auto.png'
+} else if (normalizedTipo.includes('suv') || normalizedTipo.includes('utilitario') || normalizedTipo.includes('furgon')) {
+  defaultPhoto = '/vehiculos/suv.png'
+} else if (normalizedTipo.includes('combi') || normalizedTipo.includes('minibus') || normalizedTipo.includes('bus')) {
+  defaultPhoto = '/vehiculos/combi.png'
+} else if (normalizedTipo.includes('camion') && !normalizedTipo.includes('camioneta')) {
+  defaultPhoto = '/vehiculos/camion.png'
+} else {
+  defaultPhoto = '/vehiculos/camioneta.png'
+}
+
+const activeImageUrl = fotoUrl || defaultPhoto
+---
+
+<div class={`relative flex items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-[#f8fafc] to-[#eef2f6] p-4 select-none ${className}`}>
+  <!-- Sombra de suelo suave y elegante para asentar el vehículo -->
+  <div class="pointer-events-none absolute bottom-2.5 h-3 w-4/5 max-w-[85%] rounded-[100%] bg-slate-900/15 blur-[4px] transition-transform duration-300 group-hover:scale-95 group-hover:opacity-75"></div>
+
+  <img
+    src={activeImageUrl}
+    alt={`${marca} ${modelo} - ${tipoNombre}`}
+    class="relative z-10 h-full w-full object-contain drop-shadow-sm transition-transform duration-300 group-hover:scale-105"
+    loading="lazy"
+    onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');"
+  />
+
+  <div class="w-full h-full flex items-center justify-center hidden">
+    {normalizedTipo.includes('utilitario') || normalizedTipo.includes('furgon') ? (
+      <svg viewBox="0 0 400 180" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-full w-auto max-w-[90%] drop-shadow-sm transition-transform duration-300 group-hover:scale-105">
+        <path d="M 60 135 L 45 130 C 40 125 35 110 40 95 L 65 60 C 75 48 95 45 120 45 L 340 45 C 355 45 365 55 365 70 L 365 130 C 365 135 355 135 340 135 Z" fill="#E2E8F0" stroke="#94A3B8" stroke-width="3" stroke-linejoin="round" />
+        <path d="M 38 122 L 55 122 C 58 122 60 128 58 135 L 40 135 C 36 135 34 128 38 122 Z" fill="#334155" />
+        <path d="M 350 122 L 368 122 C 372 122 374 128 370 135 L 350 135 Z" fill="#334155" />
+        <path d="M 72 62 L 125 55 L 125 90 L 58 90 Z" fill="#38BDF8" fill-opacity="0.35" stroke="#94A3B8" stroke-width="2" />
+        <line x1="135" y1="52" x2="135" y2="130" stroke="#CBD5E1" stroke-width="2" stroke-dasharray="2 2" />
+        <line x1="240" y1="52" x2="240" y2="130" stroke="#CBD5E1" stroke-width="2" />
+        <line x1="330" y1="52" x2="330" y2="130" stroke="#CBD5E1" stroke-width="2" />
+        <rect x="145" y="94" width="16" height="5" rx="2" fill="#64748B" />
+        <rect x="250" y="94" width="16" height="5" rx="2" fill="#64748B" />
+        <path d="M 45 92 L 56 86 L 54 100 L 41 100 Z" fill="#FBBF24" />
+        <rect x="360" y="75" width="5" height="25" rx="2" fill="#EF4444" />
+        <circle cx="115" cy="135" r="26" fill="#1E293B" />
+        <circle cx="115" cy="135" r="15" fill="#94A3B8" />
+        <circle cx="115" cy="135" r="6" fill="#F8FAFC" />
+        <circle cx="310" cy="135" r="26" fill="#1E293B" />
+        <circle cx="310" cy="135" r="15" fill="#94A3B8" />
+        <circle cx="310" cy="135" r="6" fill="#F8FAFC" />
+        <ellipse cx="205" cy="165" rx="160" ry="6" fill="#64748B" fill-opacity="0.18" />
+      </svg>
+    ) : normalizedTipo.includes('minibus') || normalizedTipo.includes('bus') ? (
+      <svg viewBox="0 0 420 180" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-full w-auto max-w-[90%] drop-shadow-sm transition-transform duration-300 group-hover:scale-105">
+        <path d="M 65 135 L 45 130 C 40 120 38 100 48 80 L 75 45 C 85 38 105 35 130 35 L 375 35 C 390 35 398 45 398 60 L 398 130 C 398 135 385 135 375 135 Z" fill="#E2E8F0" stroke="#94A3B8" stroke-width="3" stroke-linejoin="round" />
+        <path d="M 38 120 L 58 120 C 60 120 62 128 60 135 L 42 135 C 38 135 35 128 38 120 Z" fill="#334155" />
+        <path d="M 385 120 L 402 120 C 405 120 405 135 398 135 L 385 135 Z" fill="#334155" />
+        <path d="M 80 50 L 128 46 L 128 85 L 60 85 Z" fill="#38BDF8" fill-opacity="0.35" stroke="#94A3B8" stroke-width="2" />
+        <rect x="136" y="46" width="52" height="39" rx="3" fill="#38BDF8" fill-opacity="0.35" stroke="#94A3B8" stroke-width="2" />
+        <rect x="196" y="46" width="52" height="39" rx="3" fill="#38BDF8" fill-opacity="0.35" stroke="#94A3B8" stroke-width="2" />
+        <rect x="256" y="46" width="52" height="39" rx="3" fill="#38BDF8" fill-opacity="0.35" stroke="#94A3B8" stroke-width="2" />
+        <rect x="316" y="46" width="65" height="39" rx="3" fill="#38BDF8" fill-opacity="0.35" stroke="#94A3B8" stroke-width="2" />
+        <line x1="38" y1="105" x2="398" y2="105" stroke="#94A3B8" stroke-width="2" stroke-dasharray="8 4" />
+        <path d="M 48 85 L 58 80 L 56 94 L 43 94 Z" fill="#FBBF24" />
+        <rect x="393" y="65" width="5" height="35" rx="2" fill="#EF4444" />
+        <circle cx="115" cy="135" r="27" fill="#1E293B" />
+        <circle cx="115" cy="135" r="16" fill="#94A3B8" />
+        <circle cx="115" cy="135" r="6" fill="#F8FAFC" />
+        <circle cx="335" cy="135" r="27" fill="#1E293B" />
+        <circle cx="335" cy="135" r="16" fill="#94A3B8" />
+        <circle cx="335" cy="135" r="6" fill="#F8FAFC" />
+        <ellipse cx="225" cy="165" rx="175" ry="6" fill="#64748B" fill-opacity="0.18" />
+      </svg>
+    ) : normalizedTipo.includes('sedan') || normalizedTipo.includes('auto') ? (
+      <svg viewBox="0 0 380 160" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-full w-auto max-w-[90%] drop-shadow-sm transition-transform duration-300 group-hover:scale-105">
+        <path d="M 45 115 L 40 102 C 45 90 65 85 95 85 L 135 60 C 160 45 225 45 270 60 L 320 85 L 345 88 C 355 92 355 105 350 115 Z" fill="#E2E8F0" stroke="#94A3B8" stroke-width="3" stroke-linejoin="round" />
+        <path d="M 142 63 L 195 56 L 195 83 L 108 83 Z" fill="#38BDF8" fill-opacity="0.35" stroke="#94A3B8" stroke-width="2" />
+        <path d="M 203 56 L 258 63 L 305 83 L 203 83 Z" fill="#38BDF8" fill-opacity="0.35" stroke="#94A3B8" stroke-width="2" />
+        <line x1="199" y1="56" x2="199" y2="115" stroke="#CBD5E1" stroke-width="2" />
+        <line x1="105" y1="83" x2="105" y2="115" stroke="#CBD5E1" stroke-width="2" />
+        <line x1="295" y1="83" x2="295" y2="115" stroke="#CBD5E1" stroke-width="2" />
+        <rect x="175" y="89" width="14" height="4" rx="1.5" fill="#64748B" />
+        <rect x="215" y="89" width="14" height="4" rx="1.5" fill="#64748B" />
+        <path d="M 40 98 L 52 94 L 50 105 L 38 105 Z" fill="#FBBF24" />
+        <path d="M 345 94 L 354 96 L 350 105 L 340 103 Z" fill="#EF4444" />
+        <circle cx="100" cy="115" r="23" fill="#1E293B" />
+        <circle cx="100" cy="115" r="14" fill="#94A3B8" />
+        <circle cx="100" cy="115" r="5" fill="#F8FAFC" />
+        <circle cx="280" cy="115" r="23" fill="#1E293B" />
+        <circle cx="280" cy="115" r="14" fill="#94A3B8" />
+        <circle cx="280" cy="115" r="5" fill="#F8FAFC" />
+        <ellipse cx="190" cy="142" rx="150" ry="5" fill="#64748B" fill-opacity="0.18" />
+      </svg>
+    ) : (normalizedTipo.includes('camion') && !normalizedTipo.includes('camioneta')) ? (
+      <svg viewBox="0 0 440 190" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-full w-auto max-w-[95%] drop-shadow-sm transition-transform duration-300 group-hover:scale-105">
+        <path d="M 50 145 L 45 90 L 60 50 C 65 42 75 40 90 40 L 125 40 L 125 145 Z" fill="#CBD5E1" stroke="#94A3B8" stroke-width="3" stroke-linejoin="round" />
+        <path d="M 58 55 L 115 50 L 115 85 L 50 85 Z" fill="#38BDF8" fill-opacity="0.35" stroke="#94A3B8" stroke-width="2" />
+        <rect x="135" y="30" width="270" height="115" rx="4" fill="#E2E8F0" stroke="#94A3B8" stroke-width="3" />
+        <line x1="225" y1="30" x2="225" y2="145" stroke="#CBD5E1" stroke-width="2" />
+        <line x1="315" y1="30" x2="315" y2="145" stroke="#CBD5E1" stroke-width="2" />
+        <rect x="38" y="130" width="20" height="18" rx="2" fill="#334155" />
+        <rect x="400" y="135" width="10" height="15" fill="#334155" />
+        <circle cx="85" cy="148" r="27" fill="#1E293B" />
+        <circle cx="85" cy="148" r="15" fill="#94A3B8" />
+        <circle cx="85" cy="148" r="6" fill="#F8FAFC" />
+        <circle cx="310" cy="148" r="27" fill="#1E293B" />
+        <circle cx="310" cy="148" r="15" fill="#94A3B8" />
+        <circle cx="310" cy="148" r="6" fill="#F8FAFC" />
+        <circle cx="370" cy="148" r="27" fill="#1E293B" />
+        <circle cx="370" cy="148" r="15" fill="#94A3B8" />
+        <circle cx="370" cy="148" r="6" fill="#F8FAFC" />
+        <ellipse cx="230" cy="178" rx="190" ry="7" fill="#64748B" fill-opacity="0.18" />
+      </svg>
+    ) : (
+      <svg viewBox="0 0 400 170" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-full w-auto max-w-[90%] drop-shadow-sm transition-transform duration-300 group-hover:scale-105">
+        <path d="M 55 125 L 45 115 C 40 105 45 92 70 88 L 115 65 C 135 52 185 50 235 50 L 255 50 L 255 88 L 355 88 C 362 88 368 94 368 100 L 368 125 Z" fill="#E2E8F0" stroke="#94A3B8" stroke-width="3" stroke-linejoin="round" />
+        <path d="M 125 68 L 180 58 L 180 86 L 85 86 Z" fill="#38BDF8" fill-opacity="0.35" stroke="#94A3B8" stroke-width="2" />
+        <path d="M 188 58 L 235 58 L 245 86 L 188 86 Z" fill="#38BDF8" fill-opacity="0.35" stroke="#94A3B8" stroke-width="2" />
+        <line x1="255" y1="52" x2="255" y2="125" stroke="#94A3B8" stroke-width="2.5" />
+        <line x1="184" y1="58" x2="184" y2="125" stroke="#CBD5E1" stroke-width="2" />
+        <rect x="155" y="93" width="14" height="4" rx="1.5" fill="#64748B" />
+        <rect x="210" y="93" width="14" height="4" rx="1.5" fill="#64748B" />
+        <path d="M 45 100 L 58 95 L 56 108 L 42 108 Z" fill="#FBBF24" />
+        <rect x="363" y="92" width="5" height="20" rx="2" fill="#EF4444" />
+        <circle cx="105" cy="126" r="26" fill="#1E293B" />
+        <circle cx="105" cy="126" r="16" fill="#94A3B8" />
+        <circle cx="105" cy="126" r="6" fill="#F8FAFC" />
+        <circle cx="305" cy="126" r="26" fill="#1E293B" />
+        <circle cx="305" cy="126" r="16" fill="#94A3B8" />
+        <circle cx="305" cy="126" r="6" fill="#F8FAFC" />
+        <path d="M 252 56 L 275 88" stroke="#64748B" stroke-width="3.5" stroke-linecap="round" />
+        <ellipse cx="205" cy="155" rx="165" ry="6" fill="#64748B" fill-opacity="0.18" />
+      </svg>
+    )}
+  </div>
+</div>

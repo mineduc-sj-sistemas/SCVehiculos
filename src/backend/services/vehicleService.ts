@@ -91,15 +91,24 @@ export async function getVehiclesFullList(): Promise<VehicleFull[]> {
         t.nombre AS tipo_nombre,
         v.dependencia_id,
         COALESCE(d.nombre, 'Sin asignar') AS dependencia_nombre,
+        v.titular_nombre,
+        v.titular_cuit_cuil,
+        v.registro_seccional,
         v.marca,
         v.modelo,
         v.version,
         v.anio,
+        v.color,
         v.numero_chasis,
         v.numero_motor,
         v.numero_cedula,
         v.fecha_vencimiento_cedula,
         v.numero_rto,
+        v.tiene_08,
+        v.estado_08,
+        v.fecha_vencimiento_08,
+        DATEDIFF(v.fecha_vencimiento_08, CURDATE()) AS dias_08,
+        v.numero_control_08,
         v.tipo_combustible,
         v.capacidad_tanque_litros,
         v.capacidad_pasajeros,
@@ -110,7 +119,8 @@ export async function getVehiclesFullList(): Promise<VehicleFull[]> {
         v.numero_poliza,
         v.fecha_vencimiento_seguro,
         v.estado,
-        v.observaciones
+        v.observaciones,
+        v.foto_url
       FROM vehiculos v
       JOIN tipos_vehiculo t ON v.tipo_vehiculo_id = t.id
       LEFT JOIN dependencias d ON v.dependencia_id = d.id
@@ -128,6 +138,41 @@ export async function getVehiclesFullList(): Promise<VehicleFull[]> {
       let vtvStatus: 'vigente' | 'proxima' | 'vencida' = 'vigente'
       if (diasVtv < 0) vtvStatus = 'vencida'
       else if (diasVtv <= 30) vtvStatus = 'proxima'
+
+      const tiene08 = Boolean(r.tiene_08)
+      const estado08 = (r.estado_08 || (tiene08 ? 'firmado' : 'no_aplica')) as VehicleFull['estado08']
+      let estado08Label = 'No Aplica'
+      switch (estado08) {
+        case 'pendiente_firma':
+          estado08Label = 'Pendiente Firma'
+          break
+        case 'firmado':
+          estado08Label = '08 Firmado'
+          break
+        case 'en_tramite':
+          estado08Label = 'En Trámite'
+          break
+        case 'inscripto':
+          estado08Label = 'Inscripto / Titularidad'
+          break
+      }
+
+      const venc08Date = r.fecha_vencimiento_08 ? new Date(r.fecha_vencimiento_08) : null
+      const vencimiento08Formatted = venc08Date
+        ? `${String(venc08Date.getDate()).padStart(2, '0')}/${String(venc08Date.getMonth() + 1).padStart(2, '0')}/${venc08Date.getFullYear()}`
+        : 'S/D'
+
+      const dias08 = r.dias_08 != null ? Number(r.dias_08) : null
+      let estado08Semaforo: VehicleFull['estado08Semaforo'] = 'neutral'
+      if (estado08 === 'firmado' || estado08 === 'en_tramite') {
+        if (dias08 != null && dias08 < 0) {
+          estado08Semaforo = 'vencido'
+        } else if (dias08 != null && dias08 <= 30) {
+          estado08Semaforo = 'proximo'
+        } else {
+          estado08Semaforo = 'vigente'
+        }
+      }
 
       let tone: VehicleFull['tone'] = 'gray'
       let estadoLabel = 'Disponible'
@@ -167,6 +212,12 @@ export async function getVehiclesFullList(): Promise<VehicleFull[]> {
         case 'gnc':
           tipoCombustibleLabel = 'GNC'
           break
+        case 'hibrido':
+          tipoCombustibleLabel = 'Híbrido'
+          break
+        case 'electrico':
+          tipoCombustibleLabel = 'Eléctrico'
+          break
       }
 
       return {
@@ -176,15 +227,27 @@ export async function getVehiclesFullList(): Promise<VehicleFull[]> {
         tipoNombre: r.tipo_nombre,
         dependenciaId: r.dependencia_id,
         dependenciaNombre: r.dependencia_nombre,
+        titularNombre: r.titular_nombre || null,
+        titularCuitCuil: r.titular_cuit_cuil || null,
+        registroSeccional: r.registro_seccional || null,
         marca: r.marca,
         modelo: r.modelo,
         version: r.version,
         anio: r.anio,
+        color: r.color || 'No especificado',
         numeroChasis: r.numero_chasis,
         numeroMotor: r.numero_motor,
         numeroCedula: r.numero_cedula || 'CV-S/D',
         fechaVencimientoCedula: r.fecha_vencimiento_cedula ? String(r.fecha_vencimiento_cedula) : null,
         numeroRto: r.numero_rto || 'RTO-S/D',
+        tiene08,
+        estado08,
+        estado08Label,
+        fechaVencimiento08: r.fecha_vencimiento_08 ? String(r.fecha_vencimiento_08) : null,
+        vencimiento08Formatted,
+        diasVencimiento08: dias08,
+        estado08Semaforo,
+        numeroControl08: r.numero_control_08 || null,
         tipoCombustible: r.tipo_combustible,
         tipoCombustibleLabel,
         capacidadTanqueLitros: r.capacidad_tanque_litros ? Number(r.capacidad_tanque_litros) : null,
@@ -202,6 +265,7 @@ export async function getVehiclesFullList(): Promise<VehicleFull[]> {
         estadoLabel,
         tone,
         observaciones: r.observaciones,
+        fotoUrl: r.foto_url || null,
       }
     })
   } catch (error) {
@@ -383,6 +447,9 @@ export async function saveVehicle(
   data: VehicleSaveInput
 ): Promise<{ success: boolean; id?: number; error?: string }> {
   try {
+    const tiene08Val = data.tiene08 ? 1 : 0
+    const estado08Val = data.estado08 || (data.tiene08 ? 'firmado' : 'no_aplica')
+
     if (data.id) {
       await query(
         `
@@ -390,15 +457,23 @@ export async function saveVehicle(
           patente = ?,
           tipo_vehiculo_id = ?,
           dependencia_id = ?,
+          titular_nombre = ?,
+          titular_cuit_cuil = ?,
+          registro_seccional = ?,
           marca = ?,
           modelo = ?,
           version = ?,
           anio = ?,
+          color = ?,
           numero_chasis = ?,
           numero_motor = ?,
           numero_cedula = ?,
           fecha_vencimiento_cedula = ?,
           numero_rto = ?,
+          tiene_08 = ?,
+          estado_08 = ?,
+          fecha_vencimiento_08 = ?,
+          numero_control_08 = ?,
           tipo_combustible = ?,
           capacidad_tanque_litros = ?,
           capacidad_pasajeros = ?,
@@ -408,22 +483,31 @@ export async function saveVehicle(
           numero_poliza = ?,
           fecha_vencimiento_seguro = ?,
           estado = COALESCE(?, estado),
-          observaciones = ?
+          observaciones = ?,
+          foto_url = ?
         WHERE id = ?
       `,
         [
           data.patente.toUpperCase().trim(),
           data.tipoId,
           data.dependenciaId || null,
+          data.titularNombre || null,
+          data.titularCuitCuil || null,
+          data.registroSeccional || null,
           data.marca,
           data.modelo,
           data.version || null,
           data.anio || null,
+          data.color || null,
           data.numeroChasis || null,
           data.numeroMotor || null,
           data.numeroCedula || null,
           data.fechaVencimientoCedula || null,
           data.numeroRto || null,
+          tiene08Val,
+          estado08Val,
+          data.fechaVencimiento08 || null,
+          data.numeroControl08 || null,
           data.tipoCombustible || 'diesel_grado_3',
           data.capacidadTanqueLitros || null,
           data.capacidadPasajeros || 5,
@@ -434,6 +518,7 @@ export async function saveVehicle(
           data.fechaVencimientoSeguro || null,
           data.estado || 'disponible',
           data.observaciones || null,
+          data.fotoUrl || null,
           data.id,
         ]
       )
@@ -442,26 +527,36 @@ export async function saveVehicle(
       const result = await query<any>(
         `
         INSERT INTO vehiculos (
-          patente, tipo_vehiculo_id, dependencia_id, marca, modelo, version, anio,
+          patente, tipo_vehiculo_id, dependencia_id, titular_nombre, titular_cuit_cuil,
+          registro_seccional, marca, modelo, version, anio, color,
           numero_chasis, numero_motor, numero_cedula, fecha_vencimiento_cedula, numero_rto,
+          tiene_08, estado_08, fecha_vencimiento_08, numero_control_08,
           tipo_combustible, capacidad_tanque_litros, capacidad_pasajeros, odometro_actual,
           fecha_vencimiento_vtv, compania_seguro, numero_poliza, fecha_vencimiento_seguro,
-          estado, observaciones
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          estado, observaciones, foto_url
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
         [
           data.patente.toUpperCase().trim(),
           data.tipoId,
           data.dependenciaId || null,
+          data.titularNombre || null,
+          data.titularCuitCuil || null,
+          data.registroSeccional || null,
           data.marca,
           data.modelo,
           data.version || null,
           data.anio || null,
+          data.color || null,
           data.numeroChasis || null,
           data.numeroMotor || null,
           data.numeroCedula || null,
           data.fechaVencimientoCedula || null,
           data.numeroRto || null,
+          tiene08Val,
+          estado08Val,
+          data.fechaVencimiento08 || null,
+          data.numeroControl08 || null,
           data.tipoCombustible || 'diesel_grado_3',
           data.capacidadTanqueLitros || null,
           data.capacidadPasajeros || 5,
@@ -472,6 +567,7 @@ export async function saveVehicle(
           data.fechaVencimientoSeguro || null,
           data.estado || 'disponible',
           data.observaciones || null,
+          data.fotoUrl || null,
         ]
       )
       return { success: true, id: result.insertId }

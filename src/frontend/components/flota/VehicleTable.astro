@@ -54,19 +54,46 @@ const { vehicles } = Astro.props
               <PlateBadge plate={v.patente} />
             </td>
 
-            <!-- Marca y Modelo -->
+            <!-- Marca y Modelo con Miniatura -->
             <td class="px-4 py-4">
-              <p class="font-bold text-navy text-[13px]">{v.marca} {v.modelo}</p>
-              <p class="text-[11px] text-muted">{v.tipoNombre} {v.anio ? `· ${v.anio}` : ''} {v.version ? `(${v.version})` : ''}</p>
+              <div class="flex items-center gap-3">
+                {v.fotoUrl ? (
+                  <img src={v.fotoUrl} alt={v.modelo} class="h-10 w-14 object-contain rounded-lg border border-line bg-paper/50 p-0.5 shrink-0" />
+                ) : (
+                  <div class="flex h-10 w-12 items-center justify-center rounded-lg border border-line bg-sky/50 text-blue shrink-0">
+                    <Truck size={18} />
+                  </div>
+                )}
+                <div>
+                  <p class="font-bold text-navy text-[13px]">{v.marca} {v.modelo}</p>
+                  <p class="text-[11px] text-muted">{v.tipoNombre} {v.anio ? `· ${v.anio}` : ''} {v.version ? `(${v.version})` : ''}</p>
+                </div>
+              </div>
             </td>
 
-            <!-- Cédula -->
+            <!-- Cédula y Formulario 08 -->
             <td class="px-3 py-4 whitespace-nowrap">
               <p class="font-mono text-xs font-semibold text-navy flex items-center gap-1">
                 <FileText size={13} class="text-blue shrink-0" />
                 {v.numeroCedula}
               </p>
-              <span class="text-[10px] text-muted">Oficial San Juan</span>
+              <div class="mt-0.5 flex items-center gap-1">
+                {v.estado08 === 'inscripto' && (
+                  <span class="rounded bg-[#e8f7ef] px-1.5 py-0.5 text-[9px] font-bold text-[#20864f]">08 Inscripto</span>
+                )}
+                {v.estado08 === 'firmado' && (
+                  <span class="rounded bg-sky px-1.5 py-0.5 text-[9px] font-bold text-blue">08 Firmado</span>
+                )}
+                {v.estado08 === 'en_tramite' && (
+                  <span class="rounded bg-amber-50 px-1.5 py-0.5 text-[9px] font-bold text-amber-700">08 En trámite</span>
+                )}
+                {v.estado08 === 'pendiente_firma' && (
+                  <span class="rounded bg-rose-50 px-1.5 py-0.5 text-[9px] font-bold text-rose-700">08 Pendiente</span>
+                )}
+                {(!v.estado08 || v.estado08 === 'no_aplica') && (
+                  <span class="text-[10px] text-muted">Oficial San Juan</span>
+                )}
+              </div>
             </td>
 
             <!-- RTO con semáforo -->

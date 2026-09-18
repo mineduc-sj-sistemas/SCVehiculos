@@ -5,15 +5,27 @@ export interface VehicleFull {
   tipoNombre: string
   dependenciaId: number | null
   dependenciaNombre: string
+  titularNombre: string | null
+  titularCuitCuil: string | null
+  registroSeccional: string | null
   marca: string
   modelo: string
   version: string | null
   anio: number | null
+  color: string | null
   numeroChasis: string | null
   numeroMotor: string | null
   numeroCedula: string | null
   fechaVencimientoCedula: string | null
   numeroRto: string | null
+  tiene08: boolean
+  estado08: 'no_aplica' | 'pendiente_firma' | 'firmado' | 'en_tramite' | 'inscripto'
+  estado08Label: string
+  fechaVencimiento08: string | null
+  vencimiento08Formatted: string
+  diasVencimiento08: number | null
+  estado08Semaforo: 'vigente' | 'proximo' | 'vencido' | 'neutral'
+  numeroControl08: string | null
   tipoCombustible: string
   tipoCombustibleLabel: string
   capacidadTanqueLitros: number | null
@@ -31,6 +43,7 @@ export interface VehicleFull {
   estadoLabel: string
   tone: 'green' | 'blue' | 'orange' | 'gray'
   observaciones: string | null
+  fotoUrl: string | null
 }
 
 export interface VehicleHistoryItem {
@@ -90,15 +103,23 @@ export interface VehicleSaveInput {
   patente: string
   tipoId: number
   dependenciaId?: number | null
+  titularNombre?: string | null
+  titularCuitCuil?: string | null
+  registroSeccional?: string | null
   marca: string
   modelo: string
   version?: string
   anio?: number
+  color?: string | null
   numeroChasis?: string
   numeroMotor?: string
   numeroCedula?: string
   fechaVencimientoCedula?: string
   numeroRto?: string
+  tiene08?: boolean | number
+  estado08?: 'no_aplica' | 'pendiente_firma' | 'firmado' | 'en_tramite' | 'inscripto'
+  fechaVencimiento08?: string | null
+  numeroControl08?: string | null
   tipoCombustible: string
   capacidadTanqueLitros?: number
   capacidadPasajeros?: number
@@ -109,4 +130,5 @@ export interface VehicleSaveInput {
   fechaVencimientoSeguro?: string
   estado?: string
   observaciones?: string
+  fotoUrl?: string | null
 }
