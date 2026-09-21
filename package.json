@@ -9,10 +9,13 @@
     "start": "astro preview"
   },
   "dependencies": {
+    "@astrojs/node": "^11.1.6",
     "@astrojs/tailwind": "^6.0.2",
     "@base-ui/react": "^1.5.0",
+    "@types/bcryptjs": "^2.4.6",
     "@vercel/analytics": "1.6.1",
     "astro": "^7.3.2",
+    "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "flatpickr": "^4.6.13",

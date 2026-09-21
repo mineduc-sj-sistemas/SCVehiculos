@@ -9,4 +9,6 @@ export * from './services/dashboardService'
 export * from './services/vehicleService'
 export * from './services/choferService'
 export * from './services/cronogramaService'
+export * from './services/authService'
+export * from './services/userService'
 

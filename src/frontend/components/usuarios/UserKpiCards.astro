@@ -1,0 +1,60 @@
+﻿---
+import { ShieldCheck, UserCheck, Users, UserX } from 'lucide-astro'
+import type { UserStats } from '../../../backend/index'
+
+interface Props {
+  stats: UserStats
+}
+
+const { stats } = Astro.props
+---
+
+<section class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+  <!-- Total de Cuentas -->
+  <div class="card flex items-start justify-between p-5">
+    <div>
+      <p class="text-[12px] font-bold uppercase tracking-wider text-muted">Total Cuentas</p>
+      <p class="mt-2 font-display text-[30px] font-bold text-navy">{stats.total}</p>
+      <p class="mt-1 text-[11px] font-semibold text-muted">Usuarios en la base de datos</p>
+    </div>
+    <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-sky text-blue">
+      <Users size={22} strokeWidth={2.2} />
+    </div>
+  </div>
+
+  <!-- Administradores -->
+  <div class="card flex items-start justify-between p-5">
+    <div>
+      <p class="text-[12px] font-bold uppercase tracking-wider text-muted">Administradores</p>
+      <p class="mt-2 font-display text-[30px] font-bold text-navy">{stats.administradores}</p>
+      <p class="mt-1 text-[11px] font-semibold text-emerald-600">Acceso total al sistema</p>
+    </div>
+    <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+      <ShieldCheck size={22} strokeWidth={2.2} />
+    </div>
+  </div>
+
+  <!-- Operadores y Despachantes -->
+  <div class="card flex items-start justify-between p-5">
+    <div>
+      <p class="text-[12px] font-bold uppercase tracking-wider text-muted">Operadores Activos</p>
+      <p class="mt-2 font-display text-[30px] font-bold text-navy">{stats.operadores}</p>
+      <p class="mt-1 text-[11px] font-semibold text-blue">Gestión de comisiones y flota</p>
+    </div>
+    <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-[#fff6df] text-gold">
+      <UserCheck size={22} strokeWidth={2.2} />
+    </div>
+  </div>
+
+  <!-- Inactivos / Restringidos -->
+  <div class="card flex items-start justify-between p-5">
+    <div>
+      <p class="text-[12px] font-bold uppercase tracking-wider text-muted">Cuentas Inactivas</p>
+      <p class="mt-2 font-display text-[30px] font-bold text-navy">{stats.inactivos}</p>
+      <p class="mt-1 text-[11px] font-semibold text-muted">Sin acceso habilitado</p>
+    </div>
+    <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-[#fff0e4] text-[#bf6e32]">
+      <UserX size={22} strokeWidth={2.2} />
+    </div>
+  </div>
+</section>

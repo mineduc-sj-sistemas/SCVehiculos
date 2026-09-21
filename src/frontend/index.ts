@@ -27,5 +27,8 @@ export { default as ChoferTable } from './components/choferes/ChoferTable.astro'
 export { default as ChoferDetailModal } from './components/choferes/ChoferDetailModal.astro'
 export { default as ChoferFormModal } from './components/choferes/ChoferFormModal.astro'
 export { default as ChoferLicenciaFormModal } from './components/choferes/ChoferLicenciaFormModal.astro'
-export * from './scripts/choferesController'
+// Componentes del módulo de Usuarios
+export { default as UserKpiCards } from './components/usuarios/UserKpiCards.astro'
+export { default as UserTable } from './components/usuarios/UserTable.astro'
+export { default as UserFormModal } from './components/usuarios/UserFormModal.astro'
 
