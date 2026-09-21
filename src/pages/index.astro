@@ -1,5 +1,5 @@
 ---
-import { ChevronRight, Fuel, MoreHorizontal, Route, UsersRound, Wrench } from 'lucide-astro'
+import { CalendarDays, Car, ChevronRight, Fuel, MoreHorizontal, Route, UsersRound, Wrench } from 'lucide-astro'
 import DashboardLayout from '../frontend/layouts/DashboardLayout.astro'
 import DashboardStatCards from '../frontend/components/dashboard/DashboardStatCards.astro'
 import PlateBadge from '../frontend/components/ui/PlateBadge.astro'
@@ -21,26 +21,93 @@ const [stats, fleet, travels, driverStats, maintenance, fuelStats] = await Promi
   <h1 slot="header-title" class="font-display text-xl font-bold text-navy sm:text-2xl">Panel principal</h1>
 
   <!-- Encabezado de bienvenida -->
-  <div class="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+  <div class="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
     <div>
-      <p class="mb-1 text-sm font-semibold text-blue">Resumen operativo</p>
+      <div class="flex items-center gap-2 mb-1">
+        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-orange-100 text-orange-800">
+          Ministerio de Educación
+        </span>
+        <span class="text-xs font-semibold text-muted">· Gobierno de San Juan</span>
+      </div>
       <h2 class="font-display text-[27px] font-bold tracking-tight text-navy">Buen día, María</h2>
-      <p class="mt-1 text-sm text-muted">Este es el estado actual de la flota y las movilidades en tiempo real.</p>
+      <p class="mt-0.5 text-sm text-muted">Supervisión en tiempo real del parque automotor y comisiones oficiales.</p>
     </div>
     
     <div class="flex items-center gap-2">
       <a
         href="/flota"
-        class="flex items-center gap-2 rounded-lg border border-line bg-white px-4 py-2.5 text-xs font-bold text-navy hover:bg-paper transition"
+        class="flex items-center gap-2 rounded-xl border border-line bg-white px-4 py-2.5 text-xs font-bold text-navy hover:bg-paper transition"
       >
         <span>Ver parque automotor</span>
       </a>
-      <button class="flex items-center gap-2 rounded-lg bg-blue px-4 py-2.5 text-xs font-bold text-white shadow-sm shadow-blue/20 hover:opacity-90 transition cursor-pointer">
-        <span class="text-lg leading-none">+</span>
+      <a
+        href="/cronograma"
+        class="flex items-center gap-2 rounded-xl bg-orangeGov px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-orange-500/20 hover:bg-orange-700 transition cursor-pointer"
+      >
+        <span class="text-base leading-none">+</span>
         <span>Nueva comisión</span>
-      </button>
+      </a>
     </div>
   </div>
+
+  <!-- Accesos Rápidos Institucionales · Estilo Oficial Ministerio de Educación (Referencia San Juan) -->
+  <section class="mb-7 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+    <!-- Card 1: Naranja San Juan - Nueva Comisión -->
+    <a
+      href="/cronograma"
+      class="group relative flex items-center gap-3.5 rounded-2xl bg-[#ea580c] p-4 text-white shadow-md shadow-orange-600/20 transition-all hover:bg-[#c2410c] hover:shadow-lg hover:-translate-y-0.5"
+    >
+      <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/20 text-white backdrop-blur-xs transition group-hover:scale-105">
+        <Route size={24} strokeWidth={2.2} />
+      </div>
+      <div>
+        <h3 class="font-display text-[15px] font-bold leading-tight">Nueva Comisión</h3>
+        <p class="mt-0.5 text-[11px] text-orange-100 font-medium">Asignar viaje oficial</p>
+      </div>
+    </a>
+
+    <!-- Card 2: Carbón Ministerio - Parque Automotor -->
+    <a
+      href="/flota"
+      class="group relative flex items-center gap-3.5 rounded-2xl bg-[#2d2e37] p-4 text-white shadow-md shadow-slate-900/20 transition-all hover:bg-[#202127] hover:shadow-lg hover:-translate-y-0.5"
+    >
+      <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/15 text-white backdrop-blur-xs transition group-hover:scale-105">
+        <Car size={24} strokeWidth={2.2} />
+      </div>
+      <div>
+        <h3 class="font-display text-[15px] font-bold leading-tight">Parque Automotor</h3>
+        <p class="mt-0.5 text-[11px] text-slate-300 font-medium">Fichas técnicas y RTO</p>
+      </div>
+    </a>
+
+    <!-- Card 3: Naranja San Juan - Conductores -->
+    <a
+      href="/choferes"
+      class="group relative flex items-center gap-3.5 rounded-2xl bg-[#ea580c] p-4 text-white shadow-md shadow-orange-600/20 transition-all hover:bg-[#c2410c] hover:shadow-lg hover:-translate-y-0.5"
+    >
+      <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/20 text-white backdrop-blur-xs transition group-hover:scale-105">
+        <UsersRound size={24} strokeWidth={2.2} />
+      </div>
+      <div>
+        <h3 class="font-display text-[15px] font-bold leading-tight">Conductores</h3>
+        <p class="mt-0.5 text-[11px] text-orange-100 font-medium">Legajos y licencias</p>
+      </div>
+    </a>
+
+    <!-- Card 4: Carbón Ministerio - Cronograma -->
+    <a
+      href="/cronograma"
+      class="group relative flex items-center gap-3.5 rounded-2xl bg-[#2d2e37] p-4 text-white shadow-md shadow-slate-900/20 transition-all hover:bg-[#202127] hover:shadow-lg hover:-translate-y-0.5"
+    >
+      <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/15 text-white backdrop-blur-xs transition group-hover:scale-105">
+        <CalendarDays size={24} strokeWidth={2.2} />
+      </div>
+      <div>
+        <h3 class="font-display text-[15px] font-bold leading-tight">Cronograma</h3>
+        <p class="mt-0.5 text-[11px] text-slate-300 font-medium">Itinerarios y traslados</p>
+      </div>
+    </a>
+  </section>
 
   <!-- Tarjetas KPI superiores (Componente de Frontend) -->
   <section class="mb-6">

@@ -11,19 +11,19 @@ const { stats } = Astro.props
 
 <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5 mb-6">
   <!-- Total Choferes -->
-  <div class="card p-4 flex items-center justify-between">
+  <div class="card p-4 flex items-center justify-between border-l-4 border-orangeGov transition-all hover:shadow-md">
     <div>
       <p class="text-[11px] font-bold text-muted uppercase tracking-wider">Plantel Choferes</p>
       <p class="mt-1 font-display text-2xl font-bold text-navy">{String(stats.totalDrivers).padStart(2, '0')}</p>
       <p class="text-[10px] text-muted">Conductores activos</p>
     </div>
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-sky text-blue">
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orangeGov">
       <UsersRound size={20} />
     </div>
   </div>
 
   <!-- Disponibles -->
-  <div class="card p-4 flex items-center justify-between">
+  <div class="card p-4 flex items-center justify-between border-l-4 border-emerald-500 transition-all hover:shadow-md">
     <div>
       <p class="text-[11px] font-bold text-muted uppercase tracking-wider">Disponibles</p>
       <p class="mt-1 font-display text-2xl font-bold text-emerald-600">{String(stats.availableDrivers).padStart(2, '0')}</p>
@@ -35,19 +35,19 @@ const { stats } = Astro.props
   </div>
 
   <!-- En Comisión -->
-  <div class="card p-4 flex items-center justify-between">
+  <div class="card p-4 flex items-center justify-between border-l-4 border-orange-400 transition-all hover:shadow-md">
     <div>
       <p class="text-[11px] font-bold text-muted uppercase tracking-wider">En Comisión</p>
-      <p class="mt-1 font-display text-2xl font-bold text-blue">{String(stats.onTravelDrivers).padStart(2, '0')}</p>
+      <p class="mt-1 font-display text-2xl font-bold text-orangeGov">{String(stats.onTravelDrivers).padStart(2, '0')}</p>
       <p class="text-[10px] text-muted">En viaje oficial</p>
     </div>
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-sky text-blue">
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orangeGov">
       <Route size={20} />
     </div>
   </div>
 
   <!-- De Licencia / Ausentes -->
-  <div class="card p-4 flex items-center justify-between">
+  <div class="card p-4 flex items-center justify-between border-l-4 border-amber-500 transition-all hover:shadow-md">
     <div>
       <p class="text-[11px] font-bold text-muted uppercase tracking-wider">De Licencia</p>
       <p class="mt-1 font-display text-2xl font-bold text-amber-600">{String(stats.onLeaveDrivers).padStart(2, '0')}</p>
@@ -59,7 +59,7 @@ const { stats } = Astro.props
   </div>
 
   <!-- Alertas de Carnet -->
-  <div class="card p-4 flex items-center justify-between">
+  <div class={`card p-4 flex items-center justify-between border-l-4 ${stats.expiringLicenses > 0 ? 'border-rose-500' : 'border-emerald-500'} transition-all hover:shadow-md`}>
     <div>
       <p class="text-[11px] font-bold text-muted uppercase tracking-wider">Alertas Carnet</p>
       <p class={`mt-1 font-display text-2xl font-bold ${stats.expiringLicenses > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>

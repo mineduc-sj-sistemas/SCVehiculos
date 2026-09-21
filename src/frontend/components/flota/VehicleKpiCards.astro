@@ -14,19 +14,19 @@ const { stats, rtoAlertsCount, total08Count = 0, alerts08Count = 0 } = Astro.pro
 
 <section class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4 mb-6">
   <!-- Total Flota -->
-  <div class="card p-4 flex items-center justify-between">
+  <div class="card p-4 flex items-center justify-between border-l-4 border-orangeGov transition-all hover:shadow-md">
     <div>
       <p class="text-[11px] font-bold text-muted uppercase tracking-wider">Total Flota</p>
       <p class="mt-1 font-display text-2xl font-bold text-navy">{String(stats.totalFleet).padStart(2, '0')}</p>
       <p class="text-[10px] text-muted">Unidades oficiales</p>
     </div>
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-sky text-blue">
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orangeGov">
       <Truck size={20} />
     </div>
   </div>
 
   <!-- Disponibles -->
-  <div class="card p-4 flex items-center justify-between">
+  <div class="card p-4 flex items-center justify-between border-l-4 border-emerald-500 transition-all hover:shadow-md">
     <div>
       <p class="text-[11px] font-bold text-muted uppercase tracking-wider">Disponibles</p>
       <p class="mt-1 font-display text-2xl font-bold text-emerald-600">{String(stats.availableFleet).padStart(2, '0')}</p>
@@ -38,31 +38,31 @@ const { stats, rtoAlertsCount, total08Count = 0, alerts08Count = 0 } = Astro.pro
   </div>
 
   <!-- En Comisión -->
-  <div class="card p-4 flex items-center justify-between">
+  <div class="card p-4 flex items-center justify-between border-l-4 border-orange-400 transition-all hover:shadow-md">
     <div>
       <p class="text-[11px] font-bold text-muted uppercase tracking-wider">En Comisión</p>
-      <p class="mt-1 font-display text-2xl font-bold text-blue">{String(stats.activeTravels).padStart(2, '0')}</p>
+      <p class="mt-1 font-display text-2xl font-bold text-orangeGov">{String(stats.activeTravels).padStart(2, '0')}</p>
       <p class="text-[10px] text-muted">Viajes activos</p>
     </div>
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-sky text-blue">
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orangeGov">
       <Route size={20} />
     </div>
   </div>
 
   <!-- En Taller -->
-  <div class="card p-4 flex items-center justify-between">
+  <div class="card p-4 flex items-center justify-between border-l-4 border-charcoalGov transition-all hover:shadow-md">
     <div>
       <p class="text-[11px] font-bold text-muted uppercase tracking-wider">En Taller</p>
-      <p class="mt-1 font-display text-2xl font-bold text-amber-600">{String(stats.inRepairFleet).padStart(2, '0')}</p>
+      <p class="mt-1 font-display text-2xl font-bold text-charcoalGov">{String(stats.inRepairFleet).padStart(2, '0')}</p>
       <p class="text-[10px] text-muted">Servicio mecánico</p>
     </div>
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-charcoalGov">
       <Wrench size={20} />
     </div>
   </div>
 
   <!-- Alertas RTO / VTV -->
-  <div class="card p-4 flex items-center justify-between">
+  <div class={`card p-4 flex items-center justify-between border-l-4 ${rtoAlertsCount > 0 ? 'border-rose-500' : 'border-emerald-500'} transition-all hover:shadow-md`}>
     <div>
       <p class="text-[11px] font-bold text-muted uppercase tracking-wider">Alertas RTO</p>
       <p class={`mt-1 font-display text-2xl font-bold ${rtoAlertsCount > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
@@ -76,7 +76,7 @@ const { stats, rtoAlertsCount, total08Count = 0, alerts08Count = 0 } = Astro.pro
   </div>
 
   <!-- Formularios 08 -->
-  <div class="card p-4 flex items-center justify-between">
+  <div class="card p-4 flex items-center justify-between border-l-4 border-amber-500 transition-all hover:shadow-md">
     <div>
       <p class="text-[11px] font-bold text-muted uppercase tracking-wider">Formularios 08</p>
       <p class="mt-1 font-display text-2xl font-bold text-navy">

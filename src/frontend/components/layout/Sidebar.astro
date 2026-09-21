@@ -1,5 +1,6 @@
-﻿---
+---
 import { Bus, CalendarDays, Fuel, LayoutDashboard, LogOut, Route, Settings, ShieldCheck, Truck, UsersRound, Wrench } from 'lucide-astro'
+import SanJuanLogo from '../ui/SanJuanLogo.astro'
 import { verifySessionToken, SESSION_COOKIE_NAME } from '../../../backend/index'
 
 interface Props {
@@ -35,23 +36,17 @@ if (currentUser.rolId === 1) {
 }
 ---
 
-<aside id="sidebar" class="sidebar fixed inset-y-0 left-0 z-40 flex w-[258px] flex-col bg-navy text-white shadow-xl">
-  <!-- Identificación institucional -->
-  <div class="flex h-[94px] items-center gap-3 border-b border-white/10 px-6">
-    <a href="/" class="flex items-center gap-3 hover:opacity-95 transition">
-      <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-gold text-navy shadow-sm">
-        <Bus size={25} strokeWidth={2.5} />
-      </div>
-      <div>
-        <p class="font-display text-[17px] font-bold tracking-tight">Movilidades</p>
-        <p class="text-[11px] font-semibold uppercase tracking-[.16em] text-white/55">Ministerio de Educación</p>
-      </div>
+<aside id="sidebar" class="sidebar fixed inset-y-0 left-0 z-40 flex w-[258px] flex-col bg-[#202127] text-white shadow-2xl border-r border-white/5">
+  <!-- Identificación institucional con Emblema San Juan -->
+  <div class="flex h-[94px] items-center border-b border-white/10 px-5">
+    <a href="/" class="hover:opacity-95 transition" title="Ir al panel de inicio">
+      <SanJuanLogo variant="white" size="md" showMinistry={true} />
     </a>
   </div>
   
   <!-- Enlaces de navegación -->
-  <div class="px-4 pt-7">
-    <p class="mb-3 px-3 text-[10px] font-bold uppercase tracking-[.2em] text-white/35">Gestión operativa</p>
+  <div class="px-3 pt-6 flex-1 overflow-y-auto">
+    <p class="mb-3 px-3 text-[10px] font-bold uppercase tracking-[.2em] text-white/40">Gestión operativa</p>
     <nav class="space-y-1">
       {navItems.map((item) => {
         const isActive = activeNav === item.id
@@ -59,13 +54,15 @@ if (currentUser.rolId === 1) {
           <a
             href={item.href}
             class:list={[
-              'group flex items-center gap-3 rounded-lg px-3 py-3 text-[13px] font-semibold transition',
-              isActive ? 'bg-white/12 text-white font-bold' : 'text-white/65 hover:bg-white/10 hover:text-white'
+              'group flex items-center gap-3 rounded-xl px-3.5 py-3 text-[13px] font-semibold transition',
+              isActive
+                ? 'bg-white/10 text-white font-bold shadow-xs border-l-[3px] border-[#ea580c]'
+                : 'text-white/65 hover:bg-white/6 hover:text-white'
             ]}
           >
-            <item.icon size={18} strokeWidth={1.9} />
+            <item.icon size={18} strokeWidth={1.9} class={isActive ? 'text-[#ea580c]' : 'group-hover:text-[#ea580c] transition-colors'} />
             <span>{item.label}</span>
-            {isActive && <span class="ml-auto h-1.5 w-1.5 rounded-full bg-gold" />}
+            {isActive && <span class="ml-auto h-2 w-2 rounded-full bg-[#ea580c]" />}
           </a>
         )
       })}
@@ -73,7 +70,7 @@ if (currentUser.rolId === 1) {
   </div>
   
   <!-- Configuración y usuario -->
-  <div class="mt-auto px-4 pb-5">
+  <div class="mt-auto px-4 pb-5 pt-3">
     <div class="mb-3 h-px bg-white/10"></div>
     
     <div class="flex items-center justify-between px-3 py-1">
@@ -88,12 +85,12 @@ if (currentUser.rolId === 1) {
       </a>
     </div>
 
-    <div class="mt-2 flex items-center gap-3 rounded-lg bg-white/8 p-3">
-      <div class="flex h-9 w-9 items-center justify-center rounded-full bg-gold font-display text-sm font-bold text-navy shrink-0">
+    <div class="mt-2 flex items-center gap-3 rounded-xl bg-white/6 p-3 border border-white/5">
+      <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#ea580c] font-display text-sm font-bold text-white shadow-xs shrink-0">
         {initials}
       </div>
       <div class="min-w-0 flex-1">
-        <p class="truncate text-xs font-bold">{currentUser.nombreCompleto}</p>
+        <p class="truncate text-xs font-bold text-white">{currentUser.nombreCompleto}</p>
         <p class="truncate text-[11px] text-white/50">{currentUser.rolNombre}</p>
       </div>
     </div>

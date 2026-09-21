@@ -12,11 +12,15 @@ const capitalizedDate = todayFormatted.charAt(0).toUpperCase() + todayFormatted.
 
 <header class="flex h-[94px] items-center justify-between border-b border-line bg-white px-5 sm:px-8">
   <div class="flex items-center gap-4">
-    <button id="menu-button" class="rounded-lg p-2 text-muted hover:bg-sky lg:hidden" aria-label="Abrir menú">
+    <button id="menu-button" class="rounded-lg p-2 text-muted hover:bg-orange-50 hover:text-orangeGov lg:hidden" aria-label="Abrir menú">
       <Menu size={21} />
     </button>
     <div>
-      <p class="text-xs font-semibold text-muted">{capitalizedDate}</p>
+      <div class="flex items-center gap-2">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-orangeGov">Gobierno de San Juan</span>
+        <span class="text-line text-xs">·</span>
+        <p class="text-xs font-semibold text-muted">{capitalizedDate}</p>
+      </div>
       <slot name="header-title">
         <h1 class="font-display text-xl font-bold text-navy sm:text-2xl">Panel principal</h1>
       </slot>
@@ -29,15 +33,15 @@ const capitalizedDate = todayFormatted.charAt(0).toUpperCase() + todayFormatted.
       <input
         aria-label="Buscar"
         placeholder="Buscar vehículo, patente..."
-        class="h-10 w-[230px] rounded-lg border border-line bg-paper pl-10 pr-3 text-xs outline-none transition focus:border-blue focus:bg-white"
+        class="h-10 w-[240px] rounded-xl border border-line bg-paper pl-10 pr-3.5 text-xs font-semibold text-navy outline-none transition focus:border-orangeGov focus:bg-white focus:ring-2 focus:ring-orangeGov/15"
       />
     </div>
-    <button class="relative rounded-lg p-2.5 text-muted hover:bg-sky cursor-pointer" aria-label="Notificaciones">
+    <button class="relative rounded-xl border border-line bg-white p-2.5 text-muted hover:bg-orange-50 hover:text-orangeGov hover:border-orangeGov/30 transition cursor-pointer" aria-label="Notificaciones">
       <Bell size={19} />
-      <span class="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-gold ring-2 ring-white"></span>
+      <span class="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-orangeGov ring-2 ring-white"></span>
     </button>
-    <button class="hidden rounded-lg border border-line px-3 py-2 text-xs font-bold text-blue sm:flex sm:items-center sm:gap-2 hover:bg-sky/50 transition cursor-pointer">
-      <CalendarDays size={15} /> Este mes <ChevronDown size={14} />
+    <button class="hidden rounded-xl border border-line px-3.5 py-2 text-xs font-bold text-navy sm:flex sm:items-center sm:gap-2 hover:bg-paper hover:border-orangeGov/40 transition cursor-pointer">
+      <CalendarDays size={15} class="text-orangeGov" /> Este mes <ChevronDown size={14} class="text-muted" />
     </button>
   </div>
 </header>
