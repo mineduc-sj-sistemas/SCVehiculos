@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "start": "astro preview"
+    "start": "astro preview",
+    "test": "node tests/system_test_suite.mjs"
   },
   "dependencies": {
     "@astrojs/node": "^11.1.6",
