@@ -82,6 +82,7 @@ export interface NuevaComisionDTO {
   fechaSalidaProgramada: string // ISO string o YYYY-MM-DDTHH:mm
   fechaRegresoEstimada: string // ISO string o YYYY-MM-DDTHH:mm
   observaciones?: string
+  usuarioCreadorId?: number
 }
 
 export interface ActualizarEstadoComisionDTO {
@@ -89,6 +90,7 @@ export interface ActualizarEstadoComisionDTO {
   odometroSalida?: number
   odometroRegreso?: number
   observaciones?: string
+  usuarioId?: number
 }
 
 export interface DatosAuxiliaresDespacho {

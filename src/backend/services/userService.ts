@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs'
-import { query } from '../config/db'
+import { query, withTransaction } from '../config/db'
 import type { Usuario, Rol, UserCreateInput, UserUpdateInput, UserStats, ChoferParaVinculacion } from '../types/user.types'
 
 const MOCK_ROLES: Rol[] = [
@@ -231,56 +231,78 @@ export async function createUsuario(input: UserCreateInput): Promise<{ success: 
   }
 
   try {
-    // Si se especificó un choferId, validar que exista y que NO tenga un usuario vinculado (regla: 1 usuario por chofer)
-    if (choferId) {
-      const choferRows = await query<any[]>(`SELECT id, usuario_id, nombre, apellido FROM choferes WHERE id = ? LIMIT 1`, [choferId])
-      if (!choferRows || choferRows.length === 0) {
-        return { success: false, message: 'El chofer seleccionado no existe en el registro del sistema.' }
+    const res = await withTransaction(async (conn) => {
+      // Si se especificó un choferId, validar que exista y que NO tenga un usuario vinculado (con bloqueo FOR UPDATE)
+      if (choferId) {
+        const [choferRows] = await conn.execute<any[]>(
+          `SELECT id, usuario_id, nombre, apellido FROM choferes WHERE id = ? FOR UPDATE`,
+          [choferId]
+        )
+        if (!choferRows || choferRows.length === 0) {
+          throw new Error('El chofer seleccionado no existe en el registro del sistema.')
+        }
+        if (choferRows[0].usuario_id) {
+          throw new Error(
+            `El chofer ${choferRows[0].apellido}, ${choferRows[0].nombre} ya posee credenciales de acceso vinculadas. Solo se permite un único usuario por chofer.`
+          )
+        }
       }
-      if (choferRows[0].usuario_id) {
-        return { success: false, message: `El chofer ${choferRows[0].apellido}, ${choferRows[0].nombre} ya posee credenciales de acceso vinculadas. Solo se permite un único usuario por chofer.` }
+
+      // Validar si el email ya existe
+      const [existing] = await conn.execute<any[]>(
+        `SELECT id FROM usuarios WHERE LOWER(email) = ? LIMIT 1`,
+        [email]
+      )
+      if (existing && existing.length > 0) {
+        throw new Error(`El correo '${email}' ya se encuentra registrado en el sistema.`)
       }
-    }
 
-    // Validar si el email ya existe
-    const existing = await query<any[]>(`SELECT id FROM usuarios WHERE LOWER(email) = ? LIMIT 1`, [email])
-    if (existing && existing.length > 0) {
-      return { success: false, message: `El correo '${email}' ya se encuentra registrado en el sistema.` }
-    }
+      // Hashear contraseña
+      const passwordHash = bcrypt.hashSync(password, 10)
 
-    // Hashear contraseña
-    const passwordHash = bcrypt.hashSync(password, 10)
+      const [insertResult] = await conn.execute<any>(
+        `
+        INSERT INTO usuarios (
+          rol_id,
+          dependencia_id,
+          nombre,
+          apellido,
+          email,
+          password_hash,
+          dni,
+          telefono,
+          activo
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
+        `,
+        [rolId, dependenciaId, nombre, apellido, email, passwordHash, dni, telefono]
+      )
 
-    const result = await query<any>(
-      `
-      INSERT INTO usuarios (
-        rol_id,
-        dependencia_id,
-        nombre,
-        apellido,
-        email,
-        password_hash,
-        dni,
-        telefono,
-        activo
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
-      `,
-      [rolId, dependenciaId, nombre, apellido, email, passwordHash, dni, telefono]
-    )
+      const newUserId = insertResult.insertId
 
-    const newUserId = result.insertId
+      // Si se vinculó un chofer, actualizar choferes con el nuevo usuario_id atómicamente
+      if (choferId && newUserId) {
+        await conn.execute(`UPDATE choferes SET usuario_id = ? WHERE id = ?`, [newUserId, choferId])
+      }
 
-    // Si se vinculó un chofer, actualizar choferes con el nuevo usuario_id
-    if (choferId && newUserId) {
-      await query(`UPDATE choferes SET usuario_id = ? WHERE id = ?`, [newUserId, choferId])
-    }
+      return {
+        success: true,
+        message: `Usuario ${nombre} ${apellido} creado exitosamente.`,
+        id: newUserId,
+      }
+    })
 
-    return {
-      success: true,
-      message: `Usuario ${nombre} ${apellido} creado exitosamente.`,
-      id: newUserId,
-    }
+    return res
   } catch (error: any) {
+    // Si es un error de validación de negocio, devolverlo directamente
+    if (
+      error?.message &&
+      (error.message.includes('ya posee credenciales') ||
+        error.message.includes('ya se encuentra registrado') ||
+        error.message.includes('no existe en el registro'))
+    ) {
+      return { success: false, message: error.message }
+    }
+
     console.error('Error al crear usuario en BD, aplicando fallback demo:', error?.message)
     
     // Si la BD no está accesible, guardar en memoria para que no se interrumpa la experiencia demo

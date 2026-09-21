@@ -1,4 +1,4 @@
-import { query } from '../config/db'
+import { query, withTransaction } from '../config/db'
 import type {
   ActualizarEstadoComisionDTO,
   ComisionGridItem,
@@ -420,37 +420,40 @@ export async function crearComision(dto: NuevaComisionDTO): Promise<{ success: b
       return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
     }
 
-    const res = await query<any>(
-      `INSERT INTO comisiones (
-        codigo_comision, vehiculo_id, chofer_id, dependencia_solicitante_id,
-        solicitante_nombre, origen, destino, motivo, cantidad_pasajeros,
-        fecha_salida_programada, fecha_regreso_estimada, odometro_salida,
-        estado, observaciones
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'programada', ?)`,
-      [
-        codigoComision,
-        dto.vehiculoId,
-        dto.choferId,
-        dto.dependenciaId,
-        dto.solicitanteNombre || null,
-        dto.origen || 'Ministerio de Educación - Centro Cívico',
-        dto.destino,
-        dto.motivo,
-        dto.cantidadPasajeros || 1,
-        formatSqlDatetime(salida),
-        formatSqlDatetime(regreso),
-        vehiculo[0].odometro_actual,
-        dto.observaciones || null,
-      ]
-    )
+    return await withTransaction(async (conn) => {
+      const [res] = await conn.execute<any>(
+        `INSERT INTO comisiones (
+          codigo_comision, vehiculo_id, chofer_id, dependencia_solicitante_id,
+          solicitante_nombre, origen, destino, motivo, cantidad_pasajeros,
+          fecha_salida_programada, fecha_regreso_estimada, odometro_salida,
+          estado, observaciones, usuario_creador_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'programada', ?, ?)`,
+        [
+          codigoComision,
+          dto.vehiculoId,
+          dto.choferId,
+          dto.dependenciaId,
+          dto.solicitanteNombre || null,
+          dto.origen || 'Ministerio de Educación - Centro Cívico',
+          dto.destino,
+          dto.motivo,
+          dto.cantidadPasajeros || 1,
+          formatSqlDatetime(salida),
+          formatSqlDatetime(regreso),
+          vehiculo[0].odometro_actual,
+          dto.observaciones || null,
+          dto.usuarioCreadorId || null,
+        ]
+      )
 
-    return {
-      success: true,
-      id: res.insertId,
-      codigoComision,
-    }
+      return {
+        success: true,
+        id: res.insertId,
+        codigoComision,
+      }
+    })
   } catch (error: any) {
-    console.error('Error al crear comisión en cronogramaService:', error)
+    console.error('Error al crear comisión en cronogramaService (transacción):', error)
     return { success: false, error: error.message || 'Error al persistir la comisión' }
   }
 }
@@ -460,81 +463,111 @@ export async function crearComision(dto: NuevaComisionDTO): Promise<{ success: b
  */
 export async function actualizarEstadoComision(id: number, dto: ActualizarEstadoComisionDTO): Promise<{ success: boolean; error?: string }> {
   try {
-    const comisionRows = await query<any>(`SELECT id, vehiculo_id, chofer_id, estado, odometro_salida FROM comisiones WHERE id = ? LIMIT 1`, [id])
-    if (!comisionRows || comisionRows.length === 0) {
-      return { success: false, error: 'Comisión no encontrada.' }
-    }
-
-    const comision = comisionRows[0]
-    const ahora = new Date()
-    const pad = (n: number) => String(n).padStart(2, '0')
-    const sqlAhora = `${ahora.getFullYear()}-${pad(ahora.getMonth() + 1)}-${pad(ahora.getDate())} ${pad(ahora.getHours())}:${pad(ahora.getMinutes())}:${pad(ahora.getSeconds())}`
-
-    if (dto.estado === 'en_curso') {
-      // Registrar salida real
-      const odoSalida = dto.odometroSalida ?? comision.odometro_salida
-      await query(
-        `UPDATE comisiones SET 
-          estado = 'en_curso',
-          fecha_salida_real = ?,
-          odometro_salida = ?,
-          observaciones = COALESCE(?, observaciones)
-         WHERE id = ?`,
-        [sqlAhora, odoSalida, dto.observaciones ?? null, id]
-      )
-
-      // Actualizar estado del vehículo y chofer
-      await query(`UPDATE vehiculos SET estado = 'en_comision' WHERE id = ?`, [comision.vehiculo_id])
-      await query(`UPDATE choferes SET estado = 'en_comision' WHERE id = ?`, [comision.chofer_id])
-    } else if (dto.estado === 'finalizada') {
-      // Registrar regreso real
-      const odoRegreso = dto.odometroRegreso ?? null
-      await query(
-        `UPDATE comisiones SET 
-          estado = 'finalizada',
-          fecha_regreso_real = ?,
-          odometro_regreso = ?,
-          observaciones = COALESCE(?, observaciones)
-         WHERE id = ?`,
-        [sqlAhora, odoRegreso, dto.observaciones ?? null, id]
-      )
-
-      // Si se reportó odómetro de regreso, actualizar odómetro actual del vehículo
-      if (odoRegreso && odoRegreso > 0) {
-        await query(`UPDATE vehiculos SET odometro_actual = ? WHERE id = ? AND odometro_actual < ?`, [odoRegreso, comision.vehiculo_id, odoRegreso])
+    return await withTransaction(async (conn) => {
+      const [comisionRows] = await conn.execute<any>(`SELECT id, vehiculo_id, chofer_id, estado, odometro_salida FROM comisiones WHERE id = ? LIMIT 1`, [id])
+      if (!comisionRows || (comisionRows as any[]).length === 0) {
+        return { success: false, error: 'Comisión no encontrada.' }
       }
 
-      // Liberar vehículo y chofer a disponible
-      await query(`UPDATE vehiculos SET estado = 'disponible' WHERE id = ? AND estado = 'en_comision'`, [comision.vehiculo_id])
-      await query(`UPDATE choferes SET estado = 'disponible' WHERE id = ? AND estado = 'en_comision'`, [comision.chofer_id])
-    } else if (dto.estado === 'cancelada') {
-      await query(
-        `UPDATE comisiones SET 
-          estado = 'cancelada',
-          observaciones = COALESCE(?, observaciones)
-         WHERE id = ?`,
-        [dto.observaciones ?? null, id]
-      )
+      const comision = (comisionRows as any[])[0]
+      const ahora = new Date()
+      const pad = (n: number) => String(n).padStart(2, '0')
+      const sqlAhora = `${ahora.getFullYear()}-${pad(ahora.getMonth() + 1)}-${pad(ahora.getDate())} ${pad(ahora.getHours())}:${pad(ahora.getMinutes())}:${pad(ahora.getSeconds())}`
 
-      // Si estaba en curso, liberar vehículo y chofer
-      if (comision.estado === 'en_curso') {
-        await query(`UPDATE vehiculos SET estado = 'disponible' WHERE id = ? AND estado = 'en_comision'`, [comision.vehiculo_id])
-        await query(`UPDATE choferes SET estado = 'disponible' WHERE id = ? AND estado = 'en_comision'`, [comision.chofer_id])
+      // Obtener estado actual del vehículo para auditoría
+      const [vehRows] = await conn.execute<any>(`SELECT estado FROM vehiculos WHERE id = ?`, [comision.vehiculo_id])
+      const estadoAnteriorVehiculo = (vehRows as any[])[0]?.estado || 'disponible'
+
+      if (dto.estado === 'en_curso') {
+        // Registrar salida real
+        const odoSalida = dto.odometroSalida ?? comision.odometro_salida
+        await conn.execute(
+          `UPDATE comisiones SET 
+            estado = 'en_curso',
+            fecha_salida_real = ?,
+            odometro_salida = ?,
+            observaciones = COALESCE(?, observaciones)
+           WHERE id = ?`,
+          [sqlAhora, odoSalida, dto.observaciones ?? null, id]
+        )
+
+        // Actualizar estado del vehículo y chofer
+        await conn.execute(`UPDATE vehiculos SET estado = 'en_comision' WHERE id = ?`, [comision.vehiculo_id])
+        await conn.execute(`UPDATE choferes SET estado = 'en_comision' WHERE id = ?`, [comision.chofer_id])
+
+        // Registrar auditoría de estado del vehículo
+        await conn.execute(
+          `INSERT INTO auditoria_estados_vehiculo (
+            vehiculo_id, estado_anterior, estado_nuevo, motivo, comision_id, usuario_id, created_at
+          ) VALUES (?, ?, 'en_comision', 'Despacho de comisión oficial', ?, ?, NOW())`,
+          [comision.vehiculo_id, estadoAnteriorVehiculo, id, dto.usuarioId || null]
+        )
+      } else if (dto.estado === 'finalizada') {
+        // Registrar regreso real
+        const odoRegreso = dto.odometroRegreso ?? null
+        await conn.execute(
+          `UPDATE comisiones SET 
+            estado = 'finalizada',
+            fecha_regreso_real = ?,
+            odometro_regreso = ?,
+            observaciones = COALESCE(?, observaciones)
+           WHERE id = ?`,
+          [sqlAhora, odoRegreso, dto.observaciones ?? null, id]
+        )
+
+        // Si se reportó odómetro de regreso, actualizar odómetro actual del vehículo
+        if (odoRegreso && odoRegreso > 0) {
+          await conn.execute(`UPDATE vehiculos SET odometro_actual = ? WHERE id = ? AND odometro_actual < ?`, [odoRegreso, comision.vehiculo_id, odoRegreso])
+        }
+
+        // Liberar vehículo y chofer a disponible
+        await conn.execute(`UPDATE vehiculos SET estado = 'disponible' WHERE id = ? AND estado = 'en_comision'`, [comision.vehiculo_id])
+        await conn.execute(`UPDATE choferes SET estado = 'disponible' WHERE id = ? AND estado = 'en_comision'`, [comision.chofer_id])
+
+        // Registrar auditoría de liberación del vehículo
+        await conn.execute(
+          `INSERT INTO auditoria_estados_vehiculo (
+            vehiculo_id, estado_anterior, estado_nuevo, motivo, comision_id, usuario_id, created_at
+          ) VALUES (?, ?, 'disponible', 'Retorno y finalización de comisión', ?, ?, NOW())`,
+          [comision.vehiculo_id, estadoAnteriorVehiculo, id, dto.usuarioId || null]
+        )
+      } else if (dto.estado === 'cancelada') {
+        await conn.execute(
+          `UPDATE comisiones SET 
+            estado = 'cancelada',
+            observaciones = COALESCE(?, observaciones)
+           WHERE id = ?`,
+          [dto.observaciones ?? null, id]
+        )
+
+        // Si estaba en curso, liberar vehículo y chofer
+        if (comision.estado === 'en_curso') {
+          await conn.execute(`UPDATE vehiculos SET estado = 'disponible' WHERE id = ? AND estado = 'en_comision'`, [comision.vehiculo_id])
+          await conn.execute(`UPDATE choferes SET estado = 'disponible' WHERE id = ? AND estado = 'en_comision'`, [comision.chofer_id])
+
+          // Auditoría de cancelación
+          await conn.execute(
+            `INSERT INTO auditoria_estados_vehiculo (
+              vehiculo_id, estado_anterior, estado_nuevo, motivo, comision_id, usuario_id, created_at
+            ) VALUES (?, ?, 'disponible', 'Comisión cancelada en curso', ?, ?, NOW())`,
+            [comision.vehiculo_id, estadoAnteriorVehiculo, id, dto.usuarioId || null]
+          )
+        }
+      } else {
+        // Actualizar otros estados o campos
+        await conn.execute(
+          `UPDATE comisiones SET 
+            estado = ?,
+            observaciones = COALESCE(?, observaciones)
+           WHERE id = ?`,
+          [dto.estado, dto.observaciones ?? null, id]
+        )
       }
-    } else {
-      // Actualizar otros estados o campos
-      await query(
-        `UPDATE comisiones SET 
-          estado = ?,
-          observaciones = COALESCE(?, observaciones)
-         WHERE id = ?`,
-        [dto.estado, dto.observaciones ?? null, id]
-      )
-    }
 
-    return { success: true }
+      return { success: true }
+    })
   } catch (error: any) {
-    console.error('Error al actualizar estado de comisión:', error)
+    console.error('Error al actualizar estado de comisión en transacción:', error)
     return { success: false, error: error.message || 'Error al actualizar comisión' }
   }
 }

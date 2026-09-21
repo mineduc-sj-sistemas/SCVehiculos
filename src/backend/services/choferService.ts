@@ -1,4 +1,4 @@
-import { query } from '../config/db'
+import { query, withTransaction } from '../config/db'
 import type {
   ChoferFull,
   ChoferStats,
@@ -54,7 +54,139 @@ export async function getChoferesStats(): Promise<ChoferStats> {
 }
 
 /**
- * 2. Lista completa de choferes con cálculo de vigencia de carnet y métricas
+ * Helper para mapear una fila de la base de datos al tipo ChoferFull
+ */
+function mapChoferRowToFull(r: any, includePhotos = false): ChoferFull {
+  const vDate = r.fecha_vencimiento_licencia ? new Date(r.fecha_vencimiento_licencia) : null
+  const formattedDate = vDate
+    ? `${String(vDate.getDate()).padStart(2, '0')}/${String(vDate.getMonth() + 1).padStart(2, '0')}/${vDate.getFullYear()}`
+    : 'S/D'
+
+  const dias = Number(r.dias_licencia ?? 999)
+  let licenciaStatus: ChoferFull['licenciaStatus'] = 'vigente'
+  if (dias < 0) licenciaStatus = 'vencida'
+  else if (dias <= 30) licenciaStatus = 'proxima'
+
+  let tone: ChoferFull['tone'] = 'gray'
+  let estadoLabel = 'Disponible'
+  switch (r.estado) {
+    case 'disponible':
+      tone = 'green'
+      estadoLabel = 'Disponible'
+      break
+    case 'en_comision':
+      tone = 'blue'
+      estadoLabel = 'En comisión'
+      break
+    case 'licencia':
+      tone = 'orange'
+      estadoLabel = 'De licencia'
+      break
+    case 'inactivo':
+      tone = 'gray'
+      estadoLabel = 'Inactivo'
+      break
+  }
+
+  const iniciales = `${(r.nombre || '').charAt(0)}${(r.apellido || '').charAt(0)}`.toUpperCase()
+  const categoriasList = (r.categoria_licencia || '')
+    .split(',')
+    .map((s: string) => s.trim())
+    .filter(Boolean)
+
+  const tieneFotoDni = Boolean(
+    r.tiene_foto_dni_frente ||
+    r.tiene_foto_dni_dorso ||
+    r.foto_dni_frente ||
+    r.foto_dni_dorso
+  )
+  const tieneFotoLicencia = Boolean(
+    r.tiene_foto_licencia_frente ||
+    r.tiene_foto_licencia_dorso ||
+    r.foto_licencia_frente ||
+    r.foto_licencia_dorso
+  )
+
+  return {
+    id: r.id,
+    usuarioId: r.usuario_id,
+    nombre: r.nombre,
+    apellido: r.apellido,
+    nombreCompleto: `${r.apellido}, ${r.nombre}`,
+    iniciales: iniciales || 'CH',
+    dni: r.dni,
+    cuil: r.cuil,
+    telefono: r.telefono || 'Sin registrar',
+    email: r.email || 'Sin correo',
+    direccion: r.direccion || 'San Juan, Argentina',
+    fotoDniFrente: includePhotos ? (r.foto_dni_frente || null) : null,
+    fotoDniDorso: includePhotos ? (r.foto_dni_dorso || null) : null,
+    numeroLicencia: r.numero_licencia,
+    categoriaLicencia: r.categoria_licencia,
+    categoriasList,
+    fechaVencimientoLicencia: r.fecha_vencimiento_licencia ? String(r.fecha_vencimiento_licencia) : '',
+    fotoLicenciaFrente: includePhotos ? (r.foto_licencia_frente || null) : null,
+    fotoLicenciaDorso: includePhotos ? (r.foto_licencia_dorso || null) : null,
+    tieneFotoDni,
+    tieneFotoLicencia,
+    licenciaFormatted: formattedDate,
+    licenciaStatus,
+    licenciaDaysRemaining: dias,
+    estado: r.estado,
+    estadoLabel,
+    tone,
+    observaciones: r.observaciones,
+    totalViajes: Number(r.total_viajes || 0),
+    totalKmRecorridos: Number(r.total_km || 0),
+  }
+}
+
+/**
+ * Obtiene un chofer por ID. Por defecto incluye fotos digitalizadas completas.
+ */
+export async function getChoferById(choferId: number, includePhotos = true): Promise<ChoferFull | null> {
+  try {
+    const rows = await query<any[]>(`
+      SELECT 
+        c.id,
+        c.usuario_id,
+        c.nombre,
+        c.apellido,
+        c.dni,
+        c.cuil,
+        c.telefono,
+        c.email,
+        c.direccion,
+        ${includePhotos ? 'c.foto_dni_frente, c.foto_dni_dorso, c.foto_licencia_frente, c.foto_licencia_dorso,' : ''}
+        (c.foto_dni_frente IS NOT NULL AND c.foto_dni_frente != '') AS tiene_foto_dni_frente,
+        (c.foto_dni_dorso IS NOT NULL AND c.foto_dni_dorso != '') AS tiene_foto_dni_dorso,
+        (c.foto_licencia_frente IS NOT NULL AND c.foto_licencia_frente != '') AS tiene_foto_licencia_frente,
+        (c.foto_licencia_dorso IS NOT NULL AND c.foto_licencia_dorso != '') AS tiene_foto_licencia_dorso,
+        c.numero_licencia,
+        c.categoria_licencia,
+        c.fecha_vencimiento_licencia,
+        DATEDIFF(c.fecha_vencimiento_licencia, CURDATE()) AS dias_licencia,
+        c.estado,
+        c.observaciones,
+        (SELECT COUNT(*) FROM comisiones com WHERE com.chofer_id = c.id) AS total_viajes,
+        (SELECT COALESCE(SUM(com.odometro_regreso - com.odometro_salida), 0) 
+         FROM comisiones com 
+         WHERE com.chofer_id = c.id AND com.odometro_regreso > com.odometro_salida) AS total_km
+      FROM choferes c
+      WHERE c.id = ?
+      LIMIT 1
+    `, [choferId])
+
+    if (!rows || rows.length === 0) return null
+    return mapChoferRowToFull(rows[0], includePhotos)
+  } catch (error) {
+    console.error('Error al obtener chofer por ID:', error)
+    return null
+  }
+}
+
+/**
+ * 2. Lista completa de choferes optimizada: excluye cadenas pesadas en base64 de fotos (cargas rápidas)
  */
 export async function getChoferesFullList(): Promise<ChoferFull[]> {
   try {
@@ -69,13 +201,13 @@ export async function getChoferesFullList(): Promise<ChoferFull[]> {
         c.telefono,
         c.email,
         c.direccion,
-        c.foto_dni_frente,
-        c.foto_dni_dorso,
+        (c.foto_dni_frente IS NOT NULL AND c.foto_dni_frente != '') AS tiene_foto_dni_frente,
+        (c.foto_dni_dorso IS NOT NULL AND c.foto_dni_dorso != '') AS tiene_foto_dni_dorso,
+        (c.foto_licencia_frente IS NOT NULL AND c.foto_licencia_frente != '') AS tiene_foto_licencia_frente,
+        (c.foto_licencia_dorso IS NOT NULL AND c.foto_licencia_dorso != '') AS tiene_foto_licencia_dorso,
         c.numero_licencia,
         c.categoria_licencia,
         c.fecha_vencimiento_licencia,
-        c.foto_licencia_frente,
-        c.foto_licencia_dorso,
         DATEDIFF(c.fecha_vencimiento_licencia, CURDATE()) AS dias_licencia,
         c.estado,
         c.observaciones,
@@ -88,75 +220,7 @@ export async function getChoferesFullList(): Promise<ChoferFull[]> {
       ORDER BY c.apellido ASC, c.nombre ASC
     `)
 
-    return rows.map((r) => {
-      const vDate = r.fecha_vencimiento_licencia ? new Date(r.fecha_vencimiento_licencia) : null
-      const formattedDate = vDate
-        ? `${String(vDate.getDate()).padStart(2, '0')}/${String(vDate.getMonth() + 1).padStart(2, '0')}/${vDate.getFullYear()}`
-        : 'S/D'
-
-      const dias = Number(r.dias_licencia ?? 999)
-      let licenciaStatus: ChoferFull['licenciaStatus'] = 'vigente'
-      if (dias < 0) licenciaStatus = 'vencida'
-      else if (dias <= 30) licenciaStatus = 'proxima'
-
-      let tone: ChoferFull['tone'] = 'gray'
-      let estadoLabel = 'Disponible'
-      switch (r.estado) {
-        case 'disponible':
-          tone = 'green'
-          estadoLabel = 'Disponible'
-          break
-        case 'en_comision':
-          tone = 'blue'
-          estadoLabel = 'En comisión'
-          break
-        case 'licencia':
-          tone = 'orange'
-          estadoLabel = 'De licencia'
-          break
-        case 'inactivo':
-          tone = 'gray'
-          estadoLabel = 'Inactivo'
-          break
-      }
-
-      const iniciales = `${(r.nombre || '').charAt(0)}${(r.apellido || '').charAt(0)}`.toUpperCase()
-      const categoriasList = (r.categoria_licencia || '')
-        .split(',')
-        .map((s: string) => s.trim())
-        .filter(Boolean)
-
-      return {
-        id: r.id,
-        usuarioId: r.usuario_id,
-        nombre: r.nombre,
-        apellido: r.apellido,
-        nombreCompleto: `${r.apellido}, ${r.nombre}`,
-        iniciales: iniciales || 'CH',
-        dni: r.dni,
-        cuil: r.cuil,
-        telefono: r.telefono || 'Sin registrar',
-        email: r.email || 'Sin correo',
-        direccion: r.direccion || 'San Juan, Argentina',
-        fotoDniFrente: r.foto_dni_frente || null,
-        fotoDniDorso: r.foto_dni_dorso || null,
-        numeroLicencia: r.numero_licencia,
-        categoriaLicencia: r.categoria_licencia,
-        categoriasList,
-        fechaVencimientoLicencia: r.fecha_vencimiento_licencia ? String(r.fecha_vencimiento_licencia) : '',
-        fotoLicenciaFrente: r.foto_licencia_frente || null,
-        fotoLicenciaDorso: r.foto_licencia_dorso || null,
-        licenciaFormatted: formattedDate,
-        licenciaStatus,
-        licenciaDaysRemaining: dias,
-        estado: r.estado,
-        estadoLabel,
-        tone,
-        observaciones: r.observaciones,
-        totalViajes: Number(r.total_viajes || 0),
-        totalKmRecorridos: Number(r.total_km || 0),
-      }
-    })
+    return rows.map((r) => mapChoferRowToFull(r, false))
   } catch (error) {
     console.error('Error al obtener lista de choferes:', error)
     return []
@@ -164,12 +228,11 @@ export async function getChoferesFullList(): Promise<ChoferFull[]> {
 }
 
 /**
- * 3. Detalle 360° de un Chofer (Ficha, historial de viajes y registro de licencias laborales)
+ * 3. Detalle 360° de un Chofer (Ficha con fotos digitalizadas, historial de viajes y registro de licencias laborales)
  */
 export async function getChoferDetailWithHistory(choferId: number): Promise<ChoferDetailComplete> {
   try {
-    const choferes = await getChoferesFullList()
-    const chofer = choferes.find((c) => c.id === choferId) || null
+    const chofer = await getChoferById(choferId, true)
 
     // Historial de viajes / comisiones
     const rawComisiones = await query<any[]>(`
@@ -422,32 +485,38 @@ export async function saveChoferLicencia(data: ChoferLicenciaSaveInput): Promise
       diasHabiles = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1)
     }
 
-    const result = await query<any>(`
-      INSERT INTO licencias_chofer (
-        chofer_id, tipo, fecha_inicio, fecha_fin, dias_habiles,
-        motivo, estado, aprobado_por_id, observaciones
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [
-      data.choferId,
-      data.tipo,
-      data.fechaInicio,
-      data.fechaFin,
-      diasHabiles,
-      data.motivo || null,
-      data.estado || 'aprobada',
-      data.aprobadoPorId || 1, // Admin implícito
-      data.observaciones || null,
-    ])
+    const newId = await withTransaction(async (conn) => {
+      const [result] = await conn.execute<any>(`
+        INSERT INTO licencias_chofer (
+          chofer_id, tipo, fecha_inicio, fecha_fin, dias_habiles,
+          motivo, estado, aprobado_por_id, observaciones
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        data.choferId,
+        data.tipo,
+        data.fechaInicio,
+        data.fechaFin,
+        diasHabiles,
+        data.motivo || null,
+        data.estado || 'aprobada',
+        data.aprobadoPorId || 1, // Admin implícito
+        data.observaciones || null,
+      ])
 
-    // Si la licencia es aprobada y está vigente hoy, actualizar el estado del chofer a 'licencia'
-    if (data.estado === 'aprobada') {
-      const hoy = new Date().toISOString().split('T')[0]
-      if (data.fechaInicio <= hoy && data.fechaFin >= hoy) {
-        await query('UPDATE choferes SET estado = "licencia" WHERE id = ?', [data.choferId])
+      const insertId = result.insertId
+
+      // Si la licencia es aprobada y está vigente hoy, actualizar el estado del chofer a 'licencia'
+      if (data.estado === 'aprobada') {
+        const hoy = new Date().toISOString().split('T')[0]
+        if (data.fechaInicio <= hoy && data.fechaFin >= hoy) {
+          await conn.execute('UPDATE choferes SET estado = "licencia" WHERE id = ?', [data.choferId])
+        }
       }
-    }
 
-    return { success: true, id: result.insertId }
+      return insertId
+    })
+
+    return { success: true, id: newId }
   } catch (error: any) {
     console.error('Error al registrar licencia del chofer:', error)
     return { success: false, error: error.message || 'Error al registrar licencia' }

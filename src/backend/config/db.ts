@@ -24,4 +24,26 @@ export async function query<T = any>(sql: string, params: any[] = []): Promise<T
   return rows as T
 }
 
+export type TransactionCallback<T> = (conn: mysql.PoolConnection) => Promise<T>
+
+/**
+ * Ejecuta una operación atómica dentro de una transacción SQL (ACID).
+ * Si ocurre cualquier excepción, realiza ROLLBACK automático y libera la conexión al pool.
+ */
+export async function withTransaction<T>(callback: TransactionCallback<T>): Promise<T> {
+  const conn = await pool.getConnection()
+  try {
+    await conn.beginTransaction()
+    const result = await callback(conn)
+    await conn.commit()
+    return result
+  } catch (error) {
+    await conn.rollback().catch(() => {})
+    throw error
+  } finally {
+    conn.release()
+  }
+}
+
 export default pool
+

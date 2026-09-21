@@ -1,4 +1,4 @@
-﻿import type { APIRoute } from 'astro'
+import type { APIRoute } from 'astro'
 import { authenticateUser, SESSION_COOKIE_NAME } from '../../../backend/index'
 
 export const POST: APIRoute = async ({ request, cookies }) => {
@@ -22,7 +22,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     cookies.set(SESSION_COOKIE_NAME, result.token, {
       path: '/',
       httpOnly: true,
-      secure: false, // Permite HTTP en desarrollo local
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 7 días
     })

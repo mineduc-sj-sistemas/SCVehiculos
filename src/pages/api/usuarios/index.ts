@@ -4,20 +4,12 @@ import {
   getRolesList,
   getChoferesParaVinculacion,
   createUsuario,
-  verifySessionToken,
-  SESSION_COOKIE_NAME,
+  requireAuth,
 } from '../../../backend/index'
 
 export const GET: APIRoute = async ({ cookies }) => {
-  const sessionToken = cookies.get(SESSION_COOKIE_NAME)?.value
-  const user = verifySessionToken(sessionToken)
-
-  if (!user || user.rolId !== 1) {
-    return new Response(JSON.stringify({ success: false, message: 'Acceso no autorizado. Se requiere rol de Administrador.' }), {
-      status: 403,
-      headers: { 'Content-Type': 'application/json; charset=utf-8' },
-    })
-  }
+  const auth = requireAuth(cookies, [1])
+  if (!auth.authorized) return auth.response!
 
   const [usuarios, roles, choferes] = await Promise.all([
     getUsuariosList(),
@@ -32,15 +24,8 @@ export const GET: APIRoute = async ({ cookies }) => {
 }
 
 export const POST: APIRoute = async ({ request, cookies }) => {
-  const sessionToken = cookies.get(SESSION_COOKIE_NAME)?.value
-  const user = verifySessionToken(sessionToken)
-
-  if (!user || user.rolId !== 1) {
-    return new Response(JSON.stringify({ success: false, message: 'No tienes permisos de Administrador para crear usuarios.' }), {
-      status: 403,
-      headers: { 'Content-Type': 'application/json; charset=utf-8' },
-    })
-  }
+  const auth = requireAuth(cookies, [1])
+  if (!auth.authorized) return auth.response!
 
   try {
     const body = await request.json()

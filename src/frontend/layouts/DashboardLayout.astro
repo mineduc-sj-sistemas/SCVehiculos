@@ -2,6 +2,7 @@
 import Sidebar from '../components/layout/Sidebar.astro'
 import Header from '../components/layout/Header.astro'
 import Footer from '../components/layout/Footer.astro'
+import ToastNotification from '../components/ui/ToastNotification.astro'
 import '../styles/global.css'
 
 interface Props {
@@ -51,6 +52,9 @@ const {
     <!-- Modales fuera del flujo principal -->
     <slot name="modals" />
 
+    <!-- Notificaciones flotantes globales -->
+    <ToastNotification />
+
     <script>
       const menuButton = document.querySelector('#menu-button')
       const sidebar = document.querySelector('#sidebar')
@@ -68,6 +72,36 @@ const {
 
       overlay?.addEventListener('click', closeMenu)
       sidebar?.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeMenu))
+
+      // Manejador global de tecla Escape para cerrar cualquier modal activo
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          const openModals = document.querySelectorAll<HTMLElement>(
+            'div[id$="-modal"], div[id*="modal"]'
+          )
+
+          openModals.forEach((modal) => {
+            const isVisible =
+              modal.style.display !== 'none' &&
+              !modal.classList.contains('hidden') &&
+              modal.offsetParent !== null
+
+            if (isVisible) {
+              // Buscar botón de cierre dentro del modal
+              const closeBtn = modal.querySelector<HTMLElement>(
+                'button[id^="close-"], button[aria-label="Cerrar modal"], button[aria-label="Cerrar"], .btn-close-modal'
+              )
+              if (closeBtn) {
+                closeBtn.click()
+              } else {
+                modal.style.display = 'none'
+                modal.classList.add('hidden')
+              }
+              document.body.style.overflow = ''
+            }
+          })
+        }
+      })
     </script>
   </body>
 </html>

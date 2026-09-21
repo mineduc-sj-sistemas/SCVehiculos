@@ -3,11 +3,15 @@ import {
   crearComision,
   getCronogramaSemanal,
   getDatosAuxiliaresDespacho,
+  requireAuth,
 } from '../../../backend/index'
 
 export const prerender = false
 
-export const GET: APIRoute = async ({ request }) => {
+export const GET: APIRoute = async ({ request, cookies }) => {
+  const auth = requireAuth(cookies)
+  if (!auth.authorized) return auth.response!
+
   const url = new URL(request.url)
   const fecha = url.searchParams.get('fecha') || undefined
   const auxiliares = url.searchParams.get('auxiliares') === 'true'
@@ -15,27 +19,31 @@ export const GET: APIRoute = async ({ request }) => {
   try {
     if (auxiliares) {
       const dataAux = await getDatosAuxiliaresDespacho()
-      return new Response(JSON.stringify(dataAux), {
+      return new Response(JSON.stringify({ success: true, ...dataAux }), {
         status: 200,
         headers: { 'Content-Type': 'application/json; charset=utf-8' },
       })
     }
 
     const data = await getCronogramaSemanal(fecha)
-    return new Response(JSON.stringify(data), {
+    return new Response(JSON.stringify({ success: true, ...data }), {
       status: 200,
       headers: { 'Content-Type': 'application/json; charset=utf-8' },
     })
   } catch (error: any) {
     console.error('Error en GET /api/cronograma:', error)
-    return new Response(JSON.stringify({ error: error.message || 'Error al obtener cronograma' }), {
+    return new Response(JSON.stringify({ success: false, error: error.message || 'Error al obtener cronograma' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json; charset=utf-8' },
     })
   }
 }
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, cookies }) => {
+  // Roles autorizados para crear y despachar comisiones: 1 (Admin), 2 (Operador)
+  const auth = requireAuth(cookies, [1, 2])
+  if (!auth.authorized) return auth.response!
+
   try {
     const body = await request.json()
 
@@ -43,6 +51,7 @@ export const POST: APIRoute = async ({ request }) => {
     if (!body.vehiculoId || !body.choferId || !body.dependenciaId || !body.destino || !body.motivo || !body.fechaSalidaProgramada || !body.fechaRegresoEstimada) {
       return new Response(
         JSON.stringify({
+          success: false,
           error: 'Vehículo, chofer, dependencia, destino, motivo, fecha de salida y fecha de regreso son obligatorios.',
         }),
         { status: 400, headers: { 'Content-Type': 'application/json; charset=utf-8' } }
@@ -61,6 +70,7 @@ export const POST: APIRoute = async ({ request }) => {
       fechaSalidaProgramada: String(body.fechaSalidaProgramada),
       fechaRegresoEstimada: String(body.fechaRegresoEstimada),
       observaciones: body.observaciones ? String(body.observaciones).trim() : undefined,
+      usuarioCreadorId: auth.user?.id,
     })
 
     if (!result.success) {

@@ -1,4 +1,4 @@
-﻿import crypto from 'node:crypto'
+import crypto from 'node:crypto'
 import bcrypt from 'bcryptjs'
 import { query } from '../config/db'
 import type { UserSession } from '../types/user.types'
@@ -72,6 +72,43 @@ export function verifySessionToken(token: string | undefined): UserSession | nul
   }
 }
 
+export interface AuthCheckResult {
+  authorized: boolean
+  user?: UserSession
+  response?: Response
+}
+
+/**
+ * Helper para endpoints API: valida sesión y roles autorizados
+ */
+export function requireAuth(cookies: any, allowedRoleIds?: number[]): AuthCheckResult {
+  const sessionToken = cookies?.get ? cookies.get(SESSION_COOKIE_NAME)?.value : cookies
+  const user = verifySessionToken(sessionToken)
+
+  if (!user) {
+    return {
+      authorized: false,
+      response: new Response(
+        JSON.stringify({ success: false, message: 'Sesión no iniciada o expirada.' }),
+        { status: 401, headers: { 'Content-Type': 'application/json; charset=utf-8' } }
+      ),
+    }
+  }
+
+  if (allowedRoleIds && allowedRoleIds.length > 0 && !allowedRoleIds.includes(user.rolId)) {
+    return {
+      authorized: false,
+      user,
+      response: new Response(
+        JSON.stringify({ success: false, message: 'Acceso no autorizado: tu rol no tiene permisos para realizar esta operación.' }),
+        { status: 403, headers: { 'Content-Type': 'application/json; charset=utf-8' } }
+      ),
+    }
+  }
+
+  return { authorized: true, user }
+}
+
 /**
  * Procesa el inicio de sesión con email y contraseña
  */
@@ -107,27 +144,6 @@ export async function authenticateUser(emailInput: string, passwordInput: string
     )
 
     if (!rows || rows.length === 0) {
-      // Si la base de datos aún no tiene el usuario pero es el admin por defecto, permitimos demo fallback
-      if (email === 'maria.gutierrez@sanjuan.edu.ar' && (password === 'admin123' || password === 'Admin2026!')) {
-        const demoSession: UserSession = {
-          id: 1,
-          email: 'maria.gutierrez@sanjuan.edu.ar',
-          nombre: 'María',
-          apellido: 'Gutiérrez',
-          nombreCompleto: 'María Gutiérrez',
-          rolId: 1,
-          rolNombre: 'Administrador',
-          dependenciaId: null,
-          dependenciaNombre: 'Ministerio de Educación',
-        }
-        return {
-          success: true,
-          message: 'Inicio de sesión exitoso (Modo Administrador Demo).',
-          session: demoSession,
-          token: signSession(demoSession),
-        }
-      }
-
       return { success: false, message: 'Las credenciales ingresadas son incorrectas.' }
     }
 
@@ -137,7 +153,7 @@ export async function authenticateUser(emailInput: string, passwordInput: string
       return { success: false, message: 'Esta cuenta de usuario se encuentra inactiva. Contacta al Administrador.' }
     }
 
-    // Verificar contraseña con bcrypt o clave demo
+    // Verificar contraseña exclusivamente con hash seguro bcrypt
     let passwordMatches = false
     try {
       if (user.password_hash && user.password_hash.startsWith('$2')) {
@@ -147,11 +163,6 @@ export async function authenticateUser(emailInput: string, passwordInput: string
       }
     } catch (e) {
       console.error('Error al comparar bcrypt hash:', e)
-    }
-
-    // Admite también contraseña demo si está en fase de prueba
-    if (!passwordMatches && (password === 'admin123' || password === 'Admin2026!')) {
-      passwordMatches = true
     }
 
     if (!passwordMatches) {
@@ -186,8 +197,13 @@ export async function authenticateUser(emailInput: string, passwordInput: string
   } catch (error) {
     console.error('Error en autenticación:', error)
 
-    // Fallback resiliente para desarrollo si MySQL aún no está encendido
-    if (email === 'maria.gutierrez@sanjuan.edu.ar' && (password === 'admin123' || password === 'Admin2026!')) {
+    // Fallback de emergencia exclusivamente para entorno de desarrollo local sin BD
+    if (
+      process.env.NODE_ENV !== 'production' &&
+      email === 'maria.gutierrez@sanjuan.edu.ar' &&
+      password === 'admin123'
+    ) {
+      console.warn('ADVERTENCIA: Iniciando en Modo Demo Administrador (solo disponible en desarrollo local).')
       const demoSession: UserSession = {
         id: 1,
         email: 'maria.gutierrez@sanjuan.edu.ar',
@@ -210,3 +226,4 @@ export async function authenticateUser(emailInput: string, passwordInput: string
     return { success: false, message: 'Error en el servidor al intentar autenticar. Verifica la conexión con la base de datos.' }
   }
 }
+
