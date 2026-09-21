@@ -1,4 +1,4 @@
-﻿export interface Rol {
+export interface Rol {
   id: number
   nombre: string
   descripcion?: string | null
@@ -18,6 +18,9 @@ export interface Usuario {
   activo: boolean
   ultimoAcceso?: string | null
   createdAt?: string
+  choferId?: number | null
+  choferNombre?: string | null
+  choferLicencia?: string | null
 }
 
 export interface UserSession {
@@ -41,6 +44,7 @@ export interface UserCreateInput {
   password: string
   dni?: string
   telefono?: string
+  choferId?: number | null
 }
 
 export interface UserUpdateInput {
@@ -53,6 +57,21 @@ export interface UserUpdateInput {
   dni?: string
   telefono?: string
   activo?: boolean
+  choferId?: number | null
+}
+
+export interface ChoferParaVinculacion {
+  id: number
+  nombre: string
+  apellido: string
+  dni: string
+  email?: string | null
+  telefono?: string | null
+  numeroLicencia: string
+  categoriaLicencia: string
+  usuarioId?: number | null
+  usuarioEmail?: string | null
+  tieneUsuario: boolean
 }
 
 export interface UserStats {
@@ -62,3 +81,4 @@ export interface UserStats {
   otros: number
   inactivos: number
 }
+

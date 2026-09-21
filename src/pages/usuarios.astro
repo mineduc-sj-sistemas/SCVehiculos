@@ -1,4 +1,4 @@
-﻿---
+---
 import { Plus, ShieldCheck } from 'lucide-astro'
 import DashboardLayout from '../frontend/layouts/DashboardLayout.astro'
 import UserKpiCards from '../frontend/components/usuarios/UserKpiCards.astro'
@@ -9,6 +9,7 @@ import {
   getUserStats,
   getRolesList,
   getDependenciasList,
+  getChoferesParaVinculacion,
   verifySessionToken,
   SESSION_COOKIE_NAME,
 } from '../backend/index'
@@ -26,11 +27,12 @@ if (currentUser.rolId !== 1) {
 }
 
 // Carga de datos
-const [usuarios, stats, roles, dependencias] = await Promise.all([
+const [usuarios, stats, roles, dependencias, choferes] = await Promise.all([
   getUsuariosList(),
   getUserStats(),
   getRolesList(),
   getDependenciasList(),
+  getChoferesParaVinculacion(),
 ])
 ---
 
@@ -71,7 +73,7 @@ const [usuarios, stats, roles, dependencias] = await Promise.all([
 
   <!-- Modal para Crear Usuario -->
   <Fragment slot="modals">
-    <UserFormModal roles={roles} dependencias={dependencias} />
+    <UserFormModal roles={roles} dependencias={dependencias} choferes={choferes} />
   </Fragment>
 </DashboardLayout>
 

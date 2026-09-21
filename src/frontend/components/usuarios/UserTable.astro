@@ -1,4 +1,4 @@
-﻿---
+---
 import { Building2, Mail, Phone, ShieldCheck, User } from 'lucide-astro'
 import type { Usuario } from '../../../backend/index'
 
@@ -79,6 +79,16 @@ const rolBadgeClass = (rolId: number) => {
                   {u.rolId === 1 && <ShieldCheck size={12} />}
                   {u.rolNombre}
                 </span>
+                {u.choferNombre && (
+                  <div class="mt-1">
+                    <span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
+                      🚗 {u.choferNombre}
+                    </span>
+                    {u.choferLicencia && (
+                      <p class="text-[10px] text-muted font-mono mt-0.5">{u.choferLicencia}</p>
+                    )}
+                  </div>
+                )}
               </td>
 
               <!-- Dependencia -->

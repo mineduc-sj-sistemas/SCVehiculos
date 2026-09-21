@@ -55,7 +55,18 @@ const { choferes } = Astro.props
                 </div>
                 <div>
                   <p class="font-bold text-navy text-[13px]">{c.apellido}, {c.nombre}</p>
-                  <p class="text-[10px] text-muted">{c.direccion || 'San Juan'}</p>
+                  <div class="flex items-center gap-1.5 mt-0.5">
+                    <span class="text-[10px] text-muted">{c.direccion || 'San Juan'}</span>
+                    {c.usuarioId ? (
+                      <span class="inline-flex items-center gap-0.5 text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1 py-0.2 rounded" title="Cuenta de usuario vinculada">
+                        ✓ Con usuario
+                      </span>
+                    ) : (
+                      <span class="inline-flex items-center gap-0.5 text-[9px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 px-1 py-0.2 rounded" title="Sin cuenta de usuario">
+                        Sin usuario
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             </td>

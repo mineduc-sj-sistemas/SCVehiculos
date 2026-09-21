@@ -1,7 +1,8 @@
-﻿import type { APIRoute } from 'astro'
+import type { APIRoute } from 'astro'
 import {
   getUsuariosList,
   getRolesList,
+  getChoferesParaVinculacion,
   createUsuario,
   verifySessionToken,
   SESSION_COOKIE_NAME,
@@ -18,8 +19,13 @@ export const GET: APIRoute = async ({ cookies }) => {
     })
   }
 
-  const [usuarios, roles] = await Promise.all([getUsuariosList(), getRolesList()])
-  return new Response(JSON.stringify({ success: true, usuarios, roles }), {
+  const [usuarios, roles, choferes] = await Promise.all([
+    getUsuariosList(),
+    getRolesList(),
+    getChoferesParaVinculacion(),
+  ])
+
+  return new Response(JSON.stringify({ success: true, usuarios, roles, choferes }), {
     status: 200,
     headers: { 'Content-Type': 'application/json; charset=utf-8' },
   })
@@ -47,6 +53,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       password: body.password,
       dni: body.dni,
       telefono: body.telefono,
+      choferId: body.choferId ? Number(body.choferId) : null,
     })
 
     const status = result.success ? 201 : 400
@@ -61,3 +68,4 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     })
   }
 }
+

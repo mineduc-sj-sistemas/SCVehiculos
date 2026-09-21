@@ -1,4 +1,4 @@
-﻿document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
   const modal = document.getElementById('modal-create-user')
   const btnOpen = document.getElementById('btn-open-create-user')
   const btnClose = document.getElementById('btn-close-user-modal')
@@ -7,11 +7,57 @@
   const errorBox = document.getElementById('user-form-error')
   const btnSubmit = document.getElementById('btn-submit-user') as HTMLButtonElement | null
 
+  // Elementos específicos de vinculación de chofer
+  const selectRol = document.getElementById('user-rol') as HTMLSelectElement | null
+  const containerChofer = document.getElementById('container-chofer-selector')
+  const selectChofer = document.getElementById('user-chofer-id') as HTMLSelectElement | null
+
+  // Inputs para autocompletado
+  const inputNombre = document.getElementById('user-nombre') as HTMLInputElement | null
+  const inputApellido = document.getElementById('user-apellido') as HTMLInputElement | null
+  const inputDni = document.getElementById('user-dni') as HTMLInputElement | null
+  const inputTelefono = document.getElementById('user-telefono') as HTMLInputElement | null
+  const inputEmail = document.getElementById('user-email') as HTMLInputElement | null
+
+  function updateChoferVisibility() {
+    if (!selectRol || !containerChofer) return
+    const isChofer = selectRol.value === '4' // Rol ID 4 = Chofer
+    if (isChofer) {
+      containerChofer.classList.remove('hidden')
+      if (selectChofer) selectChofer.required = true
+    } else {
+      containerChofer.classList.add('hidden')
+      if (selectChofer) {
+        selectChofer.required = false
+        selectChofer.value = ''
+      }
+    }
+  }
+
+  // Cambio de rol dinámico
+  selectRol?.addEventListener('change', updateChoferVisibility)
+
+  // Autocompletado al seleccionar un chofer
+  selectChofer?.addEventListener('change', () => {
+    const selectedOption = selectChofer.selectedOptions[0]
+    if (!selectedOption || !selectedOption.value) return
+
+    const { nombre, apellido, dni, email, telefono } = selectedOption.dataset
+    if (nombre && inputNombre) inputNombre.value = nombre
+    if (apellido && inputApellido) inputApellido.value = apellido
+    if (dni && inputDni) inputDni.value = dni
+    if (telefono && inputTelefono) inputTelefono.value = telefono
+    if (email && inputEmail && !inputEmail.value) {
+      inputEmail.value = email
+    }
+  })
+
   function openModal() {
     if (!modal) return
     modal.classList.remove('opacity-0', 'pointer-events-none')
     modal.classList.add('opacity-100')
     form?.reset()
+    updateChoferVisibility()
     if (errorBox) {
       errorBox.classList.add('hidden')
       errorBox.textContent = ''
@@ -45,12 +91,21 @@
     const telefono = String(formData.get('telefono') || '').trim()
     const rolId = Number(formData.get('rolId'))
     const dependenciaId = formData.get('dependenciaId') ? Number(formData.get('dependenciaId')) : null
+    const choferId = formData.get('choferId') ? Number(formData.get('choferId')) : null
     const password = String(formData.get('password') || '')
     const passwordConfirm = String(formData.get('password_confirm') || '')
 
     if (errorBox) {
       errorBox.classList.add('hidden')
       errorBox.textContent = ''
+    }
+
+    if (rolId === 4 && !choferId) {
+      if (errorBox) {
+        errorBox.textContent = 'Debes seleccionar un chofer del padrón para vincularle credenciales de acceso.'
+        errorBox.classList.remove('hidden')
+      }
+      return
     }
 
     if (password !== passwordConfirm) {
@@ -86,6 +141,7 @@
           telefono,
           rolId,
           dependenciaId,
+          choferId,
           password,
         }),
       })
@@ -111,3 +167,4 @@
     }
   })
 })
+

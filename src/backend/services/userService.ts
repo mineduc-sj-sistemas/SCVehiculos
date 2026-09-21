@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs'
 import { query } from '../config/db'
-import type { Usuario, Rol, UserCreateInput, UserUpdateInput, UserStats } from '../types/user.types'
+import type { Usuario, Rol, UserCreateInput, UserUpdateInput, UserStats, ChoferParaVinculacion } from '../types/user.types'
 
 const MOCK_ROLES: Rol[] = [
   { id: 1, nombre: 'Administrador', descripcion: 'Acceso total al sistema y gestión de usuarios' },
@@ -79,6 +79,51 @@ export async function getRolesList(): Promise<Rol[]> {
 }
 
 /**
+ * Obtiene la lista de choferes para vinculación de credenciales (1 usuario por chofer)
+ */
+export async function getChoferesParaVinculacion(): Promise<ChoferParaVinculacion[]> {
+  try {
+    const rows = await query<any[]>(`
+      SELECT 
+        c.id,
+        c.nombre,
+        c.apellido,
+        c.dni,
+        c.email,
+        c.telefono,
+        c.numero_licencia,
+        c.categoria_licencia,
+        c.usuario_id,
+        u.email AS usuario_email
+      FROM choferes c
+      LEFT JOIN usuarios u ON c.usuario_id = u.id
+      WHERE c.estado != 'inactivo'
+      ORDER BY c.apellido ASC, c.nombre ASC
+    `)
+
+    if (rows && rows.length > 0) {
+      return rows.map((r) => ({
+        id: r.id,
+        nombre: r.nombre,
+        apellido: r.apellido,
+        dni: r.dni,
+        email: r.email,
+        telefono: r.telefono,
+        numeroLicencia: r.numero_licencia,
+        categoriaLicencia: r.categoria_licencia,
+        usuarioId: r.usuario_id,
+        usuarioEmail: r.usuario_email,
+        tieneUsuario: Boolean(r.usuario_id),
+      }))
+    }
+    return []
+  } catch (error) {
+    console.error('Error al obtener choferes para vinculación:', error)
+    return []
+  }
+}
+
+/**
  * Obtiene la lista completa de usuarios registrados
  */
 export async function getUsuariosList(): Promise<Usuario[]> {
@@ -97,10 +142,14 @@ export async function getUsuariosList(): Promise<Usuario[]> {
         u.telefono,
         u.activo,
         u.ultimo_acceso,
-        u.created_at
+        u.created_at,
+        ch.id AS chofer_id,
+        CONCAT(ch.apellido, ', ', ch.nombre) AS chofer_nombre,
+        CONCAT('Cat. ', ch.categoria_licencia, ' · ', ch.numero_licencia) AS chofer_licencia
       FROM usuarios u
       JOIN roles r ON u.rol_id = r.id
       LEFT JOIN dependencias d ON u.dependencia_id = d.id
+      LEFT JOIN choferes ch ON ch.usuario_id = u.id
       ORDER BY u.id ASC
     `)
 
@@ -129,6 +178,9 @@ export async function getUsuariosList(): Promise<Usuario[]> {
         activo: Boolean(r.activo),
         ultimoAcceso: ultimoAccesoFormatted,
         createdAt: r.created_at ? new Date(r.created_at).toLocaleDateString('es-AR') : undefined,
+        choferId: r.chofer_id || null,
+        choferNombre: r.chofer_nombre || null,
+        choferLicencia: r.chofer_licencia || null,
       }
     })
   } catch (error) {
@@ -163,6 +215,7 @@ export async function createUsuario(input: UserCreateInput): Promise<{ success: 
   const dependenciaId = input.dependenciaId ? Number(input.dependenciaId) : null
   const dni = input.dni?.trim() || null
   const telefono = input.telefono?.trim() || null
+  const choferId = input.choferId ? Number(input.choferId) : null
 
   if (!nombre || !apellido || !email || !password || !rolId) {
     return { success: false, message: 'Todos los campos marcados como obligatorios deben completarse.' }
@@ -172,7 +225,23 @@ export async function createUsuario(input: UserCreateInput): Promise<{ success: 
     return { success: false, message: 'La contraseña inicial debe tener al menos 6 caracteres.' }
   }
 
+  // Regla para rol Chofer (ID 4): Debe asociarse a un chofer oficial existente
+  if (rolId === 4 && !choferId) {
+    return { success: false, message: 'Debes seleccionar un chofer de la lista para vincular sus credenciales de acceso.' }
+  }
+
   try {
+    // Si se especificó un choferId, validar que exista y que NO tenga un usuario vinculado (regla: 1 usuario por chofer)
+    if (choferId) {
+      const choferRows = await query<any[]>(`SELECT id, usuario_id, nombre, apellido FROM choferes WHERE id = ? LIMIT 1`, [choferId])
+      if (!choferRows || choferRows.length === 0) {
+        return { success: false, message: 'El chofer seleccionado no existe en el registro del sistema.' }
+      }
+      if (choferRows[0].usuario_id) {
+        return { success: false, message: `El chofer ${choferRows[0].apellido}, ${choferRows[0].nombre} ya posee credenciales de acceso vinculadas. Solo se permite un único usuario por chofer.` }
+      }
+    }
+
     // Validar si el email ya existe
     const existing = await query<any[]>(`SELECT id FROM usuarios WHERE LOWER(email) = ? LIMIT 1`, [email])
     if (existing && existing.length > 0) {
@@ -199,10 +268,17 @@ export async function createUsuario(input: UserCreateInput): Promise<{ success: 
       [rolId, dependenciaId, nombre, apellido, email, passwordHash, dni, telefono]
     )
 
+    const newUserId = result.insertId
+
+    // Si se vinculó un chofer, actualizar choferes con el nuevo usuario_id
+    if (choferId && newUserId) {
+      await query(`UPDATE choferes SET usuario_id = ? WHERE id = ?`, [newUserId, choferId])
+    }
+
     return {
       success: true,
       message: `Usuario ${nombre} ${apellido} creado exitosamente.`,
-      id: result.insertId,
+      id: newUserId,
     }
   } catch (error: any) {
     console.error('Error al crear usuario en BD, aplicando fallback demo:', error?.message)
