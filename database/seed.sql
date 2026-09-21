@@ -56,7 +56,9 @@ INSERT INTO `tipos_vehiculo` (`id`, `nombre`, `descripcion`) VALUES
 (1, 'Camioneta', 'Pick-up 4x2 o 4x4 para caminos de montaña y rurales'),
 (2, 'Utilitario', 'Furgón pequeño para carga ligera y logística escolar'),
 (3, 'Sedán', 'Vehículo de pasajeros para traslados urbanos y protocolares'),
-(4, 'Minibús', 'Transporte de contingentes y delegaciones educativas');
+(4, 'Minibús', 'Transporte de contingentes y delegaciones educativas'),
+(5, 'Camión', 'Camión de carga pesada para distribución de mobiliario escolar'),
+(6, 'SUV', 'Vehículo utilitario deportivo para supervisión pedagógica');
 
 -- 6. Flota Oficial Inicial (con Formulario 08, Titularidad, Color y Foto)
 INSERT INTO `vehiculos` (
