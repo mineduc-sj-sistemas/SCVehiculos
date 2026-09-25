@@ -1,5 +1,5 @@
 ---
-import { Plus, Wrench } from 'lucide-astro'
+import { Download, Plus, Wrench } from 'lucide-astro'
 import DashboardLayout from '../frontend/layouts/DashboardLayout.astro'
 import MaintenanceKpiCards from '../frontend/components/mantenimientos/MaintenanceKpiCards.astro'
 import MaintenanceTable from '../frontend/components/mantenimientos/MaintenanceTable.astro'
@@ -33,6 +33,14 @@ const [kpis, mantenimientos, vehiculos] = await Promise.all([
     </div>
 
     <div class="flex items-center gap-2">
+      <a
+        href="/api/reportes/mantenimientos"
+        class="flex items-center gap-2 rounded-xl border border-line bg-white hover:bg-paper px-3.5 py-2.5 text-xs font-bold text-navy shadow-xs transition"
+        title="Descargar historial de servicios y costos en Excel (CSV UTF-8)"
+      >
+        <Download size={15} />
+        <span>Exportar Reporte</span>
+      </a>
       <button
         id="btn-abrir-crear-mantenimiento"
         type="button"

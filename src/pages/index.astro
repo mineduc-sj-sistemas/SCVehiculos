@@ -1,19 +1,20 @@
 ---
-import { CalendarDays, Car, ChevronRight, Fuel, MoreHorizontal, Route, UsersRound, Wrench } from 'lucide-astro'
+import { AlertTriangle, CalendarDays, Car, ChevronRight, Fuel, MoreHorizontal, Route, UsersRound, Wrench } from 'lucide-astro'
 import DashboardLayout from '../frontend/layouts/DashboardLayout.astro'
 import DashboardStatCards from '../frontend/components/dashboard/DashboardStatCards.astro'
 import PlateBadge from '../frontend/components/ui/PlateBadge.astro'
 import StatusBadge from '../frontend/components/ui/StatusBadge.astro'
-import { getDashboardStats, getFleet, getActiveTravels, getDriverStats, getDashboardMaintenance, getFuelStats } from '../backend/index'
+import { getDashboardStats, getFleet, getActiveTravels, getDriverStats, getDashboardMaintenance, getFuelStats, getOperationalAlerts } from '../backend/index'
 
 // Consultas dinámicas a la base de datos MySQL (sc_vehiculos) a través de la capa Backend
-const [stats, fleet, travels, driverStats, maintenance, fuelStats] = await Promise.all([
+const [stats, fleet, travels, driverStats, maintenance, fuelStats, alertsSummary] = await Promise.all([
   getDashboardStats(),
   getFleet(),
   getActiveTravels(),
   getDriverStats(),
   getDashboardMaintenance(),
   getFuelStats(),
+  getOperationalAlerts(),
 ])
 ---
 
@@ -49,6 +50,31 @@ const [stats, fleet, travels, driverStats, maintenance, fuelStats] = await Promi
       </a>
     </div>
   </div>
+
+  {alertsSummary.totalAlerts > 0 && (
+    <div class="mb-6 rounded-2xl bg-amber-50 border border-amber-200 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+      <div class="flex items-center gap-3">
+        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white font-bold shadow-sm">
+          <AlertTriangle size={20} />
+        </div>
+        <div>
+          <h4 class="font-display text-sm font-bold text-amber-900">
+            {alertsSummary.urgentesCount > 0 ? 'Atención: Vencimientos Críticos Detectados' : 'Avisos Operativos Próximos'}
+          </h4>
+          <p class="text-xs text-amber-800/80 mt-0.5">
+            Hay <strong>{alertsSummary.totalAlerts}</strong> avisos ({alertsSummary.urgentesCount} urgentes, {alertsSummary.advertenciasCount} próximos) que requieren regularización de RTO, licencias o services mecánicos.
+          </p>
+        </div>
+      </div>
+      <a
+        href="/flota"
+        class="inline-flex items-center gap-1.5 rounded-xl bg-white border border-amber-300 px-3.5 py-2 text-xs font-bold text-amber-900 hover:bg-amber-100 transition shrink-0"
+      >
+        <span>Revisar Parque Automotor</span>
+        <ChevronRight size={14} />
+      </a>
+    </div>
+  )}
 
   <!-- Accesos Rápidos Institucionales · Estilo Oficial Ministerio de Educación (Referencia San Juan) -->
   <section class="mb-7 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">

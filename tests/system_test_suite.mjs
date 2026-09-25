@@ -560,6 +560,60 @@ async function runTestSuite() {
   )
 
   // -------------------------------------------------------------------------
+  // MÓDULO 11: REPORTES OFICIALES Y ALERTAS OPERATIVAS (FASE 3)
+  // -------------------------------------------------------------------------
+  console.log('\n--- MÓDULO 11: REPORTES OFICIALES Y ALERTAS OPERATIVAS (FASE 3) ---')
+
+  // TC-28: Exportación oficial de planillas en CSV con UTF-8 BOM
+  const resReporteFlota = await fetch(`${BASE_URL}/api/reportes/flota`, {
+    headers: { Cookie: `sc_session=${TOKENS.admin}` },
+  })
+  const bufFlota = Buffer.from(await resReporteFlota.arrayBuffer())
+  const hasBom = bufFlota[0] === 0xef && bufFlota[1] === 0xbb && bufFlota[2] === 0xbf
+  const textReporteFlota = bufFlota.toString('utf8')
+
+  const resReporteMant = await fetch(`${BASE_URL}/api/reportes/mantenimientos`, {
+    headers: { Cookie: `sc_session=${TOKENS.admin}` },
+  })
+  const textReporteMant = await resReporteMant.text()
+
+  const resReporteFuel = await fetch(`${BASE_URL}/api/reportes/combustible`, {
+    headers: { Cookie: `sc_session=${TOKENS.admin}` },
+  })
+  const textReporteFuel = await resReporteFuel.text()
+
+  assert(
+    resReporteFlota.status === 200 &&
+    resReporteFlota.headers.get('content-type')?.includes('text/csv') &&
+    hasBom &&
+    textReporteFlota.includes('Patente;Marca;Modelo') &&
+    resReporteMant.status === 200 &&
+    textReporteMant.includes('ID;Fecha Programada') &&
+    resReporteFuel.status === 200 &&
+    textReporteFuel.includes('ID;Fecha y Hora'),
+    'TC-28',
+    'Generación y exportación de reportes oficiales en Excel (CSV UTF-8 con BOM)',
+    '3 reportes validados (Flota, Mantenimiento, Combustible con BOM EF BB BF)'
+  )
+
+  // TC-29: Centro de Alertas y Monitor de Vencimientos Proactivos
+  const resAlertas = await fetch(`${BASE_URL}/api/alertas`, {
+    headers: { Cookie: `sc_session=${TOKENS.admin}` },
+  })
+  const dataAlertas = await resAlertas.json()
+
+  assert(
+    resAlertas.status === 200 &&
+    dataAlertas.success &&
+    typeof dataAlertas.totalAlerts === 'number' &&
+    Array.isArray(dataAlertas.alerts) &&
+    typeof dataAlertas.urgentesCount === 'number',
+    'TC-29',
+    'Centro de alertas y monitor de vencimientos (RTO, licencias, 08 y services)',
+    `${dataAlertas.totalAlerts} alertas detectadas (${dataAlertas.urgentesCount} urgentes)`
+  )
+
+  // -------------------------------------------------------------------------
   // LIMPIEZA DE DATOS TEMPORALES (TEARDOWN)
   // -------------------------------------------------------------------------
   console.log('\n--- LIMPIEZA DE DATOS TEMPORALES (TEARDOWN) ---')
