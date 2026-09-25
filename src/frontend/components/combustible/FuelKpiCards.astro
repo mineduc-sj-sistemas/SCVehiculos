@@ -1,0 +1,84 @@
+---
+import { Droplet, Fuel, Gauge, Receipt, TrendingUp } from 'lucide-astro'
+import type { FuelKpis } from '../../../backend/services/fuelService'
+
+interface Props {
+  kpis: FuelKpis
+}
+
+const { kpis } = Astro.props
+
+const formatCurrency = (val: number) => {
+  return new Intl.NumberFormat('es-AR', {
+    style: 'currency',
+    currency: 'ARS',
+    maximumFractionDigits: 0,
+  }).format(val)
+}
+---
+
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+  <!-- Litros Totales del Mes -->
+  <div class="card p-5 border-l-4 border-orangeGov transition-all hover:shadow-md hover:-translate-y-0.5">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-xs font-bold text-muted uppercase tracking-wider">Litros en el Mes</p>
+        <p class="mt-2 font-display text-3xl font-bold tracking-tight text-navy">
+          {kpis.totalLitrosMes.toLocaleString('es-AR')} <span class="text-sm font-normal text-muted">L</span>
+        </p>
+        <p class="mt-1 text-xs text-muted">Consumo acumulado de flota</p>
+      </div>
+      <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-50 text-orangeGov">
+        <Fuel size={22} />
+      </div>
+    </div>
+  </div>
+
+  <!-- Gasto Total en Combustible -->
+  <div class="card p-5 border-l-4 border-emerald-500 transition-all hover:shadow-md hover:-translate-y-0.5">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-xs font-bold text-muted uppercase tracking-wider">Inversión en Combustible</p>
+        <p class="mt-2 font-display text-2xl font-bold tracking-tight text-emerald-700 font-mono">
+          {formatCurrency(kpis.gastoTotalMes)}
+        </p>
+        <p class="mt-1 text-xs text-muted">Total liquidado en el mes</p>
+      </div>
+      <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+        <Receipt size={22} />
+      </div>
+    </div>
+  </div>
+
+  <!-- Rendimiento Promedio -->
+  <div class="card p-5 border-l-4 border-charcoalGov transition-all hover:shadow-md hover:-translate-y-0.5">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-xs font-bold text-muted uppercase tracking-wider">Rendimiento Medio</p>
+        <p class="mt-2 font-display text-3xl font-bold tracking-tight text-charcoalGov">
+          {kpis.rendimientoPromedioKmL} <span class="text-sm font-normal text-muted">km/L</span>
+        </p>
+        <p class="mt-1 text-xs text-muted">Promedio general de la flota</p>
+      </div>
+      <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-charcoalGov">
+        <Gauge size={22} />
+      </div>
+    </div>
+  </div>
+
+  <!-- Cantidad de Cargas Registradas -->
+  <div class="card p-5 border-l-4 border-amber-500 transition-all hover:shadow-md hover:-translate-y-0.5">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-xs font-bold text-muted uppercase tracking-wider">Tickets / Cargas</p>
+        <p class="mt-2 font-display text-3xl font-bold tracking-tight text-navy">
+          {String(kpis.cargasCountMes).padStart(2, '0')}
+        </p>
+        <p class="mt-1 text-xs text-muted">Operaciones en estaciones</p>
+      </div>
+      <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+        <Droplet size={22} />
+      </div>
+    </div>
+  </div>
+</section>

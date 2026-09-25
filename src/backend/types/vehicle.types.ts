@@ -80,11 +80,24 @@ export interface VehicleFuelItem {
   rendimiento: string
 }
 
+export interface VehicleAuditItem {
+  id: number
+  estadoAnterior: string
+  estadoNuevo: string
+  motivo: string | null
+  comisionId: number | null
+  mantenimientoId: number | null
+  usuarioNombre: string
+  fecha: string
+  createdAt: string
+}
+
 export interface VehicleDetailComplete {
   vehicle: VehicleFull | null
   mantenimientos: VehicleHistoryItem[]
   viajes: VehicleTravelItem[]
   cargasCombustible: VehicleFuelItem[]
+  auditoria: VehicleAuditItem[]
 }
 
 export interface VehicleType {

@@ -501,9 +501,72 @@ async function runTestSuite() {
   )
 
   // -------------------------------------------------------------------------
+  // MÓDULO 10: CONTROL DE COMBUSTIBLE Y TRAZABILIDAD VISUAL (FASE 2)
+  // -------------------------------------------------------------------------
+  console.log('\n--- MÓDULO 10: CONTROL DE COMBUSTIBLE Y TRAZABILIDAD VISUAL ---')
+
+  // TC-26: Registro de Carga de Combustible con cálculo de Km/L y sincronización de odómetro
+  let tempFuelId = null
+  const resFuel = await fetch(`${BASE_URL}/api/combustible`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: `sc_session=${TOKENS.admin}` },
+    body: JSON.stringify({
+      vehiculoId: testVehId,
+      fechaCarga: '2026-09-25T10:00:00',
+      estacionServicio: 'YPF ACA San Juan Centro',
+      tipoCombustible: 'diesel_grado_3',
+      litros: 50.0,
+      precioPorLitro: 1200.0,
+      importeTotal: 60000.0,
+      odometroCarga: 45600,
+      tanqueLleno: true,
+      numeroTicket: 'TKT-TEST-9999',
+      metodoPago: 'tarjeta_flota',
+    }),
+  })
+  const dataFuel = await resFuel.json()
+  tempFuelId = dataFuel.id
+
+  const [fuelDb] = await db.execute('SELECT * FROM cargas_combustible WHERE id = ?', [tempFuelId])
+  const [vehOdoCheck] = await db.execute('SELECT odometro_actual FROM vehiculos WHERE id = ?', [testVehId])
+
+  assert(
+    resFuel.status === 201 &&
+    dataFuel.success &&
+    fuelDb.length > 0 &&
+    Number(fuelDb[0].importe_total) === 60000 &&
+    vehOdoCheck[0]?.odometro_actual >= 45600,
+    'TC-26',
+    'Registro de carga de combustible con cálculo de importe, ticket y actualización de odómetro',
+    `Carga #${tempFuelId} registrada ($60.000, 50L en Vehículo #${testVehId})`
+  )
+
+  // TC-27: Consulta de Línea de Tiempo y Auditoría de Estados del Vehículo
+  const resAuditVeh = await fetch(`${BASE_URL}/api/vehiculos?id=${testVehId}`, {
+    method: 'GET',
+    headers: { Cookie: `sc_session=${TOKENS.admin}` },
+  })
+  const dataAuditVeh = await resAuditVeh.json()
+
+  assert(
+    resAuditVeh.status === 200 &&
+    dataAuditVeh.success &&
+    Array.isArray(dataAuditVeh.auditoria) &&
+    dataAuditVeh.auditoria.length > 0 &&
+    dataAuditVeh.auditoria.some((a) => a.estadoNuevo === 'en_taller' || a.estadoNuevo === 'disponible'),
+    'TC-27',
+    'Trazabilidad auditada y línea de tiempo del vehículo (auditoria_estados_vehiculo)',
+    `Vehículo #${testVehId} cuenta con ${dataAuditVeh.auditoria?.length} transiciones auditadas`
+  )
+
+  // -------------------------------------------------------------------------
   // LIMPIEZA DE DATOS TEMPORALES (TEARDOWN)
   // -------------------------------------------------------------------------
   console.log('\n--- LIMPIEZA DE DATOS TEMPORALES (TEARDOWN) ---')
+  if (tempFuelId) {
+    await db.execute('DELETE FROM cargas_combustible WHERE id = ?', [tempFuelId])
+    console.log(`  ✓ Carga de combustible temporal #${tempFuelId} eliminada.`)
+  }
   if (tempMantenimientoId) {
     await db.execute('DELETE FROM auditoria_estados_vehiculo WHERE mantenimiento_id = ?', [tempMantenimientoId])
     await db.execute('DELETE FROM mantenimientos WHERE id = ?', [tempMantenimientoId])

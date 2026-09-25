@@ -5,6 +5,7 @@ import type {
   VehicleHistoryItem,
   VehicleTravelItem,
   VehicleFuelItem,
+  VehicleAuditItem,
   VehicleDetailComplete,
   VehicleType,
   Dependencia,
@@ -399,11 +400,48 @@ export async function getVehicleDetailWithHistory(vehicleId: number): Promise<Ve
       }
     })
 
+    // Historial de auditoría de estados
+    const rawAuditoria = await query<any[]>(
+      `
+      SELECT 
+        a.id,
+        a.estado_anterior,
+        a.estado_nuevo,
+        a.motivo,
+        a.comision_id,
+        a.mantenimiento_id,
+        a.created_at,
+        CONCAT(COALESCE(u.nombre, 'Sistema'), ' ', COALESCE(u.apellido, '')) AS usuario_nombre
+      FROM auditoria_estados_vehiculo a
+      LEFT JOIN usuarios u ON a.usuario_id = u.id
+      WHERE a.vehiculo_id = ?
+      ORDER BY a.created_at DESC, a.id DESC
+    `,
+      [vehicleId]
+    )
+
+    const auditoria: VehicleAuditItem[] = rawAuditoria.map((a) => {
+      const d = new Date(a.created_at)
+      const fecha = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')} hs`
+      return {
+        id: a.id,
+        estadoAnterior: a.estado_anterior,
+        estadoNuevo: a.estado_nuevo,
+        motivo: a.motivo,
+        comisionId: a.comision_id,
+        mantenimientoId: a.mantenimiento_id,
+        usuarioNombre: a.usuario_nombre?.trim() || 'Sistema / Automático',
+        fecha,
+        createdAt: d.toISOString(),
+      }
+    })
+
     return {
       vehicle,
       mantenimientos,
       viajes,
       cargasCombustible: combustible,
+      auditoria,
     }
   } catch (error) {
     console.error('Error al obtener detalle e historial del vehículo:', error)
@@ -412,6 +450,7 @@ export async function getVehicleDetailWithHistory(vehicleId: number): Promise<Ve
       mantenimientos: [],
       viajes: [],
       cargasCombustible: [],
+      auditoria: [],
     }
   }
 }

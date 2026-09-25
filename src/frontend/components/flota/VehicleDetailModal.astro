@@ -52,6 +52,9 @@ import { Bus, Calendar, ChevronRight, Clock, FileCheck2, FileText, Fuel, Gauge, 
       <button data-tab="combustible" class="tab-btn border-b-2 border-transparent px-4 py-3 text-xs font-bold text-muted hover:text-navy flex items-center gap-2 transition whitespace-nowrap">
         <Fuel size={15} /> Consumo de Combustible <span id="badge-count-combustible" class="rounded-full bg-paper px-2 py-0.5 text-[10px] text-muted">0</span>
       </button>
+      <button data-tab="auditoria" class="tab-btn border-b-2 border-transparent px-4 py-3 text-xs font-bold text-muted hover:text-navy flex items-center gap-2 transition whitespace-nowrap">
+        <Clock size={15} /> Trazabilidad y Estados <span id="badge-count-auditoria" class="rounded-full bg-paper px-2 py-0.5 text-[10px] text-muted">0</span>
+      </button>
     </div>
 
     <!-- Modal Content Scrollable -->
@@ -296,6 +299,27 @@ import { Bus, Calendar, ChevronRight, Clock, FileCheck2, FileText, Fuel, Gauge, 
         </div>
       </div>
 
+      <!-- TAB 5: AUDITORÍA Y TRAZABILIDAD -->
+      <div id="tab-content-auditoria" class="tab-pane hidden space-y-4">
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <h3 class="font-display text-sm font-bold text-navy">Línea de Tiempo y Trazabilidad de Estados</h3>
+            <p class="text-xs text-muted">Registro histórico inmutable de transiciones operativas, comisiones y servicios mecánicos.</p>
+          </div>
+          <span class="text-xs font-bold text-orangeGov bg-orange-50 border border-orange-200 px-3 py-1 rounded-lg">Auditoría Criptográfica</span>
+        </div>
+
+        <div id="auditoria-empty" class="hidden rounded-xl border border-line bg-white p-8 text-center text-muted text-xs">
+          No hay eventos de trazabilidad registrados para esta unidad.
+        </div>
+
+        <div id="auditoria-timeline-container" class="rounded-xl border border-line bg-white p-6 shadow-xs">
+          <div id="auditoria-timeline-list" class="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-gray-200">
+            <!-- Se inyecta dinámicamente con JS -->
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- Modal Footer -->
@@ -522,6 +546,72 @@ import { Bus, Calendar, ChevronRight, Clock, FileCheck2, FileText, Fuel, Gauge, 
               '<td class="px-3 py-3 font-mono text-muted">' + c.odometro + '</td>' +
               '<td class="px-4 py-3 text-right font-bold text-[#20864f]">' + c.rendimiento + '</td>';
             combustibleTbody.appendChild(tr);
+          });
+        }
+      }
+
+      // Pestaña 5: Auditoría y Trazabilidad
+      var auditList = data.auditoria || [];
+      var badgeAuditoria = document.getElementById('badge-count-auditoria');
+      if (badgeAuditoria) badgeAuditoria.textContent = String(auditList.length);
+      var auditoriaEmpty = document.getElementById('auditoria-empty');
+      var auditoriaContainer = document.getElementById('auditoria-timeline-container');
+      var auditoriaTimelineList = document.getElementById('auditoria-timeline-list');
+      if (auditoriaTimelineList) {
+        auditoriaTimelineList.innerHTML = '';
+        if (auditList.length === 0) {
+          if (auditoriaEmpty) auditoriaEmpty.classList.remove('hidden');
+          if (auditoriaContainer) auditoriaContainer.classList.add('hidden');
+        } else {
+          if (auditoriaEmpty) auditoriaEmpty.classList.add('hidden');
+          if (auditoriaContainer) auditoriaContainer.classList.remove('hidden');
+
+          var formatBadge = function(st) {
+            switch(st) {
+              case 'disponible':
+                return '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[#e8f7ef] text-[#20864f] border border-emerald-200">Disponible</span>';
+              case 'en_comision':
+                return '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">En Comisión</span>';
+              case 'en_taller':
+                return '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">En Taller</span>';
+              case 'baja':
+                return '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">Baja</span>';
+              default:
+                return '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-700">' + st + '</span>';
+            }
+          };
+
+          var getDotColor = function(st) {
+            switch(st) {
+              case 'disponible': return 'bg-emerald-500 ring-emerald-100';
+              case 'en_comision': return 'bg-amber-500 ring-amber-100';
+              case 'en_taller': return 'bg-blue-600 ring-blue-100';
+              case 'baja': return 'bg-rose-500 ring-rose-100';
+              default: return 'bg-gray-400 ring-gray-100';
+            }
+          };
+
+          auditList.forEach(function (a) {
+            var itemEl = document.createElement('div');
+            itemEl.className = 'relative group pb-1';
+            var dotColor = getDotColor(a.estadoNuevo);
+
+            itemEl.innerHTML =
+              '<span class="absolute -left-[19px] top-1.5 h-3 w-3 rounded-full ' + dotColor + ' ring-4"></span>' +
+              '<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-1">' +
+                '<div class="flex items-center gap-2 flex-wrap">' +
+                  formatBadge(a.estadoAnterior) +
+                  '<span class="text-xs text-muted font-bold">→</span>' +
+                  formatBadge(a.estadoNuevo) +
+                  (a.comisionId ? '<span class="text-[10px] font-mono font-bold bg-paper px-2 py-0.5 rounded text-navy border border-line">Comisión #' + a.comisionId + '</span>' : '') +
+                  (a.mantenimientoId ? '<span class="text-[10px] font-mono font-bold bg-paper px-2 py-0.5 rounded text-navy border border-line">Mantenimiento #' + a.mantenimientoId + '</span>' : '') +
+                '</div>' +
+                '<span class="text-[11px] font-mono text-muted">' + a.fecha + '</span>' +
+              '</div>' +
+              '<p class="text-xs text-navy font-semibold">' + (a.motivo || 'Transición de estado operativa') + '</p>' +
+              '<p class="text-[11px] text-muted mt-0.5">Operador: <strong class="text-gray-700">' + a.usuarioNombre + '</strong></p>';
+
+            auditoriaTimelineList.appendChild(itemEl);
           });
         }
       }

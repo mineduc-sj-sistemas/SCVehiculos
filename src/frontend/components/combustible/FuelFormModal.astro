@@ -1,0 +1,269 @@
+---
+import { AlertCircle, Calendar, Fuel, Receipt, Truck, User, X } from 'lucide-astro'
+import type { VehicleListItem } from '../../../backend/services/vehicleService'
+import type { ChoferFull } from '../../../backend/types/chofer.types'
+
+interface Props {
+  vehiculos: VehicleListItem[]
+  choferes: ChoferFull[]
+}
+
+const { vehiculos, choferes } = Astro.props
+
+const nowIso = new Date().toISOString()
+const todayLocal = `${nowIso.split('T')[0]}T${nowIso.split('T')[1].slice(0, 5)}`
+---
+
+<div
+  id="modal-crear-combustible"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/60 backdrop-blur-xs opacity-0 pointer-events-none transition-opacity duration-200"
+  role="dialog"
+  aria-modal="true"
+>
+  <div class="relative w-full max-w-xl rounded-2xl bg-white shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95">
+    <!-- Cabecera -->
+    <div class="flex items-center justify-between border-b border-gray-100 bg-charcoalGov px-6 py-4 text-white">
+      <div class="flex items-center gap-3">
+        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-orangeGov text-white shadow-sm">
+          <Fuel size={18} strokeWidth={2.5} />
+        </div>
+        <div>
+          <h3 class="font-display text-base font-bold">Registrar Carga de Combustible</h3>
+          <p class="text-[11px] text-white/60">Control de ticket, litros y odómetro</p>
+        </div>
+      </div>
+      <button
+        id="btn-close-combustible-modal"
+        type="button"
+        class="flex h-8 w-8 items-center justify-center rounded-lg text-white/70 hover:bg-white/10 hover:text-white transition cursor-pointer"
+        aria-label="Cerrar modal"
+      >
+        <X size={18} />
+      </button>
+    </div>
+
+    <!-- Formulario -->
+    <form id="form-crear-combustible" class="overflow-y-auto p-6 space-y-4 text-xs">
+      <div id="combustible-error-msg" class="hidden rounded-xl bg-rose-50 border border-rose-200 p-3 text-rose-700 font-semibold flex items-center gap-2">
+        <AlertCircle size={16} />
+        <span id="combustible-error-text">Ocurrió un error</span>
+      </div>
+
+      <!-- Selección de Vehículo y Chofer -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label for="fuel-vehiculo" class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1">
+            Vehículo Oficial <span class="text-rose-500">*</span>
+          </label>
+          <select
+            id="fuel-vehiculo"
+            name="vehiculoId"
+            required
+            class="w-full rounded-xl border border-line bg-paper px-3 py-2.5 text-xs font-bold text-navy outline-none focus:border-orangeGov focus:bg-white transition"
+          >
+            <option value="">Seleccione vehículo...</option>
+            {vehiculos.map((v) => (
+              <option value={v.id} data-odometro={v.odometro}>
+                {v.patente} · {v.marca} {v.modelo}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label for="fuel-chofer" class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1">
+            Conductor Responsable
+          </label>
+          <select
+            id="fuel-chofer"
+            name="choferId"
+            class="w-full rounded-xl border border-line bg-paper px-3 py-2.5 text-xs font-bold text-navy outline-none focus:border-orangeGov focus:bg-white transition"
+          >
+            <option value="">Seleccione conductor (opcional)...</option>
+            {choferes.map((c) => (
+              <option value={c.id}>
+                {c.apellido}, {c.nombre} (DNI: {c.dni})
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <!-- Fecha, Estación y Combustible -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div>
+          <label for="fuel-fecha" class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1">
+            Fecha y Hora <span class="text-rose-500">*</span>
+          </label>
+          <input
+            id="fuel-fecha"
+            name="fechaCarga"
+            type="datetime-local"
+            required
+            value={todayLocal}
+            class="w-full rounded-xl border border-line bg-paper px-3 py-2 text-xs font-semibold text-navy outline-none focus:border-orangeGov focus:bg-white transition"
+          />
+        </div>
+
+        <div>
+          <label for="fuel-estacion" class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1">
+            Estación de Servicio
+          </label>
+          <input
+            id="fuel-estacion"
+            name="estacionServicio"
+            type="text"
+            placeholder="Ej: YPF ACA San Juan / Shell"
+            class="w-full rounded-xl border border-line bg-paper px-3 py-2 text-xs font-semibold text-navy outline-none focus:border-orangeGov focus:bg-white transition"
+          />
+        </div>
+
+        <div>
+          <label for="fuel-tipo" class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1">
+            Combustible <span class="text-rose-500">*</span>
+          </label>
+          <select
+            id="fuel-tipo"
+            name="tipoCombustible"
+            required
+            class="w-full rounded-xl border border-line bg-paper px-3 py-2 text-xs font-bold text-navy outline-none focus:border-orangeGov focus:bg-white transition"
+          >
+            <option value="diesel_500">Diesel Común (500)</option>
+            <option value="diesel_grado_3">Diesel Premium (Grado 3)</option>
+            <option value="nafta_super">Nafta Súper</option>
+            <option value="nafta_premium">Nafta Premium</option>
+            <option value="gnc">GNC</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Litros, Precio y Total Calculado -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-gray-50 p-3.5 rounded-xl border border-gray-200">
+        <div>
+          <label for="fuel-litros" class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1">
+            Litros Cargados <span class="text-rose-500">*</span>
+          </label>
+          <input
+            id="fuel-litros"
+            name="litros"
+            type="number"
+            step="0.01"
+            min="0.1"
+            required
+            placeholder="0.00"
+            class="w-full rounded-xl border border-line bg-white px-3 py-2 text-xs font-mono font-bold text-navy outline-none focus:border-orangeGov transition"
+          />
+        </div>
+
+        <div>
+          <label for="fuel-precio" class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1">
+            Precio por Litro ($) <span class="text-rose-500">*</span>
+          </label>
+          <input
+            id="fuel-precio"
+            name="precioPorLitro"
+            type="number"
+            step="0.01"
+            min="1"
+            required
+            placeholder="0.00"
+            class="w-full rounded-xl border border-line bg-white px-3 py-2 text-xs font-mono font-bold text-navy outline-none focus:border-orangeGov transition"
+          />
+        </div>
+
+        <div>
+          <label for="fuel-importe" class="block text-[11px] font-bold text-emerald-800 uppercase tracking-wider mb-1">
+            Importe Total ($)
+          </label>
+          <input
+            id="fuel-importe"
+            name="importeTotal"
+            type="number"
+            step="0.01"
+            placeholder="0.00"
+            class="w-full rounded-xl border border-emerald-300 bg-white px-3 py-2 text-xs font-mono font-bold text-emerald-700 outline-none focus:border-emerald-500 transition"
+          />
+        </div>
+      </div>
+
+      <!-- Odómetro, Ticket y Medio de Pago -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div>
+          <label for="fuel-odometro" class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1">
+            Odómetro Carga (Km) <span class="text-rose-500">*</span>
+          </label>
+          <input
+            id="fuel-odometro"
+            name="odometroCarga"
+            type="number"
+            min="0"
+            required
+            placeholder="0"
+            class="w-full rounded-xl border border-line bg-paper px-3 py-2 text-xs font-mono font-bold text-navy outline-none focus:border-orangeGov focus:bg-white transition"
+          />
+        </div>
+
+        <div>
+          <label for="fuel-ticket" class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1">
+            Nº Ticket / Factura
+          </label>
+          <input
+            id="fuel-ticket"
+            name="numeroTicket"
+            type="text"
+            placeholder="T-0001-00000000"
+            class="w-full rounded-xl border border-line bg-paper px-3 py-2 text-xs font-mono text-navy outline-none focus:border-orangeGov focus:bg-white transition"
+          />
+        </div>
+
+        <div>
+          <label for="fuel-metodo" class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1">
+            Método de Pago
+          </label>
+          <select
+            id="fuel-metodo"
+            name="metodoPago"
+            class="w-full rounded-xl border border-line bg-paper px-3 py-2 text-xs font-bold text-navy outline-none focus:border-orangeGov focus:bg-white transition"
+          >
+            <option value="tarjeta_flota">Tarjeta Flota YPF en Ruta</option>
+            <option value="orden_oficial">Orden de Carga Oficial</option>
+            <option value="efectivo_fondo_fijo">Fondo Fijo / Caja Chica</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Checkbox Tanque Lleno -->
+      <div class="rounded-xl border border-gray-200 bg-gray-50/60 p-3 flex items-center gap-2.5">
+        <input
+          id="fuel-tanque-lleno"
+          name="tanqueLleno"
+          type="checkbox"
+          value="1"
+          checked
+          class="h-4 w-4 rounded border-gray-300 text-orangeGov focus:ring-orangeGov/30 cursor-pointer"
+        />
+        <label for="fuel-tanque-lleno" class="text-xs text-gray-700 cursor-pointer">
+          <strong>Carga a tanque completo</strong> (Permite calcular el rendimiento exacto de Km/Litro con respecto a la carga previa)
+        </label>
+      </div>
+
+      <!-- Botones de Acción -->
+      <div class="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
+        <button
+          type="button"
+          id="btn-cancel-combustible-modal"
+          class="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-gray-100 transition cursor-pointer"
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          id="btn-submit-combustible"
+          class="rounded-xl bg-orangeGov hover:bg-orange-700 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-orange-500/20 active:scale-98 transition cursor-pointer"
+        >
+          Registrar Carga
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

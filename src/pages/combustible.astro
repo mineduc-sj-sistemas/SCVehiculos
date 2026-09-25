@@ -1,0 +1,62 @@
+---
+import { Droplet, Plus } from 'lucide-astro'
+import DashboardLayout from '../frontend/layouts/DashboardLayout.astro'
+import FuelKpiCards from '../frontend/components/combustible/FuelKpiCards.astro'
+import FuelTable from '../frontend/components/combustible/FuelTable.astro'
+import FuelFormModal from '../frontend/components/combustible/FuelFormModal.astro'
+import { getFuelKpis, getFuelList, getVehiclesFullList, getChoferesFullList } from '../backend/index'
+
+// Carga en servidor
+const [kpis, cargas, vehiculos, choferes] = await Promise.all([
+  getFuelKpis(),
+  getFuelList(),
+  getVehiclesFullList(),
+  getChoferesFullList(),
+])
+---
+
+<DashboardLayout activeNav="combustible" title="Control de Combustible · Movilidades · Ministerio de Educación">
+  <h1 slot="header-title" class="font-display text-xl font-bold text-navy sm:text-2xl">Control y Rendimiento de Combustible</h1>
+
+  <!-- Encabezado de Sección -->
+  <div class="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+    <div>
+      <div class="flex items-center gap-2 text-xs font-semibold text-blue mb-1">
+        <span>Ministerio de Educación</span>
+        <span>·</span>
+        <span>Dirección de Movilidades</span>
+      </div>
+      <h2 class="font-display text-[26px] font-bold tracking-tight text-navy">Gestión de Cargas y Consumo</h2>
+      <p class="mt-0.5 text-xs text-muted">
+        Control de tickets, tarjetas flota YPF en Ruta, odómetros y auditoría de rendimiento (Km/L) de los vehículos oficiales.
+      </p>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button
+        id="btn-abrir-crear-combustible"
+        type="button"
+        class="flex items-center gap-2 rounded-xl bg-orangeGov hover:bg-orange-700 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-orange-500/20 active:scale-98 transition cursor-pointer"
+      >
+        <Plus size={16} strokeWidth={2.5} />
+        <span>Registrar Carga</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Tarjetas KPI de Combustible -->
+  <FuelKpiCards kpis={kpis} />
+
+  <!-- Tabla Interactiva de Cargas -->
+  <FuelTable cargas={cargas} />
+
+  <!-- Modales fuera del flujo principal -->
+  <Fragment slot="modals">
+    <FuelFormModal vehiculos={vehiculos} choferes={choferes} />
+  </Fragment>
+</DashboardLayout>
+
+<!-- Script interactivo del cliente -->
+<script>
+  import '../frontend/scripts/combustibleController'
+</script>

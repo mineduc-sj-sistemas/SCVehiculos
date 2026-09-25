@@ -1,0 +1,204 @@
+---
+import { CreditCard, Fuel, Gauge, MapPin, Receipt, Search, User } from 'lucide-astro'
+import PlateBadge from '../ui/PlateBadge.astro'
+import type { CargaCombustibleItem } from '../../../backend/services/fuelService'
+
+interface Props {
+  cargas: CargaCombustibleItem[]
+}
+
+const { cargas } = Astro.props
+
+const formatCurrency = (val: number) => {
+  return new Intl.NumberFormat('es-AR', {
+    style: 'currency',
+    currency: 'ARS',
+    maximumFractionDigits: 0,
+  }).format(val)
+}
+
+const getCombustibleLabel = (tipo: string) => {
+  switch (tipo) {
+    case 'nafta_super':
+      return { label: 'Nafta Súper', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' }
+    case 'nafta_premium':
+      return { label: 'Nafta Premium', cls: 'bg-purple-50 text-purple-700 border-purple-200' }
+    case 'diesel_500':
+      return { label: 'Diesel Común', cls: 'bg-blue-50 text-blue-700 border-blue-200' }
+    case 'diesel_grado_3':
+      return { label: 'Diesel Premium', cls: 'bg-amber-50 text-amber-700 border-amber-200' }
+    case 'gnc':
+      return { label: 'GNC', cls: 'bg-sky text-orangeGov border-orange-200' }
+    default:
+      return { label: tipo, cls: 'bg-gray-100 text-gray-700 border-gray-200' }
+  }
+}
+
+const getMetodoPagoLabel = (metodo: string) => {
+  switch (metodo) {
+    case 'tarjeta_flota':
+      return 'Tarjeta Flota'
+    case 'orden_oficial':
+      return 'Orden Oficial'
+    case 'efectivo_fondo_fijo':
+      return 'Fondo Fijo'
+    default:
+      return metodo
+  }
+}
+---
+
+<div class="card overflow-hidden">
+  <!-- Barra de Filtros y Búsqueda -->
+  <div class="flex flex-col gap-3 border-b border-line p-4 sm:flex-row sm:items-center sm:justify-between bg-white">
+    <div class="flex flex-1 flex-wrap items-center gap-2.5">
+      <!-- Buscador -->
+      <div class="relative w-full sm:w-64">
+        <Search size={15} class="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+        <input
+          id="filtro-buscar-combustible"
+          type="text"
+          placeholder="Buscar patente, ticket, estación..."
+          class="w-full rounded-xl border border-line bg-paper pl-9 pr-3 py-2 text-xs font-semibold text-navy outline-none transition focus:border-orangeGov focus:bg-white focus:ring-2 focus:ring-orangeGov/15"
+        />
+      </div>
+
+      <!-- Filtro Tipo de Combustible -->
+      <select
+        id="filtro-tipo-combustible"
+        class="rounded-xl border border-line bg-paper px-3 py-2 text-xs font-bold text-navy outline-none transition focus:border-orangeGov focus:bg-white"
+      >
+        <option value="">Todos los combustibles</option>
+        <option value="diesel_500">Diesel Común</option>
+        <option value="diesel_grado_3">Diesel Premium (Grado 3)</option>
+        <option value="nafta_super">Nafta Súper</option>
+        <option value="nafta_premium">Nafta Premium</option>
+        <option value="gnc">GNC</option>
+      </select>
+
+      <!-- Filtro Método de Pago -->
+      <select
+        id="filtro-metodo-pago"
+        class="rounded-xl border border-line bg-paper px-3 py-2 text-xs font-bold text-navy outline-none transition focus:border-orangeGov focus:bg-white"
+      >
+        <option value="">Todos los medios de pago</option>
+        <option value="tarjeta_flota">Tarjeta Flota YPF en Ruta</option>
+        <option value="orden_oficial">Orden de Carga Oficial</option>
+        <option value="efectivo_fondo_fijo">Fondo Fijo / Caja Chica</option>
+      </select>
+    </div>
+
+    <div class="flex items-center gap-2 text-xs text-muted font-bold">
+      <span id="contador-cargas">Total: {cargas.length} registros</span>
+    </div>
+  </div>
+
+  <!-- Tabla de Cargas -->
+  <div class="overflow-x-auto">
+    <table class="w-full min-w-[850px] text-left">
+      <thead>
+        <tr class="border-b border-line bg-paper text-[10px] font-bold uppercase tracking-[.08em] text-muted">
+          <th class="px-5 py-3">Fecha</th>
+          <th class="px-4 py-3">Vehículo</th>
+          <th class="px-4 py-3">Chofer / Estación</th>
+          <th class="px-3 py-3">Combustible</th>
+          <th class="px-3 py-3 text-right">Litros</th>
+          <th class="px-3 py-3 text-right">Odómetro</th>
+          <th class="px-4 py-3 text-right">Importe Total</th>
+          <th class="px-4 py-3 text-center">Rendimiento</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-combustible" class="divide-y divide-line/60">
+        {cargas.length === 0 ? (
+          <tr>
+            <td colspan="8" class="px-6 py-12 text-center text-xs text-muted">
+              No hay cargas de combustible registradas. Puedes asentar la primera usando el botón superior.
+            </td>
+          </tr>
+        ) : (
+          cargas.map((c) => {
+            const badge = getCombustibleLabel(c.tipoCombustible)
+            const searchStr = `${c.vehiculoPatente} ${c.vehiculoMarca} ${c.vehiculoModelo} ${c.estacionServicio ?? ''} ${c.numeroTicket ?? ''} ${c.choferNombreCompleto ?? ''}`.toLowerCase()
+
+            return (
+              <tr 
+                class="hover:bg-paper/60 transition item-carga-row"
+                data-tipo={c.tipoCombustible}
+                data-metodo={c.metodoPago}
+                data-search={searchStr}
+              >
+                <!-- Fecha -->
+                <td class="px-5 py-3.5 font-mono text-xs text-navy font-semibold">
+                  {c.fechaCarga.split('T')[0]}
+                  <span class="block text-[10px] text-muted font-sans font-normal">
+                    {c.fechaCarga.includes('T') ? c.fechaCarga.split('T')[1].slice(0, 5) : ''}
+                  </span>
+                </td>
+
+                <!-- Vehículo -->
+                <td class="px-4 py-3.5">
+                  <div class="flex items-center gap-2">
+                    <PlateBadge plate={c.vehiculoPatente} />
+                    <p class="text-xs font-bold text-navy truncate">{c.vehiculoMarca} {c.vehiculoModelo}</p>
+                  </div>
+                </td>
+
+                <!-- Chofer / Estación -->
+                <td class="px-4 py-3.5">
+                  <p class="text-xs font-bold text-navy">
+                    {c.choferNombreCompleto ? c.choferNombreCompleto : 'Conductor no asignado'}
+                  </p>
+                  <p class="text-[11px] text-muted">
+                    {c.estacionServicio ? c.estacionServicio : 'Estación no informada'}
+                    {c.numeroTicket && <span class="font-mono text-gray-500 font-semibold"> · Tkt: {c.numeroTicket}</span>}
+                  </p>
+                </td>
+
+                <!-- Combustible y Método -->
+                <td class="px-3 py-3.5 space-y-1">
+                  <span class={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${badge.cls}`}>
+                    {badge.label}
+                  </span>
+                  <span class="block text-[10px] text-muted font-medium">
+                    {getMetodoPagoLabel(c.metodoPago)}
+                  </span>
+                </td>
+
+                <!-- Litros -->
+                <td class="px-3 py-3.5 text-right font-mono text-xs font-bold text-navy">
+                  {c.litros.toFixed(1)} L
+                  <span class="block text-[10px] text-muted font-normal">
+                    ${c.precioPorLitro.toFixed(2)}/L
+                  </span>
+                </td>
+
+                <!-- Odómetro -->
+                <td class="px-3 py-3.5 text-right font-mono text-xs text-gray-700">
+                  {c.odometroCarga.toLocaleString('es-AR')} km
+                  {c.tanqueLleno && <span class="block text-[9px] text-emerald-700 font-sans font-bold">Tanque lleno</span>}
+                </td>
+
+                <!-- Importe Total -->
+                <td class="px-4 py-3.5 text-right font-mono font-bold text-xs text-navy">
+                  {formatCurrency(c.importeTotal)}
+                </td>
+
+                <!-- Rendimiento -->
+                <td class="px-4 py-3.5 text-center">
+                  {c.rendimientoKmL !== null ? (
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 font-mono text-[11px] font-bold border border-emerald-200">
+                      <Gauge size={12} />
+                      <span>{c.rendimientoKmL.toFixed(2)} km/L</span>
+                    </span>
+                  ) : (
+                    <span class="text-[10px] text-muted italic">Primer registro</span>
+                  )}
+                </td>
+              </tr>
+            )
+          })
+        )}
+      </tbody>
+    </table>
+  </div>
+</div>
