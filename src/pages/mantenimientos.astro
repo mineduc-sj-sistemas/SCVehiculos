@@ -1,0 +1,63 @@
+---
+import { Plus, Wrench } from 'lucide-astro'
+import DashboardLayout from '../frontend/layouts/DashboardLayout.astro'
+import MaintenanceKpiCards from '../frontend/components/mantenimientos/MaintenanceKpiCards.astro'
+import MaintenanceTable from '../frontend/components/mantenimientos/MaintenanceTable.astro'
+import MaintenanceFormModal from '../frontend/components/mantenimientos/MaintenanceFormModal.astro'
+import MaintenanceFinishModal from '../frontend/components/mantenimientos/MaintenanceFinishModal.astro'
+import { getMaintenanceKpis, getMaintenanceList, getVehiclesFullList } from '../backend/index'
+
+// Carga en servidor
+const [kpis, mantenimientos, vehiculos] = await Promise.all([
+  getMaintenanceKpis(),
+  getMaintenanceList(),
+  getVehiclesFullList(),
+])
+---
+
+<DashboardLayout activeNav="mantenimientos" title="Mantenimiento y Taller · Movilidades · Ministerio de Educación">
+  <h1 slot="header-title" class="font-display text-xl font-bold text-navy sm:text-2xl">Mantenimiento y Servicios Mecánicos</h1>
+
+  <!-- Encabezado de Sección -->
+  <div class="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+    <div>
+      <div class="flex items-center gap-2 text-xs font-semibold text-blue mb-1">
+        <span>Ministerio de Educación</span>
+        <span>·</span>
+        <span>Dirección de Movilidades</span>
+      </div>
+      <h2 class="font-display text-[26px] font-bold tracking-tight text-navy">Gestión de Taller y Servicios</h2>
+      <p class="mt-0.5 text-xs text-muted">
+        Seguimiento de services preventivos, reparaciones mecánicas, registro de facturas y costos de flota.
+      </p>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button
+        id="btn-abrir-crear-mantenimiento"
+        type="button"
+        class="flex items-center gap-2 rounded-xl bg-orangeGov hover:bg-orange-700 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-orange-500/20 active:scale-98 transition cursor-pointer"
+      >
+        <Plus size={16} strokeWidth={2.5} />
+        <span>Programar Servicio</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Tarjetas KPI de Mantenimiento -->
+  <MaintenanceKpiCards kpis={kpis} />
+
+  <!-- Tabla Interactiva de Mantenimientos -->
+  <MaintenanceTable mantenimientos={mantenimientos} />
+
+  <!-- Modales fuera del flujo principal -->
+  <Fragment slot="modals">
+    <MaintenanceFormModal vehiculos={vehiculos} />
+    <MaintenanceFinishModal />
+  </Fragment>
+</DashboardLayout>
+
+<!-- Script interactivo del cliente -->
+<script>
+  import '../frontend/scripts/mantenimientosController'
+</script>

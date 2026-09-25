@@ -421,9 +421,94 @@ async function runTestSuite() {
   assert(countBefore === countAfter, 'TC-22', 'Rollback transaccional: no se crean registros huérfanos ante fallo en operación atómica', `Usuarios antes: ${countBefore}, después: ${countAfter}`)
 
   // -------------------------------------------------------------------------
+  // MÓDULO 8: HOJAS DE RUTA & MANTENIMIENTO MECÁNICO (FASE 1)
+  // -------------------------------------------------------------------------
+  console.log('\n--- [MÓDULO 8] HOJAS DE RUTA & MANTENIMIENTO MECÁNICO ---')
+
+  // TC-23: Acceso a Hoja de Ruta imprimible ministerial
+  const resImprimir = await fetch(`${BASE_URL}/cronograma/imprimir/1`, {
+    headers: { Cookie: `sc_session=${TOKENS.admin}` },
+  })
+  const textImprimir = await resImprimir.text()
+  assert(
+    resImprimir.status === 200 && textImprimir.includes('Hoja de Ruta') && textImprimir.includes('COM-'),
+    'TC-23',
+    'Generación y renderizado de Hoja de Ruta oficial para impresión A4',
+    'HTTP 200 con membrete ministerial'
+  )
+
+  // TC-24: Registro de nuevo mantenimiento e ingreso a taller
+  let tempMantenimientoId = null
+  const [vehParaService] = await db.execute('SELECT id, patente FROM vehiculos WHERE estado = "disponible" LIMIT 1')
+  const testVehId = vehParaService[0]?.id
+
+  const resCrearMant = await fetch(`${BASE_URL}/api/mantenimientos`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: `sc_session=${TOKENS.admin}` },
+    body: JSON.stringify({
+      vehiculoId: testVehId,
+      tipo: 'preventivo',
+      titulo: 'Service Oficial de Prueba 10.000 Km',
+      tallerProveedor: 'Taller Central Mineduc',
+      odometroServicio: 45000,
+      fechaProgramada: '2026-09-25',
+      ingresarATaller: true,
+      costoManoObra: 15000,
+      costoRepuestos: 25000,
+      numeroFactura: 'FAC-TEST-001',
+    }),
+  })
+  const dataCrearMant = await resCrearMant.json()
+  tempMantenimientoId = dataCrearMant.id
+  const [vehEnTallerCheck] = await db.execute('SELECT estado FROM vehiculos WHERE id = ?', [testVehId])
+
+  assert(
+    resCrearMant.status === 201 &&
+    dataCrearMant.success &&
+    vehEnTallerCheck[0]?.estado === 'en_taller',
+    'TC-24',
+    'Registro de mantenimiento con transición atómica a "en_taller" y auditoría',
+    `Mantenimiento #${tempMantenimientoId} (Vehículo #${testVehId} en taller)`
+  )
+
+  // TC-25: Finalización del servicio de mantenimiento y restitución a disponible
+  const resFinMant = await fetch(`${BASE_URL}/api/mantenimientos/${tempMantenimientoId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Cookie: `sc_session=${TOKENS.admin}` },
+    body: JSON.stringify({
+      action: 'complete',
+      odometroServicio: 45050,
+      costoManoObra: 16000,
+      costoRepuestos: 27000,
+      numeroFactura: 'FAC-TEST-FINAL',
+      detalleTrabajos: 'Cambio de fluidos y filtros completado sin novedades.',
+      proximoMantenimientoKm: 55000,
+    }),
+  })
+  const dataFinMant = await resFinMant.json()
+  const [vehDisponibleCheck] = await db.execute('SELECT estado, odometro_actual FROM vehiculos WHERE id = ?', [testVehId])
+  const [mantFinalCheck] = await db.execute('SELECT estado, costo_total FROM mantenimientos WHERE id = ?', [tempMantenimientoId])
+
+  assert(
+    resFinMant.status === 200 &&
+    dataFinMant.success &&
+    vehDisponibleCheck[0]?.estado === 'disponible' &&
+    mantFinalCheck[0]?.estado === 'completado' &&
+    Number(mantFinalCheck[0]?.costo_total) === 43000,
+    'TC-25',
+    'Finalización de mantenimiento: costo total liquidado ($43.000) y restitución a "disponible"',
+    `Mantenimiento #${tempMantenimientoId} completado y vehículo liberado`
+  )
+
+  // -------------------------------------------------------------------------
   // LIMPIEZA DE DATOS TEMPORALES (TEARDOWN)
   // -------------------------------------------------------------------------
   console.log('\n--- LIMPIEZA DE DATOS TEMPORALES (TEARDOWN) ---')
+  if (tempMantenimientoId) {
+    await db.execute('DELETE FROM auditoria_estados_vehiculo WHERE mantenimiento_id = ?', [tempMantenimientoId])
+    await db.execute('DELETE FROM mantenimientos WHERE id = ?', [tempMantenimientoId])
+    console.log(`  ✓ Mantenimiento temporal #${tempMantenimientoId} eliminado.`)
+  }
   if (createdVehId) {
     await db.execute('DELETE FROM vehiculos WHERE id = ?', [createdVehId])
     console.log(`  ✓ Vehículo temporal #${createdVehId} eliminado.`)

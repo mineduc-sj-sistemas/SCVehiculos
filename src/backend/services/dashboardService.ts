@@ -141,9 +141,9 @@ export async function getDriverStats(): Promise<DriverStats> {
 }
 
 /**
- * 4. Mantenimientos mecánicos de taller
+ * 4. Mantenimientos mecánicos de taller para el widget de dashboard
  */
-export async function getMaintenanceList(): Promise<MaintenanceItem[]> {
+export async function getDashboardMaintenance(): Promise<MaintenanceItem[]> {
   try {
     const rows = await query<any[]>(`
       SELECT 

@@ -1,0 +1,243 @@
+---
+import { AlertCircle, Calendar, Plus, Truck, Wrench, X } from 'lucide-astro'
+import type { VehicleListItem } from '../../../backend/services/vehicleService'
+
+interface Props {
+  vehiculos: VehicleListItem[]
+}
+
+const { vehiculos } = Astro.props
+const hoyStr = new Date().toISOString().split('T')[0]
+---
+
+<div
+  id="modal-crear-mantenimiento"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/60 backdrop-blur-xs opacity-0 pointer-events-none transition-opacity duration-200"
+  role="dialog"
+  aria-modal="true"
+>
+  <div class="relative w-full max-w-xl rounded-2xl bg-white shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95">
+    <!-- Cabecera -->
+    <div class="flex items-center justify-between border-b border-gray-100 bg-charcoalGov px-6 py-4 text-white">
+      <div class="flex items-center gap-3">
+        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-orangeGov text-white shadow-sm">
+          <Wrench size={18} strokeWidth={2.5} />
+        </div>
+        <div>
+          <h3 class="font-display text-base font-bold">Registrar Servicio de Taller</h3>
+          <p class="text-[11px] text-white/60">Atención mecánica y control de mantenimiento</p>
+        </div>
+      </div>
+      <button
+        id="btn-close-crear-modal"
+        type="button"
+        class="flex h-8 w-8 items-center justify-center rounded-lg text-white/70 hover:bg-white/10 hover:text-white transition cursor-pointer"
+        aria-label="Cerrar modal"
+      >
+        <X size={18} />
+      </button>
+    </div>
+
+    <!-- Formulario -->
+    <form id="form-crear-mantenimiento" class="overflow-y-auto p-6 space-y-4 text-xs">
+      <div id="mantenimiento-error-msg" class="hidden rounded-xl bg-rose-50 border border-rose-200 p-3 text-rose-700 font-semibold flex items-center gap-2">
+        <AlertCircle size={16} />
+        <span id="mantenimiento-error-text">Ocurrió un error</span>
+      </div>
+
+      <!-- Selección de Vehículo -->
+      <div>
+        <label for="mant-vehiculo" class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1">
+          Vehículo Oficial <span class="text-rose-500">*</span>
+        </label>
+        <select
+          id="mant-vehiculo"
+          name="vehiculoId"
+          required
+          class="w-full rounded-xl border border-line bg-paper px-3.5 py-2.5 text-xs font-bold text-navy outline-none focus:border-orangeGov focus:bg-white transition"
+        >
+          <option value="">Seleccione una unidad del parque automotor...</option>
+          {vehiculos.map((v) => (
+            <option value={v.id} data-odometro={v.odometro}>
+              {v.patente} · {v.marca} {v.modelo} ({v.estado})
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <!-- Tipo de Mantenimiento y Fecha -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label for="mant-tipo" class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1">
+            Tipo de Servicio <span class="text-rose-500">*</span>
+          </label>
+          <select
+            id="mant-tipo"
+            name="tipo"
+            required
+            class="w-full rounded-xl border border-line bg-paper px-3.5 py-2.5 text-xs font-bold text-navy outline-none focus:border-orangeGov focus:bg-white transition"
+          >
+            <option value="preventivo">Preventivo (Service programado / Aceite)</option>
+            <option value="correctivo">Correctivo (Reparación mecánica / Falla)</option>
+            <option value="inspeccion">Inspección Técnica / RTO</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="mant-fecha" class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1">
+            Fecha Programada <span class="text-rose-500">*</span>
+          </label>
+          <input
+            id="mant-fecha"
+            name="fechaProgramada"
+            type="date"
+            required
+            value={hoyStr}
+            class="w-full rounded-xl border border-line bg-paper px-3.5 py-2.5 text-xs font-semibold text-navy outline-none focus:border-orangeGov focus:bg-white transition"
+          />
+        </div>
+      </div>
+
+      <!-- Título del Servicio -->
+      <div>
+        <label for="mant-titulo" class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1">
+          Título / Motivo del Servicio <span class="text-rose-500">*</span>
+        </label>
+        <input
+          id="mant-titulo"
+          name="titulo"
+          type="text"
+          required
+          placeholder="Ej: Cambio de aceite 10W-40, filtros y control de frenos"
+          class="w-full rounded-xl border border-line bg-paper px-3.5 py-2.5 text-xs font-semibold text-navy outline-none focus:border-orangeGov focus:bg-white transition"
+        />
+      </div>
+
+      <!-- Taller Proveedor y Odómetro -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label for="mant-taller" class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1">
+            Taller Mecánico / Proveedor
+          </label>
+          <input
+            id="mant-taller"
+            name="tallerProveedor"
+            type="text"
+            placeholder="Ej: Taller Central Mineduc / Taller San Juan"
+            class="w-full rounded-xl border border-line bg-paper px-3.5 py-2.5 text-xs font-semibold text-navy outline-none focus:border-orangeGov focus:bg-white transition"
+          />
+        </div>
+
+        <div>
+          <label for="mant-odometro" class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1">
+            Odómetro Actual (Km) <span class="text-rose-500">*</span>
+          </label>
+          <input
+            id="mant-odometro"
+            name="odometroServicio"
+            type="number"
+            min="0"
+            required
+            placeholder="0"
+            class="w-full rounded-xl border border-line bg-paper px-3.5 py-2.5 text-xs font-mono font-bold text-navy outline-none focus:border-orangeGov focus:bg-white transition"
+          />
+        </div>
+      </div>
+
+      <!-- Costos Estimados y Factura -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div>
+          <label for="mant-costo-mo" class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1">
+            Mano de Obra ($)
+          </label>
+          <input
+            id="mant-costo-mo"
+            name="costoManoObra"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="0.00"
+            class="w-full rounded-xl border border-line bg-paper px-3 py-2 text-xs font-mono text-navy outline-none focus:border-orangeGov focus:bg-white transition"
+          />
+        </div>
+
+        <div>
+          <label for="mant-costo-rep" class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1">
+            Repuestos ($)
+          </label>
+          <input
+            id="mant-costo-rep"
+            name="costoRepuestos"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="0.00"
+            class="w-full rounded-xl border border-line bg-paper px-3 py-2 text-xs font-mono text-navy outline-none focus:border-orangeGov focus:bg-white transition"
+          />
+        </div>
+
+        <div>
+          <label for="mant-factura" class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1">
+            Nº Factura / Remito
+          </label>
+          <input
+            id="mant-factura"
+            name="numeroFactura"
+            type="text"
+            placeholder="A-0001-00000000"
+            class="w-full rounded-xl border border-line bg-paper px-3 py-2 text-xs font-mono text-navy outline-none focus:border-orangeGov focus:bg-white transition"
+          />
+        </div>
+      </div>
+
+      <!-- Observaciones / Descripción -->
+      <div>
+        <label for="mant-descripcion" class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1">
+          Descripción del Trabajo / Diagnóstico
+        </label>
+        <textarea
+          id="mant-descripcion"
+          name="descripcion"
+          rows="2"
+          placeholder="Detallar tareas mecánicas requeridas o reporte del conductor..."
+          class="w-full rounded-xl border border-line bg-paper p-3 text-xs text-navy outline-none focus:border-orangeGov focus:bg-white transition"
+        ></textarea>
+      </div>
+
+      <!-- Casilla de Ingreso Inmediato a Taller -->
+      <div class="rounded-xl border border-amber-200 bg-amber-50/60 p-3.5 flex items-start gap-3">
+        <input
+          id="mant-ingresar-taller"
+          name="ingresarATaller"
+          type="checkbox"
+          value="1"
+          class="mt-0.5 h-4 w-4 rounded border-gray-300 text-orangeGov focus:ring-orangeGov/30 cursor-pointer"
+        />
+        <label for="mant-ingresar-taller" class="text-xs text-amber-950 cursor-pointer">
+          <strong class="font-bold">Ingresar unidad al taller inmediatamente</strong>
+          <p class="text-[11px] text-amber-800 mt-0.5">
+            Cambia el estado del vehículo a <span class="font-bold uppercase">En Taller</span>, bloqueando su asignación en el cronograma hasta que el servicio sea finalizado.
+          </p>
+        </label>
+      </div>
+
+      <!-- Botones de Acción -->
+      <div class="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
+        <button
+          type="button"
+          id="btn-cancel-crear-modal"
+          class="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-gray-100 transition cursor-pointer"
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          id="btn-submit-mantenimiento"
+          class="rounded-xl bg-orangeGov hover:bg-orange-700 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-orange-500/20 active:scale-98 transition cursor-pointer"
+        >
+          Guardar Servicio
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

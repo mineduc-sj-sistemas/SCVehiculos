@@ -1,0 +1,81 @@
+---
+import { AlertTriangle, CheckCircle2, DollarSign, ShieldAlert, Truck, Wrench } from 'lucide-astro'
+import type { MaintenanceKpis } from '../../../backend/services/maintenanceService'
+
+interface Props {
+  kpis: MaintenanceKpis
+}
+
+const { kpis } = Astro.props
+
+const formatCurrency = (val: number) => {
+  return new Intl.NumberFormat('es-AR', {
+    style: 'currency',
+    currency: 'ARS',
+    maximumFractionDigits: 0,
+  }).format(val)
+}
+---
+
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+  <!-- Total Servicios del Mes -->
+  <div class="card p-5 border-l-4 border-orangeGov transition-all hover:shadow-md hover:-translate-y-0.5">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-xs font-bold text-muted uppercase tracking-wider">Servicios del Mes</p>
+        <p class="mt-2 font-display text-3xl font-bold tracking-tight text-navy">{String(kpis.totalMes).padStart(2, '0')}</p>
+        <p class="mt-1 text-xs text-muted">Mantenimientos registrados</p>
+      </div>
+      <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-50 text-orangeGov">
+        <Wrench size={22} />
+      </div>
+    </div>
+  </div>
+
+  <!-- Unidades en Taller Ahora -->
+  <div class="card p-5 border-l-4 border-charcoalGov transition-all hover:shadow-md hover:-translate-y-0.5">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-xs font-bold text-muted uppercase tracking-wider">En Taller Ahora</p>
+        <p class="mt-2 font-display text-3xl font-bold tracking-tight text-charcoalGov">{String(kpis.enTallerAhora).padStart(2, '0')}</p>
+        <p class="mt-1 text-xs text-muted">Vehículos con atención activa</p>
+      </div>
+      <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-charcoalGov">
+        <Truck size={22} />
+      </div>
+    </div>
+  </div>
+
+  <!-- Gasto Total Acumulado -->
+  <div class="card p-5 border-l-4 border-emerald-500 transition-all hover:shadow-md hover:-translate-y-0.5">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-xs font-bold text-muted uppercase tracking-wider">Gasto Total Acumulado</p>
+        <p class="mt-2 font-display text-2xl font-bold tracking-tight text-emerald-700 font-mono">{formatCurrency(kpis.gastoTotalMes)}</p>
+        <p class="mt-1 text-xs text-muted">Mano de obra y repuestos</p>
+      </div>
+      <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+        <DollarSign size={22} />
+      </div>
+    </div>
+  </div>
+
+  <!-- Preventivos vs Correctivos -->
+  <div class="card p-5 border-l-4 border-amber-500 transition-all hover:shadow-md hover:-translate-y-0.5">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-xs font-bold text-muted uppercase tracking-wider">Tipo de Servicios</p>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span class="font-display text-2xl font-bold text-navy">{kpis.preventivosCount}</span>
+          <span class="text-xs text-muted font-bold">prev. /</span>
+          <span class="font-display text-2xl font-bold text-amber-600">{kpis.correctivosCount}</span>
+          <span class="text-xs text-muted font-bold">corr.</span>
+        </div>
+        <p class="mt-1 text-xs text-muted">Distribución operativa</p>
+      </div>
+      <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+        <AlertTriangle size={22} />
+      </div>
+    </div>
+  </div>
+</section>

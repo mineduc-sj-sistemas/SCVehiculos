@@ -1,0 +1,338 @@
+---
+import { ArrowLeft, CheckCircle2, FileText, MapPin, Phone, Printer, Shield, Truck, User } from 'lucide-astro'
+import { getHojaDeRutaData } from '../../../backend/index'
+import SanJuanLogo from '../../../frontend/components/ui/SanJuanLogo.astro'
+import '../../../frontend/styles/global.css'
+
+const { id } = Astro.params
+const comisionId = Number(id)
+
+if (isNaN(comisionId)) {
+  return Astro.redirect('/cronograma')
+}
+
+const data = await getHojaDeRutaData(comisionId)
+
+if (!data) {
+  return Astro.redirect('/cronograma')
+}
+
+// Formateadores de fecha y hora
+const formatDate = (isoStr?: string | null) => {
+  if (!isoStr) return '--'
+  try {
+    const d = new Date(isoStr)
+    return new Intl.DateTimeFormat('es-AR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(d)
+  } catch {
+    return isoStr
+  }
+}
+
+const formatOnlyDate = (isoStr?: string | null) => {
+  if (!isoStr) return '--'
+  try {
+    const d = new Date(isoStr)
+    return new Intl.DateTimeFormat('es-AR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }).format(d)
+  } catch {
+    return isoStr
+  }
+}
+
+const emitidoEl = new Intl.DateTimeFormat('es-AR', {
+  day: '2-digit',
+  month: 'long',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+}).format(new Date())
+---
+
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hoja de Ruta · {data.codigoComision} · Ministerio de Educación</title>
+    <style>
+      @media print {
+        @page {
+          size: A4 portrait;
+          margin: 10mm 12mm 10mm 12mm;
+        }
+        body {
+          background: #ffffff !important;
+          color: #000000 !important;
+          font-size: 11px !important;
+        }
+        .no-print {
+          display: none !important;
+        }
+        .page-break {
+          page-break-inside: avoid;
+        }
+        .print-border {
+          border-color: #000000 !important;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 text-gray-900 font-sans antialiased min-h-screen py-6 px-4 sm:px-6">
+
+    <!-- Barra de Herramientas Flotante (Oculta en Impresión) -->
+    <div class="no-print max-w-4xl mx-auto mb-6 flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-2xl shadow-md border border-gray-200">
+      <a
+        href="/cronograma"
+        class="inline-flex items-center gap-2 text-xs font-bold text-gray-700 hover:text-navy hover:bg-gray-100 px-3.5 py-2 rounded-xl transition"
+      >
+        <ArrowLeft size={16} />
+        <span>Volver al Cronograma</span>
+      </a>
+
+      <div class="flex items-center gap-3">
+        <span class="text-xs text-muted hidden sm:inline">Formato optimizado para impresión en hoja A4</span>
+        <button
+          onclick="window.print()"
+          class="inline-flex items-center gap-2 bg-orangeGov hover:bg-orange-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-md shadow-orange-500/20 active:scale-98 transition cursor-pointer"
+        >
+          <Printer size={16} />
+          <span>Imprimir / Guardar en PDF</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Hoja de Ruta Oficial A4 -->
+    <main class="max-w-4xl mx-auto bg-white border border-gray-300 p-8 sm:p-10 shadow-lg rounded-xl print:shadow-none print:border-0 print:p-0 page-break">
+      
+      <!-- Encabezado Institucional -->
+      <header class="border-b-2 border-gray-900 pb-5">
+        <div class="flex items-start justify-between gap-4">
+          <div class="flex items-center gap-4">
+            <SanJuanLogo variant="dark" size="lg" showMinistry={true} />
+          </div>
+
+          <!-- Recuadro de Control y Código Oficial -->
+          <div class="text-right border-2 border-gray-900 rounded-lg p-2.5 bg-gray-50 min-w-[210px]">
+            <p class="text-[10px] font-black uppercase tracking-wider text-gray-600">Orden de Comisión Nº</p>
+            <p class="font-mono text-xl font-black text-gray-900 leading-tight">{data.codigoComision}</p>
+            <div class="mt-1 pt-1 border-t border-gray-300 flex justify-between text-[9px] font-semibold text-gray-600">
+              <span>Estado:</span>
+              <span class="uppercase font-bold text-gray-900">{data.estado.replace('_', ' ')}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 flex items-center justify-between text-[10px] text-gray-600 border-t border-gray-200 pt-2">
+          <span>DIRECCIÓN GENERAL DE ADMINISTRACIÓN · MESA CENTRAL DE MOVILIDADES</span>
+          <span>Emitido el: <strong class="text-gray-900">{emitidoEl}</strong></span>
+        </div>
+
+        <h1 class="text-center font-display text-lg font-black uppercase tracking-wider text-gray-900 mt-3">
+          Hoja de Ruta y Autorización Oficial de Comisión de Servicio
+        </h1>
+      </header>
+
+      <!-- Cuerpo del Documento -->
+      <div class="mt-5 space-y-4 text-xs">
+
+        <!-- Sección 1: Datos de la Comisión e Itinerario -->
+        <section class="border border-gray-300 rounded-lg p-3.5 bg-white">
+          <div class="flex items-center gap-1.5 border-b border-gray-200 pb-1.5 mb-2.5">
+            <MapPin size={14} class="text-orangeGov" />
+            <h2 class="font-bold text-gray-900 uppercase text-[11px] tracking-wide">1. Itinerario y Destino Oficial</h2>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div class="col-span-2">
+              <span class="text-[10px] font-bold text-gray-500 uppercase block">Dependencia Solicitante</span>
+              <p class="font-bold text-gray-900">{data.dependenciaNombre}</p>
+              {data.solicitanteNombre && <p class="text-[10px] text-gray-600">Solicitado por: {data.solicitanteNombre}</p>}
+            </div>
+
+            <div>
+              <span class="text-[10px] font-bold text-gray-500 uppercase block">Origen</span>
+              <p class="font-semibold text-gray-900">{data.origen}</p>
+            </div>
+
+            <div>
+              <span class="text-[10px] font-bold text-gray-500 uppercase block">Destino</span>
+              <p class="font-bold text-gray-900">{data.destino}</p>
+            </div>
+          </div>
+
+          <div class="mt-3 pt-2.5 border-t border-dashed border-gray-200 grid grid-cols-1 sm:grid-cols-4 gap-2">
+            <div class="sm:col-span-3">
+              <span class="text-[10px] font-bold text-gray-500 uppercase block">Misión / Motivo del Traslado</span>
+              <p class="font-medium text-gray-900">{data.motivo}</p>
+            </div>
+            <div>
+              <span class="text-[10px] font-bold text-gray-500 uppercase block">Cant. Pasajeros</span>
+              <p class="font-bold text-gray-900">{data.cantidadPasajeros} {data.cantidadPasajeros === 1 ? 'persona' : 'personas'}</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Sección 2: Conductor Designado y Movilidad Oficial -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Conductor -->
+          <section class="border border-gray-300 rounded-lg p-3.5 bg-white">
+            <div class="flex items-center gap-1.5 border-b border-gray-200 pb-1.5 mb-2.5">
+              <User size={14} class="text-orangeGov" />
+              <h2 class="font-bold text-gray-900 uppercase text-[11px] tracking-wide">2. Conductor Oficial Designado</h2>
+            </div>
+            <div class="space-y-1.5">
+              <div class="flex justify-between">
+                <span class="text-[10px] font-bold text-gray-500 uppercase">Apellido y Nombre:</span>
+                <span class="font-bold text-gray-900 text-right">{data.choferApellido}, {data.choferNombre}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-[10px] font-bold text-gray-500 uppercase">D.N.I. / CUIL:</span>
+                <span class="font-mono font-bold text-gray-900">{data.choferDni} {data.choferCuil ? `· ${data.choferCuil}` : ''}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-[10px] font-bold text-gray-500 uppercase">Licencia de Conducir:</span>
+                <span class="font-mono font-bold text-gray-900">{data.numeroLicencia} (Cat. {data.categoriaLicencia})</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-[10px] font-bold text-gray-500 uppercase">Vencimiento Carnet:</span>
+                <span class="font-bold text-gray-900">{formatOnlyDate(data.fechaVencimientoLicencia)}</span>
+              </div>
+              {data.choferTelefono && (
+                <div class="flex justify-between">
+                  <span class="text-[10px] font-bold text-gray-500 uppercase">Teléfono Contacto:</span>
+                  <span class="font-semibold text-gray-900">{data.choferTelefono}</span>
+                </div>
+              )}
+            </div>
+          </section>
+
+          <!-- Movilidad -->
+          <section class="border border-gray-300 rounded-lg p-3.5 bg-white">
+            <div class="flex items-center gap-1.5 border-b border-gray-200 pb-1.5 mb-2.5">
+              <Truck size={14} class="text-orangeGov" />
+              <h2 class="font-bold text-gray-900 uppercase text-[11px] tracking-wide">3. Movilidad Oficial del Parque</h2>
+            </div>
+            <div class="space-y-1.5">
+              <div class="flex justify-between">
+                <span class="text-[10px] font-bold text-gray-500 uppercase">Dominio / Patente:</span>
+                <span class="font-mono font-black text-sm text-gray-900 px-2 py-0.5 border border-gray-900 rounded bg-gray-100">{data.vehiculoPatente}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-[10px] font-bold text-gray-500 uppercase">Marca / Modelo:</span>
+                <span class="font-bold text-gray-900 text-right">{data.vehiculoMarca} {data.vehiculoModelo}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-[10px] font-bold text-gray-500 uppercase">Tipo / Año / Color:</span>
+                <span class="font-medium text-gray-900">{data.vehiculoTipo} · {data.vehiculoAnio ?? 'S/D'} · {data.vehiculoColor ?? 'Oficial'}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-[10px] font-bold text-gray-500 uppercase">Seguro Oficial:</span>
+                <span class="font-semibold text-gray-900 text-right">{data.companiaSeguro ?? 'Póliza Oficial'} {data.numeroPoliza ? `(Nº ${data.numeroPoliza})` : ''}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-[10px] font-bold text-gray-500 uppercase">Vencimiento RTO:</span>
+                <span class="font-bold text-gray-900">{formatOnlyDate(data.fechaVencimientoVtv)}</span>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Sección 3: Planilla de Control Horario y Odómetro -->
+        <section class="border-2 border-gray-900 rounded-lg p-3.5 bg-gray-50">
+          <div class="flex items-center justify-between border-b border-gray-300 pb-1.5 mb-2.5">
+            <h2 class="font-bold text-gray-900 uppercase text-[11px] tracking-wide">
+              4. Planilla de Control Horario y Kilometraje (Completar por Despacho y Chofer)
+            </h2>
+            <span class="text-[10px] font-semibold text-gray-500">Validez estricta para control de odómetro</span>
+          </div>
+
+          <table class="w-full text-center border-collapse">
+            <thead>
+              <tr class="bg-gray-200 text-[10px] font-black uppercase text-gray-700">
+                <th class="border border-gray-400 p-2 text-left">Momento del Traslado</th>
+                <th class="border border-gray-400 p-2">Fecha y Hora Programada</th>
+                <th class="border border-gray-400 p-2">Fecha y Hora Efectiva</th>
+                <th class="border border-gray-400 p-2">Lectura Odómetro (km)</th>
+                <th class="border border-gray-400 p-2">Firma Chofer</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="border border-gray-400 p-2 text-left font-bold bg-white">SALIDA</td>
+                <td class="border border-gray-400 p-2 font-mono">{formatDate(data.fechaSalidaProgramada)}</td>
+                <td class="border border-gray-400 p-2 font-mono font-bold">{data.fechaSalidaReal ? formatDate(data.fechaSalidaReal) : '___/___/______  ___:___'}</td>
+                <td class="border border-gray-400 p-2 font-mono font-bold text-sm">{data.odometroSalida !== null ? `${data.odometroSalida.toLocaleString('es-AR')} km` : '________________ km'}</td>
+                <td class="border border-gray-400 p-2 font-mono text-[9px] text-gray-400">__________________</td>
+              </tr>
+              <tr>
+                <td class="border border-gray-400 p-2 text-left font-bold bg-white">LLEGADA</td>
+                <td class="border border-gray-400 p-2 font-mono">{formatDate(data.fechaRegresoEstimada)}</td>
+                <td class="border border-gray-400 p-2 font-mono font-bold">{data.fechaRegresoReal ? formatDate(data.fechaRegresoReal) : '___/___/______  ___:___'}</td>
+                <td class="border border-gray-400 p-2 font-mono font-bold text-sm">{data.odometroRegreso !== null ? `${data.odometroRegreso.toLocaleString('es-AR')} km` : '________________ km'}</td>
+                <td class="border border-gray-400 p-2 font-mono text-[9px] text-gray-400">__________________</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr class="bg-white font-bold text-gray-900">
+                <td colspan="3" class="border border-gray-400 p-2 text-right uppercase text-[10px]">Total Kilómetros Recorridos en Comisión:</td>
+                <td class="border border-gray-400 p-2 font-mono text-sm bg-gray-100">
+                  {data.kmRecorridos !== null ? `${data.kmRecorridos.toLocaleString('es-AR')} km` : '_______________ km'}
+                </td>
+                <td class="border border-gray-400 p-2"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </section>
+
+        <!-- Sección 4: Observaciones y Novedades del Servicio -->
+        <section class="border border-gray-300 rounded-lg p-3 bg-white">
+          <span class="text-[10px] font-bold text-gray-500 uppercase block mb-1">5. Novedades Mecánicas / Incidencias en Ruta / Combustible</span>
+          <div class="h-14 border border-dashed border-gray-300 rounded p-2 text-gray-700 italic text-[11px]">
+            {data.observaciones ? data.observaciones : 'Sin observaciones previas. Registrar aquí cualquier anomalía en el vehículo, desperfecto o necesidad de recarga en el trayecto.'}
+          </div>
+        </section>
+
+        <!-- Declaración y Disposiciones Normativas -->
+        <div class="border-t border-gray-300 pt-2 text-[9px] text-gray-500 text-justify leading-tight">
+          <p>
+            <strong>DECLARACIÓN OFICIAL:</strong> La presente Hoja de Ruta habilita el uso exclusivo de la movilidad oficial para el estricto cumplimiento de los servicios educativos del Ministerio de Educación de la Provincia de San Juan. Queda prohibido el transporte de personas no autorizadas o el desvío del itinerario establecido sin previa comunicación a la Mesa de Despacho. El conductor declara haber verificado los fluidos, neumáticos y documentación reglamentaria antes de la partida.
+          </p>
+        </div>
+
+        <!-- Sección 5: Bloque de Firmas y Sellos -->
+        <section class="mt-8 pt-6 border-t-2 border-gray-900 grid grid-cols-3 gap-6 text-center">
+          <div>
+            <div class="h-16 border-b border-gray-400"></div>
+            <p class="mt-1 font-bold text-gray-900 text-xs">{data.choferApellido}, {data.choferNombre}</p>
+            <p class="text-[10px] text-gray-500 uppercase font-semibold">Firma del Conductor Oficial</p>
+            <p class="text-[9px] text-gray-400">DNI: {data.choferDni}</p>
+          </div>
+
+          <div>
+            <div class="h-16 border-b border-gray-400"></div>
+            <p class="mt-1 font-bold text-gray-900 text-xs">{data.despachanteNombre}</p>
+            <p class="text-[10px] text-gray-500 uppercase font-semibold">Responsable de Despacho</p>
+            <p class="text-[9px] text-gray-400">Mesa Central de Movilidades</p>
+          </div>
+
+          <div>
+            <div class="h-16 border-b border-gray-400"></div>
+            <p class="mt-1 font-bold text-gray-900 text-xs">{data.dependenciaResponsable ?? data.dependenciaNombre}</p>
+            <p class="text-[10px] text-gray-500 uppercase font-semibold">Autoridad Área Solicitante</p>
+            <p class="text-[9px] text-gray-400">Ministerio de Educación</p>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </body>
+</html>

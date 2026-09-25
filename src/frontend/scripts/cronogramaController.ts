@@ -696,7 +696,9 @@ function initDetailModal() {
   })
 
   btnImprimirHoja?.addEventListener('click', () => {
-    window.print()
+    if (currentComisionId) {
+      window.open(`/cronograma/imprimir/${currentComisionId}`, '_blank')
+    }
   })
 }
 

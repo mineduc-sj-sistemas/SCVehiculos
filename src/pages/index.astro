@@ -4,7 +4,7 @@ import DashboardLayout from '../frontend/layouts/DashboardLayout.astro'
 import DashboardStatCards from '../frontend/components/dashboard/DashboardStatCards.astro'
 import PlateBadge from '../frontend/components/ui/PlateBadge.astro'
 import StatusBadge from '../frontend/components/ui/StatusBadge.astro'
-import { getDashboardStats, getFleet, getActiveTravels, getDriverStats, getMaintenanceList, getFuelStats } from '../backend/index'
+import { getDashboardStats, getFleet, getActiveTravels, getDriverStats, getDashboardMaintenance, getFuelStats } from '../backend/index'
 
 // Consultas dinámicas a la base de datos MySQL (sc_vehiculos) a través de la capa Backend
 const [stats, fleet, travels, driverStats, maintenance, fuelStats] = await Promise.all([
@@ -12,7 +12,7 @@ const [stats, fleet, travels, driverStats, maintenance, fuelStats] = await Promi
   getFleet(),
   getActiveTravels(),
   getDriverStats(),
-  getMaintenanceList(),
+  getDashboardMaintenance(),
   getFuelStats(),
 ])
 ---
@@ -248,8 +248,8 @@ const [stats, fleet, travels, driverStats, maintenance, fuelStats] = await Promi
           </div>
         ))}
       </div>
-      <a href="/flota" class="mt-4 flex items-center gap-1 text-xs font-bold text-blue hover:underline">
-        Ver servicios por unidad <ChevronRight size={14} />
+      <a href="/mantenimientos" class="mt-4 flex items-center gap-1 text-xs font-bold text-orangeGov hover:underline">
+        Ver gestión de taller y servicios <ChevronRight size={14} />
       </a>
     </section>
 

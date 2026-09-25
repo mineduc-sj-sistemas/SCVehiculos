@@ -1,0 +1,165 @@
+---
+import { AlertCircle, CheckCircle2, Wrench, X } from 'lucide-astro'
+---
+
+<div
+  id="modal-finalizar-mantenimiento"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/60 backdrop-blur-xs opacity-0 pointer-events-none transition-opacity duration-200"
+  role="dialog"
+  aria-modal="true"
+>
+  <div class="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95">
+    <!-- Cabecera -->
+    <div class="flex items-center justify-between border-b border-gray-100 bg-emerald-700 px-6 py-4 text-white">
+      <div class="flex items-center gap-3">
+        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 text-white shadow-sm">
+          <CheckCircle2 size={20} strokeWidth={2.5} />
+        </div>
+        <div>
+          <h3 class="font-display text-base font-bold">Finalizar Servicio Mecánico</h3>
+          <p class="text-[11px] text-white/80">Cierre de orden, liquidación de costos y liberación a Disponible</p>
+        </div>
+      </div>
+      <button
+        id="btn-close-finalizar-modal"
+        type="button"
+        class="flex h-8 w-8 items-center justify-center rounded-lg text-white/70 hover:bg-white/10 hover:text-white transition cursor-pointer"
+        aria-label="Cerrar modal"
+      >
+        <X size={18} />
+      </button>
+    </div>
+
+    <!-- Formulario de Finalización -->
+    <form id="form-finalizar-mantenimiento" class="overflow-y-auto p-6 space-y-4 text-xs">
+      <input type="hidden" id="finish-mant-id" name="id" value="" />
+
+      <div id="finish-error-msg" class="hidden rounded-xl bg-rose-50 border border-rose-200 p-3 text-rose-700 font-semibold flex items-center gap-2">
+        <AlertCircle size={16} />
+        <span id="finish-error-text">Ocurrió un error</span>
+      </div>
+
+      <!-- Resumen del Vehículo y Servicio -->
+      <div class="rounded-xl border border-gray-200 bg-gray-50 p-3.5 space-y-1">
+        <p class="text-[11px] font-bold text-muted uppercase">Servicio a Concluir</p>
+        <p class="font-bold text-navy text-sm" id="finish-mant-titulo">--</p>
+        <p class="text-xs text-gray-600" id="finish-mant-patente">Dominio: --</p>
+      </div>
+
+      <!-- Odómetro de Salida de Taller -->
+      <div>
+        <label for="finish-odometro" class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1">
+          Odómetro de Salida / Retiro (Km) <span class="text-rose-500">*</span>
+        </label>
+        <input
+          id="finish-odometro"
+          name="odometroServicio"
+          type="number"
+          min="0"
+          required
+          class="w-full rounded-xl border border-line bg-paper px-3.5 py-2.5 text-xs font-mono font-bold text-navy outline-none focus:border-emerald-600 focus:bg-white transition"
+        />
+      </div>
+
+      <!-- Costos Finales -->
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="finish-costo-mo" class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1">
+            Mano de Obra Final ($)
+          </label>
+          <input
+            id="finish-costo-mo"
+            name="costoManoObra"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="0.00"
+            class="w-full rounded-xl border border-line bg-paper px-3 py-2 text-xs font-mono text-navy outline-none focus:border-emerald-600 focus:bg-white transition"
+          />
+        </div>
+
+        <div>
+          <label for="finish-costo-rep" class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1">
+            Repuestos e Insumos ($)
+          </label>
+          <input
+            id="finish-costo-rep"
+            name="costoRepuestos"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="0.00"
+            class="w-full rounded-xl border border-line bg-paper px-3 py-2 text-xs font-mono text-navy outline-none focus:border-emerald-600 focus:bg-white transition"
+          />
+        </div>
+      </div>
+
+      <!-- Factura y Próximo Service -->
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="finish-factura" class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1">
+            Nº de Factura Oficial
+          </label>
+          <input
+            id="finish-factura"
+            name="numeroFactura"
+            type="text"
+            placeholder="A-0001-00000000"
+            class="w-full rounded-xl border border-line bg-paper px-3 py-2 text-xs font-mono text-navy outline-none focus:border-emerald-600 focus:bg-white transition"
+          />
+        </div>
+
+        <div>
+          <label for="finish-prox-km" class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1">
+            Próximo Service a los (Km)
+          </label>
+          <input
+            id="finish-prox-km"
+            name="proximoMantenimientoKm"
+            type="number"
+            min="0"
+            placeholder="Ej: +10.000 km"
+            class="w-full rounded-xl border border-line bg-paper px-3 py-2 text-xs font-mono text-navy outline-none focus:border-emerald-600 focus:bg-white transition"
+          />
+        </div>
+      </div>
+
+      <!-- Detalle de Trabajos Realizados -->
+      <div>
+        <label for="finish-detalle" class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1">
+          Detalle de Trabajos Realizados
+        </label>
+        <textarea
+          id="finish-detalle"
+          name="detalleTrabajos"
+          rows="2"
+          placeholder="Repuestos reemplazados, lubricantes utilizados, garantía del taller..."
+          class="w-full rounded-xl border border-line bg-paper p-3 text-xs text-navy outline-none focus:border-emerald-600 focus:bg-white transition"
+        ></textarea>
+      </div>
+
+      <!-- Notificación de Restitución -->
+      <div class="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 text-emerald-900 text-xs">
+        <strong>Efecto en la Flota:</strong> Al confirmar, el vehículo será reintegrado automáticamente con estado <span class="font-bold uppercase text-emerald-800">Disponible</span> y quedará habilitado para nuevas comisiones en el cronograma.
+      </div>
+
+      <!-- Botones -->
+      <div class="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
+        <button
+          type="button"
+          id="btn-cancel-finalizar-modal"
+          class="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-gray-100 transition cursor-pointer"
+        >
+          Volver
+        </button>
+        <button
+          type="submit"
+          id="btn-submit-finalizar"
+          class="rounded-xl bg-emerald-600 hover:bg-emerald-700 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-emerald-600/20 active:scale-98 transition cursor-pointer"
+        >
+          Confirmar y Liberar Vehículo
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

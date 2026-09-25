@@ -349,6 +349,143 @@ export async function getComisionDetalle(id: number): Promise<ComisionGridItem |
   }
 }
 
+export interface HojaDeRutaCompleta {
+  id: number
+  codigoComision: string
+  origen: string
+  destino: string
+  motivo: string
+  cantidadPasajeros: number
+  solicitanteNombre: string | null
+  fechaSalidaProgramada: string
+  fechaSalidaReal: string | null
+  fechaRegresoEstimada: string
+  fechaRegresoReal: string | null
+  odometroSalida: number | null
+  odometroRegreso: number | null
+  kmRecorridos: number | null
+  estado: EstadoComision
+  observaciones: string | null
+  createdAt: string
+  // Vehículo
+  vehiculoId: number
+  vehiculoPatente: string
+  vehiculoMarca: string
+  vehiculoModelo: string
+  vehiculoTipo: string
+  vehiculoAnio: number | null
+  vehiculoColor: string | null
+  companiaSeguro: string | null
+  numeroPoliza: string | null
+  fechaVencimientoSeguro: string | null
+  fechaVencimientoVtv: string | null
+  numeroRto: string | null
+  // Chofer
+  choferId: number
+  choferNombre: string
+  choferApellido: string
+  choferDni: string
+  choferCuil: string | null
+  choferTelefono: string | null
+  numeroLicencia: string
+  categoriaLicencia: string
+  fechaVencimientoLicencia: string | null
+  // Dependencia
+  dependenciaId: number
+  dependenciaNombre: string
+  dependenciaResponsable: string | null
+  dependenciaTelefono: string | null
+  // Despacho
+  despachanteNombre: string | null
+}
+
+/**
+ * Obtiene toda la información legal, técnica y operativa para la Hoja de Ruta e impresión oficial
+ */
+export async function getHojaDeRutaData(id: number): Promise<HojaDeRutaCompleta | null> {
+  const rows = await query<any>(
+    `SELECT 
+      c.id, c.codigo_comision, c.origen, c.destino, c.motivo, c.cantidad_pasajeros,
+      c.solicitante_nombre, c.fecha_salida_programada, c.fecha_salida_real,
+      c.fecha_regreso_estimada, c.fecha_regreso_real,
+      c.odometro_salida, c.odometro_regreso,
+      CASE 
+        WHEN c.odometro_regreso IS NOT NULL AND c.odometro_salida IS NOT NULL 
+        THEN (c.odometro_regreso - c.odometro_salida)
+        ELSE NULL 
+      END AS km_recorridos,
+      c.estado, c.observaciones, c.created_at,
+      v.id AS vehiculo_id, v.patente AS vehiculo_patente, v.marca AS vehiculo_marca,
+      v.modelo AS vehiculo_modelo, COALESCE(tv.nombre, 'Automóvil') AS vehiculo_tipo,
+      v.anio AS vehiculo_anio, v.color AS vehiculo_color, v.compania_seguro, v.numero_poliza,
+      v.fecha_vencimiento_seguro, v.fecha_vencimiento_vtv, v.numero_rto,
+      ch.id AS chofer_id, ch.nombre AS chofer_nombre, ch.apellido AS chofer_apellido,
+      ch.dni AS chofer_dni, ch.cuil AS chofer_cuil, ch.telefono AS chofer_telefono,
+      ch.numero_licencia, ch.categoria_licencia, ch.fecha_vencimiento_licencia,
+      d.id AS dependencia_id, d.nombre AS dependencia_nombre,
+      d.responsable AS dependencia_responsable, d.telefono AS dependencia_telefono,
+      CONCAT(u.nombre, ' ', u.apellido) AS despachante_nombre
+     FROM comisiones c
+     INNER JOIN vehiculos v ON c.vehiculo_id = v.id
+     LEFT JOIN tipos_vehiculo tv ON v.tipo_vehiculo_id = tv.id
+     INNER JOIN choferes ch ON c.chofer_id = ch.id
+     INNER JOIN dependencias d ON c.dependencia_solicitante_id = d.id
+     LEFT JOIN usuarios u ON c.usuario_creador_id = u.id
+     WHERE c.id = ?
+     LIMIT 1`,
+    [id]
+  )
+
+  if (!rows || rows.length === 0) return null
+  const r = rows[0]
+
+  return {
+    id: Number(r.id),
+    codigoComision: r.codigo_comision,
+    origen: r.origen,
+    destino: r.destino,
+    motivo: r.motivo,
+    cantidadPasajeros: Number(r.cantidad_pasajeros ?? 1),
+    solicitanteNombre: r.solicitante_nombre ?? null,
+    fechaSalidaProgramada: r.fecha_salida_programada instanceof Date ? r.fecha_salida_programada.toISOString() : String(r.fecha_salida_programada),
+    fechaSalidaReal: r.fecha_salida_real ? (r.fecha_salida_real instanceof Date ? r.fecha_salida_real.toISOString() : String(r.fecha_salida_real)) : null,
+    fechaRegresoEstimada: r.fecha_regreso_estimada instanceof Date ? r.fecha_regreso_estimada.toISOString() : String(r.fecha_regreso_estimada),
+    fechaRegresoReal: r.fecha_regreso_real ? (r.fecha_regreso_real instanceof Date ? r.fecha_regreso_real.toISOString() : String(r.fecha_regreso_real)) : null,
+    odometroSalida: r.odometro_salida ? Number(r.odometro_salida) : null,
+    odometroRegreso: r.odometro_regreso ? Number(r.odometro_regreso) : null,
+    kmRecorridos: r.km_recorridos ? Number(r.km_recorridos) : null,
+    estado: r.estado as EstadoComision,
+    observaciones: r.observaciones ?? null,
+    createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : String(r.created_at),
+    vehiculoId: Number(r.vehiculo_id),
+    vehiculoPatente: r.vehiculo_patente,
+    vehiculoMarca: r.vehiculo_marca,
+    vehiculoModelo: r.vehiculo_modelo,
+    vehiculoTipo: r.vehiculo_tipo,
+    vehiculoAnio: r.vehiculo_anio ? Number(r.vehiculo_anio) : null,
+    vehiculoColor: r.vehiculo_color ?? null,
+    companiaSeguro: r.compania_seguro ?? null,
+    numeroPoliza: r.numero_poliza ?? null,
+    fechaVencimientoSeguro: r.fecha_vencimiento_seguro ? toDateString(new Date(r.fecha_vencimiento_seguro)) : null,
+    fechaVencimientoVtv: r.fecha_vencimiento_vtv ? toDateString(new Date(r.fecha_vencimiento_vtv)) : null,
+    numeroRto: r.numero_rto ?? null,
+    choferId: Number(r.chofer_id),
+    choferNombre: r.chofer_nombre,
+    choferApellido: r.chofer_apellido,
+    choferDni: r.chofer_dni,
+    choferCuil: r.chofer_cuil ?? null,
+    choferTelefono: r.chofer_telefono ?? null,
+    numeroLicencia: r.numero_licencia,
+    categoriaLicencia: r.categoria_licencia,
+    fechaVencimientoLicencia: r.fecha_vencimiento_licencia ? toDateString(new Date(r.fecha_vencimiento_licencia)) : null,
+    dependenciaId: Number(r.dependencia_id),
+    dependenciaNombre: r.dependencia_nombre,
+    dependenciaResponsable: r.dependencia_responsable ?? null,
+    dependenciaTelefono: r.dependencia_telefono ?? null,
+    despachanteNombre: r.despachante_nombre ?? 'Mesa de Despacho Central',
+  }
+}
+
 /**
  * Genera el siguiente código correlativo de comisión (ej: COM-2026-0092)
  */

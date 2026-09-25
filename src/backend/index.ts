@@ -11,4 +11,5 @@ export * from './services/choferService'
 export * from './services/cronogramaService'
 export * from './services/authService'
 export * from './services/userService'
+export * from './services/maintenanceService'
 

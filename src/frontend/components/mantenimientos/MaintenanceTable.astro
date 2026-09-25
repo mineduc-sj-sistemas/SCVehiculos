@@ -1,0 +1,215 @@
+---
+import { Check, CheckCircle2, Clock, FileText, Filter, MoreHorizontal, Plus, Search, ShieldAlert, Wrench, XCircle } from 'lucide-astro'
+import PlateBadge from '../ui/PlateBadge.astro'
+import type { MantenimientoItem } from '../../../backend/services/maintenanceService'
+
+interface Props {
+  mantenimientos: MantenimientoItem[]
+}
+
+const { mantenimientos } = Astro.props
+
+const formatCurrency = (val: number) => {
+  return new Intl.NumberFormat('es-AR', {
+    style: 'currency',
+    currency: 'ARS',
+    maximumFractionDigits: 0,
+  }).format(val)
+}
+
+const getTipoBadge = (tipo: string) => {
+  switch (tipo) {
+    case 'preventivo':
+      return { label: 'Preventivo', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' }
+    case 'correctivo':
+      return { label: 'Correctivo', cls: 'bg-rose-50 text-rose-700 border-rose-200' }
+    case 'inspeccion':
+      return { label: 'Inspección', cls: 'bg-sky text-orangeGov border-orange-200' }
+    default:
+      return { label: tipo, cls: 'bg-gray-100 text-gray-700 border-gray-200' }
+  }
+}
+
+const getEstadoBadge = (estado: string) => {
+  switch (estado) {
+    case 'programado':
+      return { label: 'Programado', cls: 'bg-blue-50 text-blue-700 border-blue-200' }
+    case 'en_curso':
+      return { label: 'En Taller', cls: 'bg-amber-50 text-amber-700 border-amber-300 animate-pulse' }
+    case 'completado':
+      return { label: 'Completado', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' }
+    case 'cancelado':
+      return { label: 'Cancelado', cls: 'bg-gray-100 text-gray-500 border-gray-200' }
+    default:
+      return { label: estado, cls: 'bg-gray-100 text-gray-700 border-gray-200' }
+  }
+}
+---
+
+<div class="card overflow-hidden">
+  <!-- Barra de Filtros y Búsqueda -->
+  <div class="flex flex-col gap-3 border-b border-line p-4 sm:flex-row sm:items-center sm:justify-between bg-white">
+    <div class="flex flex-1 flex-wrap items-center gap-2.5">
+      <!-- Buscador -->
+      <div class="relative w-full sm:w-64">
+        <Search size={15} class="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+        <input
+          id="filtro-buscar-mantenimiento"
+          type="text"
+          placeholder="Buscar vehículo, taller, motivo..."
+          class="w-full rounded-xl border border-line bg-paper pl-9 pr-3 py-2 text-xs font-semibold text-navy outline-none transition focus:border-orangeGov focus:bg-white focus:ring-2 focus:ring-orangeGov/15"
+        />
+      </div>
+
+      <!-- Filtro Tipo -->
+      <select
+        id="filtro-tipo-mantenimiento"
+        class="rounded-xl border border-line bg-paper px-3 py-2 text-xs font-bold text-navy outline-none transition focus:border-orangeGov focus:bg-white"
+      >
+        <option value="">Todos los tipos</option>
+        <option value="preventivo">Preventivo</option>
+        <option value="correctivo">Correctivo</option>
+        <option value="inspeccion">Inspección Técnica</option>
+      </select>
+
+      <!-- Filtro Estado -->
+      <select
+        id="filtro-estado-mantenimiento"
+        class="rounded-xl border border-line bg-paper px-3 py-2 text-xs font-bold text-navy outline-none transition focus:border-orangeGov focus:bg-white"
+      >
+        <option value="">Todos los estados</option>
+        <option value="en_curso">En Taller (Activos)</option>
+        <option value="programado">Programados</option>
+        <option value="completado">Completados</option>
+        <option value="cancelado">Cancelados</option>
+      </select>
+    </div>
+
+    <div class="flex items-center gap-2 text-xs text-muted font-bold">
+      <span id="contador-mantenimientos">Total: {mantenimientos.length} registros</span>
+    </div>
+  </div>
+
+  <!-- Tabla de Mantenimientos -->
+  <div class="overflow-x-auto">
+    <table class="w-full min-w-[850px] text-left">
+      <thead>
+        <tr class="border-b border-line bg-paper text-[10px] font-bold uppercase tracking-[.08em] text-muted">
+          <th class="px-5 py-3">Vehículo</th>
+          <th class="px-3 py-3">Tipo & Estado</th>
+          <th class="px-4 py-3">Servicio / Taller</th>
+          <th class="px-3 py-3">Fecha Prog.</th>
+          <th class="px-3 py-3">Odómetro</th>
+          <th class="px-4 py-3 text-right">Costo Total</th>
+          <th class="px-5 py-3 text-right">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-mantenimientos" class="divide-y divide-line/60">
+        {mantenimientos.length === 0 ? (
+          <tr>
+            <td colspan="7" class="px-6 py-12 text-center text-xs text-muted">
+              No hay servicios de mantenimiento registrados. Puedes programar el primero usando el botón superior.
+            </td>
+          </tr>
+        ) : (
+          mantenimientos.map((m) => {
+            const tipoBadge = getTipoBadge(m.tipo)
+            const estadoBadge = getEstadoBadge(m.estado)
+            const isActivo = m.estado === 'programado' || m.estado === 'en_curso'
+
+            return (
+              <tr 
+                class="hover:bg-paper/60 transition item-mantenimiento-row"
+                data-id={m.id}
+                data-tipo={m.tipo}
+                data-estado={m.estado}
+                data-search={`${m.vehiculoPatente} ${m.vehiculoMarca} ${m.vehiculoModelo} ${m.titulo} ${m.tallerProveedor ?? ''} ${m.numeroFactura ?? ''}`.toLowerCase()}
+              >
+                <!-- Vehículo -->
+                <td class="px-5 py-3.5">
+                  <div class="flex items-center gap-2.5">
+                    <PlateBadge plate={m.vehiculoPatente} />
+                    <div>
+                      <p class="text-xs font-bold text-navy">{m.vehiculoMarca} {m.vehiculoModelo}</p>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Tipo & Estado -->
+                <td class="px-3 py-3.5 space-y-1">
+                  <span class={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${tipoBadge.cls}`}>
+                    {tipoBadge.label}
+                  </span>
+                  <br />
+                  <span class={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${estadoBadge.cls}`}>
+                    {estadoBadge.label}
+                  </span>
+                </td>
+
+                <!-- Servicio / Taller -->
+                <td class="px-4 py-3.5">
+                  <p class="text-xs font-bold text-navy">{m.titulo}</p>
+                  <p class="text-[11px] text-muted">
+                    {m.tallerProveedor ? m.tallerProveedor : 'Taller no asignado'}
+                    {m.numeroFactura && <span class="font-mono text-gray-500 font-semibold"> · Fac: {m.numeroFactura}</span>}
+                  </p>
+                </td>
+
+                <!-- Fecha Programada -->
+                <td class="px-3 py-3.5 font-mono text-xs text-navy font-semibold">
+                  {m.fechaProgramada}
+                  {m.fechaEgreso && <p class="text-[10px] text-emerald-600 font-sans font-bold">Egreso: {m.fechaEgreso.split('T')[0]}</p>}
+                </td>
+
+                <!-- Odómetro -->
+                <td class="px-3 py-3.5 font-mono text-xs text-gray-700">
+                  {m.odometroServicio.toLocaleString('es-AR')} km
+                </td>
+
+                <!-- Costo Total -->
+                <td class="px-4 py-3.5 text-right font-mono font-bold text-xs text-navy">
+                  {m.costoTotal > 0 ? (
+                    formatCurrency(m.costoTotal)
+                  ) : (
+                    <span class="text-muted font-normal italic">Sin cargo</span>
+                  )}
+                </td>
+
+                <!-- Acciones -->
+                <td class="px-5 py-3.5 text-right">
+                  <div class="flex items-center justify-end gap-1.5">
+                    {isActivo && (
+                      <button
+                        type="button"
+                        class="btn-abrir-finalizar inline-flex items-center gap-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] px-2.5 py-1.5 transition cursor-pointer shadow-xs active:scale-95"
+                        data-id={m.id}
+                        data-patente={m.vehiculoPatente}
+                        data-odometro={m.odometroServicio}
+                        data-titulo={m.titulo}
+                        title="Finalizar servicio y devolver vehículo a Disponible"
+                      >
+                        <Check size={13} strokeWidth={2.5} />
+                        <span>Finalizar</span>
+                      </button>
+                    )}
+
+                    {m.estado === 'programado' && (
+                      <button
+                        type="button"
+                        class="btn-cancelar-mantenimiento inline-flex items-center gap-1 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 font-bold text-[11px] px-2 py-1.5 transition cursor-pointer"
+                        data-id={m.id}
+                        title="Cancelar este turno"
+                      >
+                        <XCircle size={13} />
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            )
+          })
+        )}
+      </tbody>
+    </table>
+  </div>
+</div>
