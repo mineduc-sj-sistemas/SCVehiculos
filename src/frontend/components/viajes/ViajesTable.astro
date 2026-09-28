@@ -1,0 +1,180 @@
+---
+import { Eye, FileText, MapPin, Printer, Route, Search, User } from 'lucide-astro'
+import PlateBadge from '../ui/PlateBadge.astro'
+import StatusBadge from '../ui/StatusBadge.astro'
+import type { ViajeItem } from '../../../backend/services/viajesService'
+
+interface Props {
+  viajes: ViajeItem[]
+}
+
+const { viajes } = Astro.props
+
+const formatFecha = (isoStr: string | null) => {
+  if (!isoStr) return 'Pendiente'
+  const d = new Date(isoStr)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())} hs`
+}
+---
+
+<div class="card overflow-hidden">
+  <!-- Barra de Búsqueda y Filtros Reactivos -->
+  <div class="flex flex-col gap-3 border-b border-line p-4 sm:flex-row sm:items-center sm:justify-between bg-white">
+    <div class="flex flex-1 flex-wrap items-center gap-2.5">
+      <!-- Buscador -->
+      <div class="relative w-full sm:w-72">
+        <Search size={15} class="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+        <input
+          id="filtro-buscar-viaje"
+          type="text"
+          placeholder="Buscar código, destino, chofer, patente..."
+          class="w-full rounded-xl border border-line bg-paper pl-9 pr-3 py-2 text-xs font-semibold text-navy outline-none transition focus:border-orangeGov focus:bg-white focus:ring-2 focus:ring-orangeGov/15"
+        />
+      </div>
+
+      <!-- Filtro de Estado -->
+      <select
+        id="filtro-estado-viaje"
+        class="rounded-xl border border-line bg-paper px-3 py-2 text-xs font-bold text-navy outline-none transition focus:border-orangeGov focus:bg-white"
+      >
+        <option value="">Todos los estados</option>
+        <option value="en_curso">En Viaje / En Ruta</option>
+        <option value="programada">Salidas Programadas</option>
+        <option value="finalizada">Misiones Finalizadas</option>
+        <option value="cancelada">Canceladas</option>
+      </select>
+    </div>
+
+    <div class="flex items-center gap-2 text-xs text-muted font-bold">
+      <span id="contador-viajes">Total: {viajes.length} comisiones</span>
+    </div>
+  </div>
+
+  <!-- Tabla de Viajes y Hojas de Ruta -->
+  <div class="overflow-x-auto">
+    <table class="w-full min-w-[950px] text-left">
+      <thead>
+        <tr class="border-b border-line bg-paper text-[10px] font-bold uppercase tracking-[.08em] text-muted">
+          <th class="px-5 py-3">Comisión / Código</th>
+          <th class="px-4 py-3">Salida Programada</th>
+          <th class="px-4 py-3">Vehículo Oficial</th>
+          <th class="px-4 py-3">Conductor Designado</th>
+          <th class="px-4 py-3">Destino y Área Solicitante</th>
+          <th class="px-3 py-3 text-right">Recorrido</th>
+          <th class="px-4 py-3 text-center">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-viajes" class="divide-y divide-line/60">
+        {viajes.length === 0 ? (
+          <tr>
+            <td colspan="7" class="px-6 py-12 text-center text-xs text-muted">
+              No hay viajes ni comisiones registradas en el sistema. Puedes crear la primera con el botón "Nueva Comisión".
+            </td>
+          </tr>
+        ) : (
+          viajes.map((v) => {
+            const searchStr = `${v.codigo} ${v.destino} ${v.origen} ${v.choferNombreCompleto} ${v.vehiculoPatente} ${v.vehiculoMarca} ${v.vehiculoModelo} ${v.dependenciaNombre} ${v.solicitanteNombre ?? ''}`.toLowerCase()
+
+            return (
+              <tr
+                class="hover:bg-paper/60 transition item-viaje-row cursor-pointer"
+                data-id={v.id}
+                data-estado={v.estado}
+                data-search={searchStr}
+              >
+                <!-- Código y Estado -->
+                <td class="px-5 py-3.5">
+                  <div class="flex items-center gap-2">
+                    <span class="font-mono text-xs font-bold text-navy">{v.codigo}</span>
+                    <StatusBadge status={v.estadoLabel} tone={v.tone} />
+                  </div>
+                  <p class="text-[10px] text-muted truncate max-w-[200px] mt-0.5" title={v.motivo}>
+                    {v.motivo}
+                  </p>
+                </td>
+
+                <!-- Salida y Regreso -->
+                <td class="px-4 py-3.5 font-mono text-xs text-navy">
+                  <p class="font-bold">{formatFecha(v.fechaSalidaReal || v.fechaSalidaProgramada)}</p>
+                  <p class="text-[10px] text-muted font-sans font-normal mt-0.5">
+                    Regreso: {formatFecha(v.fechaRegresoReal || v.fechaRegresoEstimada)}
+                  </p>
+                </td>
+
+                <!-- Vehículo -->
+                <td class="px-4 py-3.5">
+                  <div class="flex items-center gap-2">
+                    <PlateBadge plate={v.vehiculoPatente} />
+                    <span class="text-xs font-bold text-navy truncate">{v.vehiculoMarca} {v.vehiculoModelo}</span>
+                  </div>
+                </td>
+
+                <!-- Conductor -->
+                <td class="px-4 py-3.5">
+                  <div class="flex items-center gap-1.5">
+                    <User size={13} class="text-muted shrink-0" />
+                    <p class="text-xs font-bold text-navy truncate">{v.choferNombreCompleto}</p>
+                  </div>
+                </td>
+
+                <!-- Destino y Dependencia -->
+                <td class="px-4 py-3.5">
+                  <p class="text-xs font-bold text-navy flex items-center gap-1">
+                    <MapPin size={12} class="text-orangeGov shrink-0" />
+                    <span class="truncate">{v.destino}</span>
+                  </p>
+                  <p class="text-[11px] text-muted truncate max-w-[220px]">
+                    {v.dependenciaNombre}
+                  </p>
+                </td>
+
+                <!-- Odómetro / Km Recorridos -->
+                <td class="px-3 py-3.5 text-right font-mono text-xs text-navy">
+                  {v.kmRecorridos !== null ? (
+                    <span class="font-bold text-emerald-700">+{v.kmRecorridos.toLocaleString('es-AR')} km</span>
+                  ) : v.odometroSalida !== null ? (
+                    <span class="text-muted text-[11px]">Salida: {v.odometroSalida.toLocaleString('es-AR')} km</span>
+                  ) : (
+                    <span class="text-muted text-[11px]">S/D</span>
+                  )}
+                  <span class="block text-[10px] text-muted font-sans">
+                    {v.cantidadPasajeros} {v.cantidadPasajeros === 1 ? 'pasajero' : 'pasajeros'}
+                  </span>
+                </td>
+
+                <!-- Acciones -->
+                <td class="px-4 py-3.5 text-center">
+                  <div class="flex items-center justify-center gap-1.5" onclick="event.stopPropagation()">
+                    <!-- Botón Imprimir Hoja de Ruta Oficial A4 -->
+                    <a
+                      href={`/cronograma/imprimir/${v.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="inline-flex items-center gap-1 rounded-lg border border-line bg-white px-2.5 py-1.5 text-[11px] font-bold text-navy hover:bg-orange-50 hover:text-orangeGov hover:border-orangeGov/30 transition shadow-xs"
+                      title="Imprimir Hoja de Ruta y Orden de Comisión Oficial A4"
+                    >
+                      <Printer size={13} />
+                      <span class="hidden md:inline">Hoja de Ruta</span>
+                    </a>
+
+                    <!-- Botón Ver Ficha / Detalle -->
+                    <button
+                      type="button"
+                      class="btn-ver-detalle-viaje inline-flex items-center gap-1 rounded-lg bg-paper hover:bg-line/70 px-2.5 py-1.5 text-[11px] font-bold text-navy transition cursor-pointer"
+                      data-id={v.id}
+                      title="Ver detalles y gestionar salida/regreso"
+                    >
+                      <Eye size={13} />
+                      <span class="hidden md:inline">Detalle</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            )
+          })
+        )}
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -20,7 +20,7 @@ El sistema administra integralmente el parque automotor, los conductores oficial
 | :--- | :--- | :---: | :--- |
 | **Fase 1** | Hoja de Ruta Oficial A4 & Mantenimientos | ✅ Completada | [`a59867f`](https://github.com/mineduc-sj-sistemas/SCVehiculos/commit/a59867f) |
 | **Fase 2** | Control de Costos de Combustible & Trazabilidad Visual | ✅ Completada | [`75181e2`](https://github.com/mineduc-sj-sistemas/SCVehiculos/commit/75181e2) |
-| **Fase 3** | Exportación de Reportes Excel/PDF & Monitor de Alertas | 🚀 En Implementación | Reportes CSV UTF-8 & Centro de Vencimientos |
+| **Fase 3** | Reportes Excel/BOM, Alertas y Módulo de Viajes (`/viajes`) | ✅ Completada | [`0ea6ee0`](https://github.com/mineduc-sj-sistemas/SCVehiculos/commit/0ea6ee0) |
 
 ---
 
@@ -108,6 +108,19 @@ El sistema administra integralmente el parque automotor, los conductores oficial
 
 ---
 
+### 3.7. Interfaz Dedicada de Viajes y Hojas de Ruta Oficiales
+- **Ubicación:** [`/viajes`](file:///C:/Users/Docente/Desktop/SCVehiculos/src/pages/viajes.astro)
+- **Propósito:** Resolver la navegación inactiva del menú lateral (*"Viajes / Hojas de ruta"* apuntaba previamente a un ancla `#viajes`), centralizando la gestión de misiones de servicio, hojas de ruta y comisiones departamentales en una interfaz de alto rendimiento.
+- **Servicio Backend:** [`viajesService.ts`](file:///C:/Users/Docente/Desktop/SCVehiculos/src/backend/services/viajesService.ts)
+- **Características:**
+  - **Tarjetas KPI en Vivo:** Unidades en ruta activa, salidas programadas pendientes de despacho, kilómetros acumulados en el mes y total de viajes cerrados.
+  - **Tabla Reactiva con Búsqueda Instantánea:** Filtrado en tiempo real por conductor, código de comisión, destino o patente, con selectores de estado (Todos, En Viaje, Programados, Finalizados, Cancelados).
+  - **Acceso Directo a Hoja de Ruta A4:** Cada viaje posee un botón de impresión directa a la Hoja de Ruta Oficial con triple firma ministerial.
+  - **Modales Integrados:** Despacho de nuevas comisiones y visualización de novedades de viaje con odómetros y trazabilidad.
+  - **Exportación Excel Dedicada:** Endpoint [`/api/reportes/viajes`](file:///C:/Users/Docente/Desktop/SCVehiculos/src/pages/api/reportes/%5Btipo%5D.ts) para descarga instantánea de planillas CSV UTF-8 con BOM.
+
+---
+
 ## 4. Arquitectura, Seguridad y Calidad del Software
 
 ### 4.1. Transaccionalidad ACID y Control Concurrente
@@ -125,7 +138,7 @@ El sistema administra integralmente el parque automotor, los conductores oficial
 
 ---
 
-## 5. Matriz del Plan de Pruebas Automatizadas (29/29 Casos Exitosos)
+## 5. Matriz del Plan de Pruebas Automatizadas (30/30 Casos Exitosos)
 
 | ID | Módulo | Descripción del Caso de Prueba | Resultado |
 | :---: | :--- | :--- | :---: |
@@ -158,5 +171,6 @@ El sistema administra integralmente el parque automotor, los conductores oficial
 | **TC-27** | Trazabilidad | Línea de tiempo y trazabilidad de estados del vehículo | ✅ PASSED |
 | **TC-28** | Reportes | Generación y exportación de planillas oficiales (CSV UTF-8) | ✅ PASSED |
 | **TC-29** | Alertas | Evaluación de vencimientos de RTO, licencias y services | ✅ PASSED |
+| **TC-30** | Viajes | Interfaz dedicada `/viajes` y exportación CSV con BOM | ✅ PASSED |
 
-**Tasa de Efectividad:** **100% de Pruebas Aprobadas (29/29)**.
+**Tasa de Efectividad:** **100% de Pruebas Aprobadas (30/30)**.

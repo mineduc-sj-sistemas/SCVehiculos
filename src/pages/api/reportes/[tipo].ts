@@ -3,6 +3,7 @@ import {
   generateFleetCsv,
   generateMaintenanceCsv,
   generateFuelCsv,
+  generateViajesCsv,
   requireAuth,
 } from '../../../backend/index'
 
@@ -34,11 +35,16 @@ export const GET: APIRoute = async ({ params, cookies }) => {
         csvData = await generateFuelCsv()
         filename = `reporte_combustible_${today}.csv`
         break
+      case 'viajes':
+      case 'comisiones':
+        csvData = await generateViajesCsv()
+        filename = `reporte_viajes_comisiones_${today}.csv`
+        break
       default:
         return new Response(
           JSON.stringify({
             success: false,
-            error: 'Tipo de reporte inválido. Opciones disponibles: flota, mantenimientos, combustible.',
+            error: 'Tipo de reporte inválido. Opciones disponibles: flota, mantenimientos, combustible, viajes.',
           }),
           { status: 400, headers: { 'Content-Type': 'application/json; charset=utf-8' } }
         )

@@ -13,6 +13,7 @@ export * from './services/authService'
 export * from './services/userService'
 export * from './services/maintenanceService'
 export * from './services/fuelService'
+export * from './services/viajesService'
 export * from './services/reportService'
 export * from './services/alertService'
 

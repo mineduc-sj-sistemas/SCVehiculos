@@ -1,0 +1,78 @@
+---
+import { Download, Plus, Route } from 'lucide-astro'
+import DashboardLayout from '../frontend/layouts/DashboardLayout.astro'
+import ViajesKpiCards from '../frontend/components/viajes/ViajesKpiCards.astro'
+import ViajesTable from '../frontend/components/viajes/ViajesTable.astro'
+import CronogramaDispatchModal from '../frontend/components/cronograma/CronogramaDispatchModal.astro'
+import CronogramaDetailModal from '../frontend/components/cronograma/CronogramaDetailModal.astro'
+import { getViajesKpis, getViajesList, getDatosAuxiliaresDespacho } from '../backend/index'
+
+// Carga en servidor
+const [kpis, viajes, datosAuxiliares] = await Promise.all([
+  getViajesKpis(),
+  getViajesList(),
+  getDatosAuxiliaresDespacho(),
+])
+---
+
+<DashboardLayout activeNav="viajes" title="Viajes y Hojas de Ruta · Movilidades · Ministerio de Educación">
+  <h1 slot="header-title" class="font-display text-xl font-bold text-navy sm:text-2xl">
+    Viajes y Hojas de Ruta
+  </h1>
+
+  <!-- Encabezado de Sección -->
+  <div class="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+    <div>
+      <div class="flex items-center gap-2 text-xs font-semibold text-blue mb-1">
+        <span>Ministerio de Educación</span>
+        <span>·</span>
+        <span>Dirección de Movilidades</span>
+      </div>
+      <h2 class="font-display text-[26px] font-bold tracking-tight text-navy">
+        Comisiones Oficiales de Servicio
+      </h2>
+      <p class="mt-0.5 text-xs text-muted">
+        Control de salidas, itinerarios departamentales, registro de odómetros y emisión de Hojas de Ruta Oficiales A4 con triple firma.
+      </p>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <!-- Botón Exportar Planilla Excel -->
+      <a
+        href="/api/reportes/viajes"
+        class="flex items-center gap-2 rounded-xl border border-line bg-white hover:bg-paper px-3.5 py-2.5 text-xs font-bold text-navy shadow-xs transition"
+        title="Descargar registro de viajes en Excel (CSV UTF-8)"
+      >
+        <Download size={15} />
+        <span>Exportar Excel</span>
+      </a>
+
+      <!-- Botón Nueva Comisión -->
+      <button
+        id="btn-abrir-nueva-comision"
+        type="button"
+        class="flex items-center gap-2 rounded-xl bg-orangeGov hover:bg-orange-700 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-orange-500/20 active:scale-98 transition cursor-pointer"
+      >
+        <Plus size={16} strokeWidth={2.5} />
+        <span>Nueva Comisión</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Tarjetas KPI -->
+  <ViajesKpiCards kpis={kpis} />
+
+  <!-- Tabla Interactiva de Viajes -->
+  <ViajesTable viajes={viajes} />
+
+  <!-- Modales fuera del flujo principal -->
+  <Fragment slot="modals">
+    <CronogramaDispatchModal datosAuxiliares={datosAuxiliares} />
+    <CronogramaDetailModal />
+  </Fragment>
+</DashboardLayout>
+
+<!-- Script interactivo del cliente -->
+<script>
+  import '../frontend/scripts/viajesController'
+</script>

@@ -1,0 +1,76 @@
+---
+import { CalendarClock, CheckCircle2, Gauge, Route } from 'lucide-astro'
+import type { ViajesKpis } from '../../../backend/services/viajesService'
+
+interface Props {
+  kpis: ViajesKpis
+}
+
+const { kpis } = Astro.props
+---
+
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+  <!-- Unidades en Ruta Ahora -->
+  <div class="card p-5 border-l-4 border-blue transition-all hover:shadow-md hover:-translate-y-0.5">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-xs font-bold text-muted uppercase tracking-wider">Unidades en Ruta</p>
+        <p class="mt-2 font-display text-3xl font-bold tracking-tight text-blue">
+          {String(kpis.enCurso).padStart(2, '0')}
+        </p>
+        <p class="mt-1 text-xs text-muted">Comisiones activas en trayecto</p>
+      </div>
+      <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-blue/10 text-blue">
+        <Route size={22} strokeWidth={2.2} />
+      </div>
+    </div>
+  </div>
+
+  <!-- Viajes Programados -->
+  <div class="card p-5 border-l-4 border-amber-500 transition-all hover:shadow-md hover:-translate-y-0.5">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-xs font-bold text-muted uppercase tracking-wider">Salidas Programadas</p>
+        <p class="mt-2 font-display text-3xl font-bold tracking-tight text-navy">
+          {String(kpis.programados).padStart(2, '0')}
+        </p>
+        <p class="mt-1 text-xs text-muted">Aguardando despacho oficial</p>
+      </div>
+      <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+        <CalendarClock size={22} strokeWidth={2.2} />
+      </div>
+    </div>
+  </div>
+
+  <!-- Km Recorridos en el Mes -->
+  <div class="card p-5 border-l-4 border-orangeGov transition-all hover:shadow-md hover:-translate-y-0.5">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-xs font-bold text-muted uppercase tracking-wider">Km Recorridos (Mes)</p>
+        <p class="mt-2 font-display text-3xl font-bold tracking-tight text-navy">
+          {kpis.totalKmMes.toLocaleString('es-AR')} <span class="text-sm font-normal text-muted">km</span>
+        </p>
+        <p class="mt-1 text-xs text-muted">En comisiones finalizadas</p>
+      </div>
+      <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-50 text-orangeGov">
+        <Gauge size={22} strokeWidth={2.2} />
+      </div>
+    </div>
+  </div>
+
+  <!-- Total Comisiones Realizadas -->
+  <div class="card p-5 border-l-4 border-emerald-500 transition-all hover:shadow-md hover:-translate-y-0.5">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-xs font-bold text-muted uppercase tracking-wider">Viajes del Mes</p>
+        <p class="mt-2 font-display text-3xl font-bold tracking-tight text-emerald-700">
+          {String(kpis.finalizadosMes).padStart(2, '0')}
+        </p>
+        <p class="mt-1 text-xs text-muted">De {kpis.totalViajes} misiones históricas</p>
+      </div>
+      <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+        <CheckCircle2 size={22} strokeWidth={2.2} />
+      </div>
+    </div>
+  </div>
+</section>

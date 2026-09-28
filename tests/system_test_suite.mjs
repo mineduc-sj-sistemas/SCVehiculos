@@ -613,6 +613,27 @@ async function runTestSuite() {
     `${dataAlertas.totalAlerts} alertas detectadas (${dataAlertas.urgentesCount} urgentes)`
   )
 
+  // TC-30: Interfaz dedicada de Viajes y Hojas de Ruta (/viajes) y exportación oficial
+  const resViajes = await fetch(`${BASE_URL}/viajes`, {
+    headers: { Cookie: `sc_session=${TOKENS.admin}` },
+  })
+  const htmlViajes = await resViajes.text()
+
+  const resReporteViajes = await fetch(`${BASE_URL}/api/reportes/viajes`, {
+    headers: { Cookie: `sc_session=${TOKENS.admin}` },
+  })
+  const textReporteViajes = await resReporteViajes.text()
+
+  assert(
+    resViajes.status === 200 &&
+    htmlViajes.includes('Comisiones Oficiales de Servicio') &&
+    resReporteViajes.status === 200 &&
+    textReporteViajes.includes('Código Comisión'),
+    'TC-30',
+    'Módulo de Viajes y Hojas de Ruta: renderizado de interfaz y exportación CSV oficial',
+    `HTTP ${resViajes.status}, CSV con ${textReporteViajes.split('\r\n').length - 1} registros`
+  )
+
   // -------------------------------------------------------------------------
   // LIMPIEZA DE DATOS TEMPORALES (TEARDOWN)
   // -------------------------------------------------------------------------
