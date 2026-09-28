@@ -1,0 +1,10 @@
+node_modules
+.astro
+dist
+.git
+.gitignore
+.env
+.env.local
+*.log
+.pnpm-store
+.vscode
