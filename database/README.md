@@ -25,6 +25,7 @@ Base de datos: **`sc_vehiculos`**
 4. **`database/migrations/`**:
    - `001_licencias_chofer.sql`: Control de licencias y ausencias de choferes.
    - `002_choferes_documentos.sql`: Soporte para documentos escaneados y múltiples categorías.
+   - `003_repair_utf8_mojibake.sql`: Repara textos importados con doble codificación UTF-8 sin alterar acentos válidos.
 
 ---
 

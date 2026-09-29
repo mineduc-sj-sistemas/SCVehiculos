@@ -20,10 +20,10 @@
   --blue: #ea580c;                 /* Naranja oficial San Juan */
   --sky: #fff7ed;                  /* Tinte naranja/ámbar suave */
   --gold: #f59e0b;                 /* Sol de San Juan / Alertas */
-  --ink: #1e293b;                  /* Texto principal */
-  --muted: #64748b;                /* Texto secundario */
-  --line: #e2e8f0;                 /* Bordes sutiles */
-  --paper: #f8fafc;                /* Fondo general */
+  --ink: #242a31;                  /* Texto principal */
+  --muted: #697582;                /* Texto secundario */
+  --line: #e0e3e8;                 /* Bordes sutiles */
+  --paper: #f1f2f5;                /* Fondo general */
   --white: #ffffff;                /* Fondo tarjetas */
 }
 
@@ -32,6 +32,15 @@ html { background: var(--paper); }
 body { margin: 0; background: var(--paper); color: var(--ink); font-family: 'Nunito Sans', sans-serif; }
 button, input, select, textarea { font: inherit; }
 .font-display { font-family: 'Space Grotesk', sans-serif; }
+
+.workspace-canvas {
+  min-height: calc(100vh - 76px);
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(rgba(115, 126, 139, .045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(115, 126, 139, .045) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
 
 @layer utilities {
   .bg-paper { background: var(--paper); }
@@ -56,9 +65,137 @@ button, input, select, textarea { font: inherit; }
 .card { 
   background: var(--white); 
   border: 1px solid var(--line); 
-  border-radius: 14px; 
-  box-shadow: 0 4px 16px rgba(32, 33, 39, .04); 
+  border-radius: 16px;
+  box-shadow: 0 3px 12px rgba(32, 33, 39, .035);
 }
+
+.dashboard-header {
+  position: relative;
+}
+
+.dashboard-header::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: linear-gradient(90deg, #f97316 0 45%, #facc15 45% 66%, #ef4444 66% 100%);
+  content: '';
+}
+
+.dashboard-welcome {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--orange-primary);
+  border-radius: 16px;
+  background: var(--white);
+  box-shadow: 0 3px 14px rgba(32, 33, 39, .035);
+  padding: 20px 24px;
+}
+
+.dashboard-welcome::after {
+  position: absolute;
+  z-index: -1;
+  top: -32px;
+  right: 14px;
+  color: rgba(32, 33, 39, .025);
+  content: 'SJ';
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 148px;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.sidebar {
+  background-color: var(--white);
+  background-image: radial-gradient(rgba(98, 111, 125, .12) .7px, transparent .7px);
+  background-size: 14px 14px;
+  border-color: var(--line);
+  box-shadow: 3px 0 14px rgba(32, 33, 39, .035);
+  color: var(--ink);
+  transition: width .2s ease, transform .2s ease;
+}
+
+.sidebar-brand-link { display: flex; width: 100%; height: 100%; align-items: center; }
+.sidebar-brand-expanded { display: flex; width: 100%; align-items: center; gap: 7px; }
+.sidebar-full-logo { display: block; width: 112px; height: 44px; flex: none; object-fit: contain; object-position: left center; }
+.sidebar-full-logo-dark { display: none; }
+.sidebar-ministry-copy { display: flex; min-width: 0; flex-direction: column; border-left: 1px solid #cbd5e1; padding-left: 6px; color: #202127; font-size: 9px; font-weight: 700; line-height: 1.2; }
+.sidebar-ministry-copy span + span { margin-top: 3px; color: #64748b; font-size: 8px; font-weight: 500; }
+.sidebar-brand-compact { display: none; }
+.sidebar-brand-compact .sidebar-logo { display: block; width: 32px; height: 32px; object-fit: contain; object-position: center; }
+.sidebar-brand-compact .sidebar-logo-dark { display: none; }
+
+@media (min-width: 901px) {
+  .sidebar-collapsed .sidebar { width: 72px; }
+  .sidebar-collapsed .main-shell { margin-left: 72px; }
+  .sidebar-collapsed .sidebar-brand { justify-content: center; padding-inline: 0; }
+  .sidebar-collapsed .sidebar-brand-expanded { display: none; }
+  .sidebar-collapsed .sidebar-brand-compact { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; }
+  .sidebar-collapsed #sidebar .sidebar-group-label,
+  .sidebar-collapsed #sidebar .sidebar-copy,
+  .sidebar-collapsed #sidebar .sidebar-active-dot { display: none; }
+  .sidebar-collapsed #sidebar nav a {
+    justify-content: center;
+    padding-inline: 0;
+  }
+  .sidebar-collapsed #sidebar nav a svg { flex: none; }
+  .sidebar-collapsed #sidebar .sidebar-user-card { justify-content: center; padding: 8px; }
+}
+
+html.dark {
+  --ink: #e9edf0;
+  --muted: #98a2ad;
+  --line: #2b3035;
+  --paper: #101214;
+  --white: #171a1d;
+  --navy: #f1f3f5;
+  --sky: #24282c;
+  --orange-light: #392411;
+}
+
+html.dark .bg-white { background-color: var(--white) !important; }
+html.dark .dashboard-welcome::after { color: rgba(255, 255, 255, .025); }
+html.dark .sidebar {
+  background-color: var(--white);
+  background-image: radial-gradient(rgba(212, 220, 228, .1) .7px, transparent .7px);
+}
+html.dark #sidebar .sidebar-logo-light { display: none; }
+html.dark #sidebar .sidebar-logo-dark { display: block; }
+html.dark #sidebar .sidebar-full-logo-light { display: none; }
+html.dark #sidebar .sidebar-full-logo-dark { display: block; }
+html.dark #sidebar .sidebar-ministry-copy { border-color: #4b5563; color: #f4f6f8; }
+html.dark #sidebar .sidebar-ministry-copy span + span { color: #b7c1cb; }
+html.dark .bg-amber-50 { background-color: #302b17; }
+html.dark .border-amber-200 { border-color: #62531d; }
+html.dark .bg-orange-50 { background-color: #322316; }
+html.dark .bg-slate-100 { background-color: #282d31; }
+html.dark .text-amber-900 { color: #f2d576; }
+html.dark .text-amber-800 { color: #dec76f; }
+html.dark .text-orange-800 { color: #ffb46f; }
+html.dark #sidebar .logo-brand-name,
+html.dark #sidebar .logo-ministry-name { color: #f4f6f8; }
+html.dark #sidebar .logo-ministry-subtitle { color: #b7c1cb; }
+html.dark #sidebar .sidebar-brand-compact { color: #ffad52; }
+html.dark #sidebar nav a:not(.sidebar-active) { color: #c0c9d2; }
+html.dark #sidebar nav a:not(.sidebar-active) svg { color: #aeb9c4; }
+html.dark #sidebar nav a:not(.sidebar-active):hover {
+  background-color: rgba(255, 255, 255, .07);
+  color: #ffffff;
+}
+html.dark #sidebar nav a:not(.sidebar-active):hover svg { color: #ff9b45; }
+html.dark #sidebar nav a.sidebar-active {
+  background-color: rgba(234, 88, 12, .18);
+  color: #ffc184;
+}
+html.dark #sidebar nav a.sidebar-active svg { color: #ff9b45; }
+html.dark #sidebar .sidebar-user-card {
+  background-color: #22272c;
+  border-color: #3a4249;
+}
+html.dark #sidebar .sidebar-user-card .text-navy { color: #f4f6f8; }
+html.dark #sidebar .sidebar-user-card .text-muted { color: #b7c1cb; }
 
 /* Tarjetas de acción estilo Ministerio San Juan (Presencial / Virtual) */
 .btn-gov-orange {
@@ -93,6 +230,7 @@ button, input, select, textarea { font: inherit; }
   .sidebar { transform: translateX(-100%); transition: transform .2s ease; }
   .sidebar.open { transform: translateX(0); }
   .mobile-overlay.open { display: block; }
+  .dashboard-welcome { padding: 18px; }
 }
 
 /* ============================================================= */

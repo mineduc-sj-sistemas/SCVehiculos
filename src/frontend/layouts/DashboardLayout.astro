@@ -33,14 +33,14 @@ const {
       <Sidebar activeNav={activeNav} />
 
       <!-- Contenedor Principal -->
-      <main class="ml-0 min-h-screen lg:ml-[258px]">
+      <main class="main-shell ml-0 min-h-screen transition-[margin] duration-200 lg:ml-[248px]">
         <!-- Cabecera Superior -->
         <Header>
           <slot name="header-title" slot="header-title" />
         </Header>
 
         <!-- Contenido de la página -->
-        <div class="p-5 sm:p-8">
+        <div class="workspace-canvas p-4 sm:p-6 lg:p-7">
           <slot />
 
           <!-- Pie de página -->
@@ -65,9 +65,18 @@ const {
         overlay?.classList.remove('open')
       }
 
+      if (window.matchMedia('(min-width: 901px)').matches && localStorage.getItem('sc-sidebar-collapsed') === 'true') {
+        document.body.classList.add('sidebar-collapsed')
+      }
+
       menuButton?.addEventListener('click', () => {
-        sidebar?.classList.toggle('open')
-        overlay?.classList.toggle('open')
+        if (window.matchMedia('(min-width: 901px)').matches) {
+          const isCollapsed = document.body.classList.toggle('sidebar-collapsed')
+          localStorage.setItem('sc-sidebar-collapsed', String(isCollapsed))
+        } else {
+          sidebar?.classList.toggle('open')
+          overlay?.classList.toggle('open')
+        }
       })
 
       overlay?.addEventListener('click', closeMenu)

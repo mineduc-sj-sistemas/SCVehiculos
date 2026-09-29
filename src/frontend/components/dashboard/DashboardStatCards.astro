@@ -16,7 +16,7 @@ const statCards = [
     icon: Truck,
     accent: 'text-orangeGov',
     bg: 'bg-orangeGov/10',
-    borderLeft: 'border-l-4 border-orangeGov',
+    borderTop: 'border-t-2 border-orangeGov',
   },
   {
     label: 'Disponibles ahora',
@@ -25,7 +25,7 @@ const statCards = [
     icon: ShieldCheck,
     accent: 'text-emerald-600',
     bg: 'bg-emerald-50',
-    borderLeft: 'border-l-4 border-emerald-500',
+    borderTop: 'border-t-2 border-emerald-500',
   },
   {
     label: 'Comisiones activas',
@@ -34,7 +34,7 @@ const statCards = [
     icon: Route,
     accent: 'text-amber-600',
     bg: 'bg-amber-50',
-    borderLeft: 'border-l-4 border-amber-500',
+    borderTop: 'border-t-2 border-orangeGov',
   },
   {
     label: 'Unidades en taller',
@@ -43,22 +43,22 @@ const statCards = [
     icon: Wrench,
     accent: 'text-charcoalGov',
     bg: 'bg-slate-100',
-    borderLeft: 'border-l-4 border-charcoalGov',
+    borderTop: 'border-t-2 border-red-500',
   },
 ]
 ---
 
 <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
   {statCards.map((card) => (
-    <div class={`card p-5 transition-all hover:shadow-md hover:-translate-y-0.5 ${card.borderLeft}`}>
-      <div class="flex items-start justify-between">
-        <div>
-          <p class="text-xs font-bold text-muted uppercase tracking-wider">{card.label}</p>
-          <p class="mt-2 font-display text-3xl font-bold tracking-tight text-navy">{card.value}</p>
-          <p class="mt-1 text-xs text-muted">{card.detail}</p>
-        </div>
-        <div class={`flex h-11 w-11 items-center justify-center rounded-xl ${card.bg} ${card.accent}`}>
-          <card.icon size={22} />
+    <div class={`card flex min-h-[92px] items-center gap-3.5 px-4 py-3 transition-all hover:shadow-md hover:-translate-y-0.5 ${card.borderTop}`}>
+      <div class={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${card.bg} ${card.accent}`}>
+        <card.icon size={20} />
+      </div>
+      <div class="min-w-0">
+        <p class="text-[10px] font-bold uppercase tracking-[.12em] text-muted">{card.label}</p>
+        <div class="mt-1 flex items-baseline gap-2">
+          <p class="font-display text-[25px] font-bold leading-none tracking-tight text-navy">{card.value}</p>
+          <p class="truncate text-[10px] font-medium text-muted">{card.detail}</p>
         </div>
       </div>
     </div>

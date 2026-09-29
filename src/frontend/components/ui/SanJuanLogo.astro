@@ -5,6 +5,8 @@ interface Props {
   size?: 'sm' | 'md' | 'lg'
   showMinistry?: boolean
   ministryText?: string
+  emblemLightSrc?: string
+  emblemDarkSrc?: string
 }
 
 const {
@@ -12,6 +14,8 @@ const {
   size = 'md',
   showMinistry = true,
   ministryText = 'Ministerio de Educación',
+  emblemLightSrc,
+  emblemDarkSrc,
 } = Astro.props
 
 const sizeClasses = {
@@ -25,38 +29,38 @@ const subTextColor = variant === 'white' ? 'text-white/70' : 'text-[#64748b]'
 const dividerColor = variant === 'white' ? 'bg-white/20' : 'bg-[#cbd5e1]'
 ---
 
-<div class="flex items-center gap-3 select-none">
+<div class="san-juan-logo flex items-center gap-3 select-none">
   <!-- Emblema Solar Oficial de San Juan -->
   <div class={`relative shrink-0 flex items-center justify-center ${sizeClasses}`}>
-    <svg class="h-full w-auto aspect-square drop-shadow-xs" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- Círculo central radiante -->
-      <circle cx="24" cy="24" r="6.5" fill="#ea580c" />
-      <circle cx="24" cy="24" r="3.5" fill="#f59e0b" />
-      
-      <!-- Pétalos / Nódulos solares geométricos de San Juan -->
-      <circle cx="24" cy="9" r="4" fill="#ea580c" opacity="0.95" />
-      <circle cx="24" cy="39" r="4" fill="#ea580c" opacity="0.95" />
-      <circle cx="9" cy="24" r="4" fill="#ea580c" opacity="0.95" />
-      <circle cx="39" cy="24" r="4" fill="#ea580c" opacity="0.95" />
-      
-      <!-- Nódulos diagonales cálidos -->
-      <circle cx="13.5" cy="13.5" r="3.5" fill="#f59e0b" />
-      <circle cx="34.5" cy="13.5" r="3.5" fill="#f59e0b" />
-      <circle cx="13.5" cy="34.5" r="3.5" fill="#f59e0b" />
-      <circle cx="34.5" cy="34.5" r="3.5" fill="#f59e0b" />
-
-      <!-- Microconectores de radiación -->
-      <path d="M24 13V17.5M24 30.5V35M13 24H17.5M30.5 24H35" stroke="#ea580c" stroke-width="1.8" stroke-linecap="round" />
-    </svg>
+    {emblemLightSrc && emblemDarkSrc ? (
+      <>
+        <img class="logo-emblem logo-emblem-light h-full w-auto aspect-square object-contain" src={emblemLightSrc} alt="" />
+        <img class="logo-emblem logo-emblem-dark h-full w-auto aspect-square object-contain" src={emblemDarkSrc} alt="" />
+      </>
+    ) : (
+      <svg class="h-full w-auto aspect-square drop-shadow-xs" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="24" cy="24" r="6.5" fill="#ea580c" />
+        <circle cx="24" cy="24" r="3.5" fill="#f59e0b" />
+        <circle cx="24" cy="9" r="4" fill="#ea580c" opacity="0.95" />
+        <circle cx="24" cy="39" r="4" fill="#ea580c" opacity="0.95" />
+        <circle cx="9" cy="24" r="4" fill="#ea580c" opacity="0.95" />
+        <circle cx="39" cy="24" r="4" fill="#ea580c" opacity="0.95" />
+        <circle cx="13.5" cy="13.5" r="3.5" fill="#f59e0b" />
+        <circle cx="34.5" cy="13.5" r="3.5" fill="#f59e0b" />
+        <circle cx="13.5" cy="34.5" r="3.5" fill="#f59e0b" />
+        <circle cx="34.5" cy="34.5" r="3.5" fill="#f59e0b" />
+        <path d="M24 13V17.5M24 30.5V35M13 24H17.5M30.5 24H35" stroke="#ea580c" stroke-width="1.8" stroke-linecap="round" />
+      </svg>
+    )}
   </div>
 
   <!-- Textos de Marca -->
   <div class="flex items-center gap-2.5">
     <div class="flex flex-col leading-none">
-      <span class={`font-display text-[15px] font-black tracking-tight ${textColor}`}>
+      <span class={`logo-brand-name font-display text-[15px] font-black tracking-tight ${textColor}`}>
         San Juan
       </span>
-      <span class={`text-[10px] font-bold uppercase tracking-[.18em] ${variant === 'white' ? 'text-orange-300' : 'text-[#ea580c]'}`}>
+      <span class={`logo-brand-secondary text-[10px] font-bold uppercase tracking-[.18em] ${variant === 'white' ? 'text-orange-300' : 'text-[#ea580c]'}`}>
         Gobierno
       </span>
     </div>
@@ -65,10 +69,10 @@ const dividerColor = variant === 'white' ? 'bg-white/20' : 'bg-[#cbd5e1]'
       <>
         <div class={`h-6 w-[1.5px] ${dividerColor}`} aria-hidden="true" />
         <div class="flex flex-col justify-center leading-tight">
-          <span class={`text-[11px] font-bold ${textColor}`}>
+          <span class={`logo-ministry-name text-[11px] font-bold ${textColor}`}>
             {ministryText}
           </span>
-          <span class={`text-[9px] font-medium tracking-wide ${subTextColor}`}>
+          <span class={`logo-ministry-subtitle text-[9px] font-medium tracking-wide ${subTextColor}`}>
             Gestión de Movilidades
           </span>
         </div>

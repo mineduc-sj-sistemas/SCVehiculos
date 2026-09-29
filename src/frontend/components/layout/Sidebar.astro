@@ -1,6 +1,5 @@
 ---
-import { Bus, CalendarDays, Fuel, LayoutDashboard, LogOut, Route, Settings, ShieldCheck, Truck, UsersRound, Wrench } from 'lucide-astro'
-import SanJuanLogo from '../ui/SanJuanLogo.astro'
+import { CalendarDays, Fuel, LayoutDashboard, LogOut, Route, Settings, ShieldCheck, Truck, UsersRound, Wrench } from 'lucide-astro'
 import { verifySessionToken, SESSION_COOKIE_NAME } from '../../../backend/index'
 
 interface Props {
@@ -36,17 +35,36 @@ if (currentUser.rolId === 1) {
 }
 ---
 
-<aside id="sidebar" class="sidebar fixed inset-y-0 left-0 z-40 flex w-[258px] flex-col bg-[#202127] text-white shadow-2xl border-r border-white/5">
+<aside id="sidebar" class="sidebar fixed inset-y-0 left-0 z-40 flex w-[248px] flex-col border-r">
   <!-- Identificación institucional con Emblema San Juan -->
-  <div class="flex h-[94px] items-center border-b border-white/10 px-5">
-    <a href="/" class="hover:opacity-95 transition" title="Ir al panel de inicio">
-      <SanJuanLogo variant="white" size="md" showMinistry={true} />
+  <div class="sidebar-brand flex h-[76px] items-center border-b border-line px-5">
+    <a href="/" class="sidebar-brand-link hover:opacity-95 transition" title="Ir al panel de inicio">
+      <div class="sidebar-brand-expanded" aria-label="San Juan Gobierno, Ministerio de Educación, Gestión de Movilidades">
+        <img class="sidebar-full-logo sidebar-full-logo-light" src="/branding/logo%20san%20juan.png" alt="San Juan Gobierno" />
+        <img class="sidebar-full-logo sidebar-full-logo-dark" src="/branding/logo%20san%20juan%20blanco.png" alt="San Juan Gobierno" />
+        <span class="sidebar-ministry-copy">
+          <span>Ministerio de Educación</span>
+          <span>Gestión de Movilidades</span>
+        </span>
+      </div>
+      <span class="sidebar-brand-compact" role="img" aria-label="Gobierno de San Juan">
+        <img
+          class="sidebar-logo sidebar-logo-light"
+          src="/branding/logo%20san%20juan%202.png"
+          alt=""
+        />
+        <img
+          class="sidebar-logo sidebar-logo-dark"
+          src="/branding/logo%20san%20juan%203.png"
+          alt=""
+        />
+      </span>
     </a>
   </div>
   
   <!-- Enlaces de navegación -->
-  <div class="px-3 pt-6 flex-1 overflow-y-auto">
-    <p class="mb-3 px-3 text-[10px] font-bold uppercase tracking-[.2em] text-white/40">Gestión operativa</p>
+  <div class="flex-1 overflow-y-auto px-3 pt-5">
+    <p class="sidebar-group-label mb-3 px-3 text-[10px] font-bold uppercase tracking-[.18em] text-muted">Gestión operativa</p>
     <nav class="space-y-1">
       {navItems.map((item) => {
         const isActive = activeNav === item.id
@@ -54,15 +72,15 @@ if (currentUser.rolId === 1) {
           <a
             href={item.href}
             class:list={[
-              'group flex items-center gap-3 rounded-xl px-3.5 py-3 text-[13px] font-semibold transition',
+              'group flex items-center gap-3 rounded-lg border-l-[3px] px-3 py-2.5 text-[13px] font-semibold transition',
               isActive
-                ? 'bg-white/10 text-white font-bold shadow-xs border-l-[3px] border-[#ea580c]'
-                : 'text-white/65 hover:bg-white/6 hover:text-white'
+                ? 'sidebar-active border-[#ea580c] bg-orange-100/70 text-[#bd4b0b] font-bold'
+                : 'border-transparent text-[#5e6873] hover:bg-black/[.035] hover:text-[#202127]'
             ]}
+            title={item.label}
           >
-            <item.icon size={18} strokeWidth={1.9} class={isActive ? 'text-[#ea580c]' : 'group-hover:text-[#ea580c] transition-colors'} />
-            <span>{item.label}</span>
-            {isActive && <span class="ml-auto h-2 w-2 rounded-full bg-[#ea580c]" />}
+            <item.icon size={18} strokeWidth={1.9} class={isActive ? 'text-[#ea580c]' : 'text-[#737d87] group-hover:text-[#ea580c] transition-colors'} />
+            <span class="sidebar-copy">{item.label}</span>
           </a>
         )
       })}
@@ -70,28 +88,27 @@ if (currentUser.rolId === 1) {
   </div>
   
   <!-- Configuración y usuario -->
-  <div class="mt-auto px-4 pb-5 pt-3">
-    <div class="mb-3 h-px bg-white/10"></div>
+  <div class="mt-auto border-t border-line px-3 pb-4 pt-3">
     
-    <div class="flex items-center justify-between px-3 py-1">
-      <span class="text-[10px] font-bold uppercase tracking-[.15em] text-white/40">Cuenta Activa</span>
+    <div class="flex items-center justify-between px-2 py-1">
+      <span class="sidebar-copy text-[10px] font-bold uppercase tracking-[.15em] text-muted">Cuenta activa</span>
       <a
         href="/api/auth/logout"
-        class="flex items-center gap-1 text-[11px] font-semibold text-rose-300/80 hover:text-rose-200 transition"
+        class="flex items-center gap-1 text-[11px] font-semibold text-muted hover:text-orangeGov transition"
         title="Cerrar sesión segura"
       >
         <LogOut size={13} />
-        <span>Salir</span>
+        <span class="sidebar-copy">Salir</span>
       </a>
     </div>
 
-    <div class="mt-2 flex items-center gap-3 rounded-xl bg-white/6 p-3 border border-white/5">
-      <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#ea580c] font-display text-sm font-bold text-white shadow-xs shrink-0">
+    <div class="sidebar-user-card mt-2 flex items-center gap-3 rounded-xl border border-line bg-white/80 p-2.5">
+      <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-orangeGov font-display text-sm font-bold text-white">
         {initials}
       </div>
-      <div class="min-w-0 flex-1">
-        <p class="truncate text-xs font-bold text-white">{currentUser.nombreCompleto}</p>
-        <p class="truncate text-[11px] text-white/50">{currentUser.rolNombre}</p>
+      <div class="sidebar-copy min-w-0 flex-1">
+        <p class="truncate text-xs font-bold text-navy">{currentUser.nombreCompleto}</p>
+        <p class="truncate text-[11px] text-muted">{currentUser.rolNombre}</p>
       </div>
     </div>
   </div>

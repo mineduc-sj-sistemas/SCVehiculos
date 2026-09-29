@@ -22,7 +22,8 @@ const [stats, fleet, travels, driverStats, maintenance, fuelStats, alertsSummary
   <h1 slot="header-title" class="font-display text-xl font-bold text-navy sm:text-2xl">Panel principal</h1>
 
   <!-- Encabezado de bienvenida -->
-  <div class="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+  <section class="dashboard-welcome mb-5">
+  <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
     <div>
       <div class="flex items-center gap-2 mb-1">
         <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-orange-100 text-orange-800">
@@ -50,9 +51,10 @@ const [stats, fleet, travels, driverStats, maintenance, fuelStats, alertsSummary
       </a>
     </div>
   </div>
+  </section>
 
   {alertsSummary.totalAlerts > 0 && (
-    <div class="mb-6 rounded-2xl bg-amber-50 border border-amber-200 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+    <div class="mb-5 rounded-xl bg-amber-50 border border-amber-200 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
       <div class="flex items-center gap-3">
         <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white font-bold shadow-sm">
           <AlertTriangle size={20} />
@@ -81,7 +83,7 @@ const [stats, fleet, travels, driverStats, maintenance, fuelStats, alertsSummary
     <!-- Card 1: Naranja San Juan - Nueva Comisión -->
     <a
       href="/cronograma"
-      class="group relative flex items-center gap-3.5 rounded-2xl bg-[#ea580c] p-4 text-white shadow-md shadow-orange-600/20 transition-all hover:bg-[#c2410c] hover:shadow-lg hover:-translate-y-0.5"
+      class="group relative flex items-center gap-3.5 rounded-2xl bg-[#ff8400] p-4 text-white shadow-md shadow-orange-600/20 transition-all hover:bg-[#e87500] hover:shadow-lg hover:-translate-y-0.5"
     >
       <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/20 text-white backdrop-blur-xs transition group-hover:scale-105">
         <Route size={24} strokeWidth={2.2} />
@@ -95,7 +97,7 @@ const [stats, fleet, travels, driverStats, maintenance, fuelStats, alertsSummary
     <!-- Card 2: Carbón Ministerio - Parque Automotor -->
     <a
       href="/flota"
-      class="group relative flex items-center gap-3.5 rounded-2xl bg-[#2d2e37] p-4 text-white shadow-md shadow-slate-900/20 transition-all hover:bg-[#202127] hover:shadow-lg hover:-translate-y-0.5"
+      class="group relative flex items-center gap-3.5 rounded-2xl bg-[#18394e] p-4 text-white shadow-md shadow-slate-900/15 transition-all hover:bg-[#112f41] hover:shadow-lg hover:-translate-y-0.5"
     >
       <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/15 text-white backdrop-blur-xs transition group-hover:scale-105">
         <Car size={24} strokeWidth={2.2} />
@@ -109,7 +111,7 @@ const [stats, fleet, travels, driverStats, maintenance, fuelStats, alertsSummary
     <!-- Card 3: Naranja San Juan - Conductores -->
     <a
       href="/choferes"
-      class="group relative flex items-center gap-3.5 rounded-2xl bg-[#ea580c] p-4 text-white shadow-md shadow-orange-600/20 transition-all hover:bg-[#c2410c] hover:shadow-lg hover:-translate-y-0.5"
+      class="group relative flex items-center gap-3.5 rounded-2xl bg-[#e6382e] p-4 text-white shadow-md shadow-red-600/15 transition-all hover:bg-[#cf2e26] hover:shadow-lg hover:-translate-y-0.5"
     >
       <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/20 text-white backdrop-blur-xs transition group-hover:scale-105">
         <UsersRound size={24} strokeWidth={2.2} />
@@ -123,7 +125,7 @@ const [stats, fleet, travels, driverStats, maintenance, fuelStats, alertsSummary
     <!-- Card 4: Carbón Ministerio - Cronograma -->
     <a
       href="/cronograma"
-      class="group relative flex items-center gap-3.5 rounded-2xl bg-[#2d2e37] p-4 text-white shadow-md shadow-slate-900/20 transition-all hover:bg-[#202127] hover:shadow-lg hover:-translate-y-0.5"
+      class="group relative flex items-center gap-3.5 rounded-2xl bg-[#20262c] p-4 text-white shadow-md shadow-slate-900/15 transition-all hover:bg-[#171c21] hover:shadow-lg hover:-translate-y-0.5"
     >
       <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/15 text-white backdrop-blur-xs transition group-hover:scale-105">
         <CalendarDays size={24} strokeWidth={2.2} />
