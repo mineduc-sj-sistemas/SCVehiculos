@@ -1,5 +1,5 @@
 ---
-import { Eye, FileText, MapPin, Printer, Route, Search, User } from 'lucide-astro'
+import { Eye, FileText, MapPin, Pencil, Printer, Route, Search, User } from 'lucide-astro'
 import PlateBadge from '../ui/PlateBadge.astro'
 import StatusBadge from '../ui/StatusBadge.astro'
 import type { ViajeItem } from '../../../backend/services/viajesService'
@@ -157,6 +157,19 @@ const formatFecha = (isoStr: string | null) => {
                       <Printer size={13} />
                       <span class="hidden md:inline">Hoja de Ruta</span>
                     </a>
+
+                    <!-- Botón Editar Comisión -->
+                    {(v.estado === 'programada' || v.estado === 'en_curso') && (
+                      <button
+                        type="button"
+                        class="btn-editar-viaje inline-flex items-center gap-1 rounded-lg border border-line bg-white hover:bg-blue/10 hover:text-blue hover:border-blue/30 px-2.5 py-1.5 text-[11px] font-bold text-navy transition shadow-xs cursor-pointer"
+                        data-id={v.id}
+                        title="Editar datos de la comisión"
+                      >
+                        <Pencil size={13} />
+                        <span class="hidden md:inline">Editar</span>
+                      </button>
+                    )}
 
                     <!-- Botón Ver Ficha / Detalle -->
                     <button

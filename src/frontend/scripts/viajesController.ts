@@ -49,8 +49,35 @@ function initFiltrosViajes() {
 }
 
 /**
- * 2. Modal de Despacho (Nueva Comisión)
+ * 2. Modal de Despacho (Nueva Comisión / Editar Comisión)
  */
+function resetDispatchModalToCreate() {
+  const hiddenId = document.getElementById('dispatch-comision-id') as HTMLInputElement | null
+  const title = document.getElementById('modal-dispatch-title')
+  const subtitle = document.getElementById('modal-dispatch-subtitle')
+  const btnSubmitText = document.getElementById('btn-submit-dispatch-text')
+  const iconSend = document.getElementById('dispatch-header-icon-send')
+  const iconEdit = document.getElementById('dispatch-header-icon-edit')
+  const btnIconSend = document.getElementById('btn-submit-icon-send')
+  const btnIconSave = document.getElementById('btn-submit-icon-save')
+  const selectVehiculo = document.getElementById('dispatch-vehiculo') as HTMLSelectElement | null
+  const selectChofer = document.getElementById('dispatch-chofer') as HTMLSelectElement | null
+  const inputSalida = document.getElementById('dispatch-salida') as HTMLInputElement | null
+
+  if (hiddenId) hiddenId.value = ''
+  if (title) title.innerText = 'Despachar Nueva Comisión Oficial'
+  if (subtitle) subtitle.innerText = 'Asignación de móvil, conductor y hoja de ruta ministerial'
+  if (btnSubmitText) btnSubmitText.innerText = 'Generar Despacho'
+  iconSend?.classList.remove('hidden')
+  iconEdit?.classList.add('hidden')
+  btnIconSend?.classList.remove('hidden')
+  btnIconSave?.classList.add('hidden')
+
+  if (selectVehiculo) selectVehiculo.disabled = false
+  if (selectChofer) selectChofer.disabled = false
+  if (inputSalida) inputSalida.disabled = false
+}
+
 function initDispatchModal() {
   const modal = document.getElementById('modal-dispatch')
   const form = document.getElementById('form-dispatch') as HTMLFormElement | null
@@ -60,6 +87,8 @@ function initDispatchModal() {
   const errorMsg = document.getElementById('dispatch-error-msg')
   const errorText = document.getElementById('dispatch-error-text')
 
+  const selectVehiculo = document.getElementById('dispatch-vehiculo') as HTMLSelectElement | null
+  const selectChofer = document.getElementById('dispatch-chofer') as HTMLSelectElement | null
   const selectDepto = document.getElementById('dispatch-depto') as HTMLSelectElement | null
   const inputDestino = document.getElementById('dispatch-destino') as HTMLInputElement | null
   const inputSalida = document.getElementById('dispatch-salida') as HTMLInputElement | null
@@ -75,10 +104,12 @@ function initDispatchModal() {
     if (!modal) return
     modal.classList.add('opacity-0', 'pointer-events-none')
     form?.reset()
+    resetDispatchModalToCreate()
   }
 
   btnOpen?.addEventListener('click', () => {
     form?.reset()
+    resetDispatchModalToCreate()
     const now = new Date()
     const pad = (n: number) => String(n).padStart(2, '0')
     const hoyStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
@@ -102,45 +133,51 @@ function initDispatchModal() {
     }
   })
 
-  // Enviar formulario
+  // Enviar formulario (Crear o Editar)
   form?.addEventListener('submit', async (e) => {
     e.preventDefault()
     if (!form) return
 
+    const hiddenId = document.getElementById('dispatch-comision-id') as HTMLInputElement | null
+    const comisionId = hiddenId?.value
+
     const btnSubmit = document.getElementById('btn-submit-dispatch') as HTMLButtonElement | null
+    const btnSubmitText = document.getElementById('btn-submit-dispatch-text')
     if (btnSubmit) {
       btnSubmit.disabled = true
-      btnSubmit.innerText = 'Despachando...'
+      if (btnSubmitText) btnSubmitText.innerText = comisionId ? 'Guardando...' : 'Despachando...'
     }
 
     if (errorMsg) errorMsg.classList.add('hidden')
 
     const formData = new FormData(form)
     const payload = {
-      vehiculoId: formData.get('vehiculoId'),
-      choferId: formData.get('choferId'),
+      vehiculoId: selectVehiculo?.value || formData.get('vehiculoId'),
+      choferId: selectChofer?.value || formData.get('choferId'),
       dependenciaId: formData.get('dependenciaId'),
       origen: formData.get('origen') || 'Ministerio de Educación - Centro Cívico',
       destino: formData.get('destino'),
       motivo: formData.get('motivo'),
       solicitanteNombre: formData.get('solicitanteNombre') || null,
       cantidadPasajeros: formData.get('cantidadPasajeros') ? Number(formData.get('cantidadPasajeros')) : 1,
-      fechaSalida: formData.get('fechaSalida'),
-      fechaRegreso: formData.get('fechaRegreso'),
-      marcarSalidaInmediata: formData.get('marcarSalidaInmediata') === '1',
-      odometroSalida: formData.get('odometroSalida') ? Number(formData.get('odometroSalida')) : undefined,
+      fechaSalidaProgramada: inputSalida?.value || formData.get('fechaSalidaProgramada') || formData.get('fechaSalida'),
+      fechaRegresoEstimada: inputRegreso?.value || formData.get('fechaRegresoEstimada') || formData.get('fechaRegreso'),
+      observaciones: formData.get('observaciones'),
     }
 
     try {
-      const res = await fetch('/api/cronograma', {
-        method: 'POST',
+      const url = comisionId ? `/api/cronograma/${comisionId}` : '/api/cronograma'
+      const method = comisionId ? 'PUT' : 'POST'
+
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
 
       const data = await res.json()
       if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Error al despachar la comisión')
+        throw new Error(data.error || (comisionId ? 'Error al actualizar la comisión' : 'Error al despachar la comisión'))
       }
 
       closeModal()
@@ -153,7 +190,7 @@ function initDispatchModal() {
     } finally {
       if (btnSubmit) {
         btnSubmit.disabled = false
-        btnSubmit.innerText = 'Confirmar Despacho'
+        if (btnSubmitText) btnSubmitText.innerText = comisionId ? 'Guardar Cambios' : 'Generar Despacho'
       }
     }
   })
@@ -193,11 +230,28 @@ function initDetailModal() {
     })
   })
 
+  // Click en botón "Editar" en la tabla
+  document.querySelectorAll<HTMLElement>('.btn-editar-viaje').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation()
+      const id = btn.dataset.id
+      if (id) openEditModalForId(parseInt(id, 10))
+    })
+  })
+
   document.querySelectorAll<HTMLElement>('.item-viaje-row').forEach((row) => {
     row.addEventListener('click', () => {
       const id = row.dataset.id
       if (id) openDetailModalForId(parseInt(id, 10))
     })
+  })
+
+  // Botón Editar Comisión desde el modal de detalle
+  const btnEditarComision = document.getElementById('btn-editar-comision')
+  btnEditarComision?.addEventListener('click', () => {
+    if (currentComisionId) {
+      openEditModalForId(currentComisionId)
+    }
   })
 
   // Confirmar salida
@@ -390,21 +444,136 @@ async function openDetailModalForId(id: number) {
       elKmSection?.classList.add('hidden')
     }
 
+    const btnEditarComision = document.getElementById('btn-editar-comision')
+
     // Configurar formularios operativos según estado
     if (c.estado === 'programada') {
       secAcciones?.classList.remove('hidden')
       formSalida?.classList.remove('hidden')
       formRegreso?.classList.add('hidden')
+      btnEditarComision?.classList.remove('hidden')
     } else if (c.estado === 'en_curso') {
       secAcciones?.classList.remove('hidden')
       formSalida?.classList.add('hidden')
       formRegreso?.classList.remove('hidden')
+      btnEditarComision?.classList.remove('hidden')
     } else {
       secAcciones?.classList.add('hidden')
+      btnEditarComision?.classList.add('hidden')
     }
 
     modal.classList.remove('opacity-0', 'pointer-events-none')
   } catch (err: any) {
     alert(err.message || 'Error al cargar los detalles de la comisión')
+  }
+}
+
+/**
+ * Abre el modal de despacho en modo edición con los datos precargados
+ */
+async function openEditModalForId(id: number) {
+  const modalDetail = document.getElementById('modal-detail')
+  if (modalDetail) {
+    modalDetail.classList.add('opacity-0', 'pointer-events-none')
+  }
+
+  try {
+    const res = await fetch(`/api/cronograma/${id}`)
+    if (!res.ok) throw new Error('Error al cargar datos para edición')
+    const c = await res.json()
+
+    const modal = document.getElementById('modal-dispatch')
+    const form = document.getElementById('form-dispatch') as HTMLFormElement | null
+    const hiddenId = document.getElementById('dispatch-comision-id') as HTMLInputElement | null
+    const title = document.getElementById('modal-dispatch-title')
+    const subtitle = document.getElementById('modal-dispatch-subtitle')
+    const btnSubmitText = document.getElementById('btn-submit-dispatch-text')
+    const iconSend = document.getElementById('dispatch-header-icon-send')
+    const iconEdit = document.getElementById('dispatch-header-icon-edit')
+    const btnIconSend = document.getElementById('btn-submit-icon-send')
+    const btnIconSave = document.getElementById('btn-submit-icon-save')
+    const errorMsg = document.getElementById('dispatch-error-msg')
+
+    const selectVehiculo = document.getElementById('dispatch-vehiculo') as HTMLSelectElement | null
+    const selectChofer = document.getElementById('dispatch-chofer') as HTMLSelectElement | null
+    const selectDependencia = document.getElementById('dispatch-dependencia') as HTMLSelectElement | null
+    const inputSolicitante = document.getElementById('dispatch-solicitante') as HTMLInputElement | null
+    const inputOrigen = document.getElementById('dispatch-origen') as HTMLInputElement | null
+    const selectDepto = document.getElementById('dispatch-depto') as HTMLSelectElement | null
+    const inputDestino = document.getElementById('dispatch-destino') as HTMLInputElement | null
+    const inputSalida = document.getElementById('dispatch-salida') as HTMLInputElement | null
+    const inputRegreso = document.getElementById('dispatch-regreso') as HTMLInputElement | null
+    const inputPasajeros = document.getElementById('dispatch-pasajeros') as HTMLInputElement | null
+    const inputMotivo = document.getElementById('dispatch-motivo') as HTMLInputElement | null
+    const inputObservaciones = document.getElementById('dispatch-observaciones') as HTMLTextAreaElement | null
+
+    if (errorMsg) errorMsg.classList.add('hidden')
+    form?.reset()
+
+    if (hiddenId) hiddenId.value = String(id)
+    if (title) title.innerText = `Editar Comisión Oficial (${c.codigoComision})`
+    if (subtitle) subtitle.innerText = 'Modificación de itinerario, chofer, móvil y horarios'
+    if (btnSubmitText) btnSubmitText.innerText = 'Guardar Cambios'
+
+    iconSend?.classList.add('hidden')
+    iconEdit?.classList.remove('hidden')
+    btnIconSend?.classList.add('hidden')
+    btnIconSave?.classList.remove('hidden')
+
+    if (selectVehiculo) {
+      const currentOpt = selectVehiculo.querySelector(`option[value="${c.vehiculoId}"]`) as HTMLOptionElement | null
+      if (currentOpt) currentOpt.disabled = false
+      selectVehiculo.value = String(c.vehiculoId)
+    }
+
+    if (selectChofer) {
+      const currentOpt = selectChofer.querySelector(`option[value="${c.choferId}"]`) as HTMLOptionElement | null
+      if (currentOpt) currentOpt.disabled = false
+      selectChofer.value = String(c.choferId)
+    }
+
+    if (selectDependencia) selectDependencia.value = String(c.dependenciaId)
+    if (inputSolicitante) inputSolicitante.value = c.solicitanteNombre || ''
+    if (inputOrigen) inputOrigen.value = c.origen || 'Ministerio de Educación - Centro Cívico'
+    if (inputDestino) inputDestino.value = c.destino || ''
+
+    if (selectDepto && c.destino) {
+      const match = Array.from(selectDepto.options).find((opt) => opt.value && c.destino.startsWith(opt.value))
+      if (match) {
+        selectDepto.value = match.value
+      } else {
+        selectDepto.value = ''
+      }
+    }
+
+    const formatToLocalInput = (dateStr: string | null) => {
+      if (!dateStr) return ''
+      const d = new Date(dateStr)
+      if (isNaN(d.getTime())) return ''
+      const pad = (n: number) => String(n).padStart(2, '0')
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+    }
+
+    if (inputSalida) inputSalida.value = formatToLocalInput(c.fechaSalidaProgramada)
+    if (inputRegreso) inputRegreso.value = formatToLocalInput(c.fechaRegresoEstimada)
+    if (inputPasajeros) inputPasajeros.value = String(c.cantidadPasajeros || 1)
+    if (inputMotivo) inputMotivo.value = c.motivo || ''
+    if (inputObservaciones) inputObservaciones.value = c.observaciones || ''
+
+    if (c.estado === 'en_curso') {
+      if (selectVehiculo) selectVehiculo.disabled = true
+      if (selectChofer) selectChofer.disabled = true
+      if (inputSalida) inputSalida.disabled = true
+    } else {
+      if (selectVehiculo) selectVehiculo.disabled = false
+      if (selectChofer) selectChofer.disabled = false
+      if (inputSalida) inputSalida.disabled = false
+    }
+
+    if (modal) {
+      modal.classList.remove('opacity-0', 'pointer-events-none')
+    }
+  } catch (err: any) {
+    alert(err.message || 'Error al abrir edición de comisión')
   }
 }

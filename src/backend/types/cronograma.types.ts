@@ -93,6 +93,21 @@ export interface ActualizarEstadoComisionDTO {
   usuarioId?: number
 }
 
+export interface EditarComisionDTO {
+  vehiculoId?: number
+  choferId?: number
+  dependenciaId?: number
+  solicitanteNombre?: string | null
+  origen?: string
+  destino?: string
+  motivo?: string
+  cantidadPasajeros?: number
+  fechaSalidaProgramada?: string
+  fechaRegresoEstimada?: string
+  observaciones?: string | null
+  usuarioId?: number
+}
+
 export interface DatosAuxiliaresDespacho {
   vehiculos: Array<{
     id: number

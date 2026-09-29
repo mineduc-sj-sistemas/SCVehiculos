@@ -6,6 +6,7 @@ import {
   Clock,
   FileText,
   MapPin,
+  Pencil,
   Printer,
   Radio,
   Send,
@@ -211,6 +212,16 @@ import {
       </button>
 
       <div class="flex items-center gap-2">
+        <button
+          type="button"
+          id="btn-editar-comision"
+          class="flex items-center gap-1.5 rounded-xl border border-blue/30 bg-blue/10 px-3.5 py-2 text-xs font-bold text-blue hover:bg-blue hover:text-white transition cursor-pointer shadow-xs"
+          title="Editar datos de la comisión"
+        >
+          <Pencil size={14} />
+          <span>Editar Comisión</span>
+        </button>
+
         <button
           type="button"
           id="btn-imprimir-hoja-ruta"

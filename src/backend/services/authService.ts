@@ -75,6 +75,7 @@ export function verifySessionToken(token: string | undefined): UserSession | nul
 export interface AuthCheckResult {
   authorized: boolean
   user?: UserSession
+  session?: UserSession
   response?: Response
 }
 
@@ -99,6 +100,7 @@ export function requireAuth(cookies: any, allowedRoleIds?: number[]): AuthCheckR
     return {
       authorized: false,
       user,
+      session: user,
       response: new Response(
         JSON.stringify({ success: false, message: 'Acceso no autorizado: tu rol no tiene permisos para realizar esta operación.' }),
         { status: 403, headers: { 'Content-Type': 'application/json; charset=utf-8' } }
@@ -106,7 +108,7 @@ export function requireAuth(cookies: any, allowedRoleIds?: number[]): AuthCheckR
     }
   }
 
-  return { authorized: true, user }
+  return { authorized: true, user, session: user }
 }
 
 /**
