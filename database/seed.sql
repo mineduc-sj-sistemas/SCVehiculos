@@ -26,9 +26,8 @@ SET FOREIGN_KEY_CHECKS = 1;
 INSERT INTO `roles` (`id`, `nombre`, `descripcion`) VALUES
 (1, 'Administrador', 'Acceso total al sistema y gestión de flota'),
 (2, 'Operador / Despachante', 'Gestión de comisiones, cargas y hojas de ruta'),
-(3, 'Mecánico / Taller', 'Registro y seguimiento de servicios de mantenimiento'),
 (4, 'Chofer', 'Consulta de hojas de ruta asignadas'),
-(5, 'Auditor', 'Lectura de estadísticas e informes de uso');
+(5, 'Auditor', 'Lectura de estadísticas, auditoría e informes de gestión');
 
 -- 2. Dependencias del Ministerio de Educación
 INSERT INTO `dependencias` (`id`, `nombre`, `sigla`, `responsable`, `telefono`, `email`) VALUES
@@ -38,10 +37,11 @@ INSERT INTO `dependencias` (`id`, `nombre`, `sigla`, `responsable`, `telefono`, 
 (4, 'Dirección de Educación Primaria', 'DEP', 'Prof. Silvia Fernández', '264-4305030', 'educacion.primaria@sanjuan.edu.ar'),
 (5, 'Dirección de Educación Secundaria', 'DES', 'Prof. Alejandro Morales', '264-4305035', 'educacion.secundaria@sanjuan.edu.ar');
 
--- 3. Usuarios iniciales (Password demo)
+-- 3. Usuarios iniciales (Password demo: admin123)
 INSERT INTO `usuarios` (`id`, `rol_id`, `dependencia_id`, `nombre`, `apellido`, `email`, `password_hash`, `dni`, `telefono`, `activo`) VALUES
 (1, 1, NULL, 'María', 'Gutiérrez', 'maria.gutierrez@sanjuan.edu.ar', '$2b$10$476RAYizCI0NW.M6lBaX6OxR9vtFjtA3de9wSx/WkeTBTDZcYGHda', '27456789', '264-5012345', 1),
-(2, 2, NULL, 'Gonzalo', 'Pérez', 'gonzalo.perez@sanjuan.edu.ar', '$2b$10$476RAYizCI0NW.M6lBaX6OxR9vtFjtA3de9wSx/WkeTBTDZcYGHda', '32145678', '264-5023456', 1);
+(2, 2, NULL, 'Gonzalo', 'Pérez', 'gonzalo.perez@sanjuan.edu.ar', '$2b$10$476RAYizCI0NW.M6lBaX6OxR9vtFjtA3de9wSx/WkeTBTDZcYGHda', '32145678', '264-5023456', 1),
+(3, 5, NULL, 'Roberto', 'Méndez', 'auditor@sanjuan.edu.ar', '$2b$10$476RAYizCI0NW.M6lBaX6OxR9vtFjtA3de9wSx/WkeTBTDZcYGHda', '24112334', '264-4209988', 1);
 
 -- 4. Choferes con vencimientos relativos
 INSERT INTO `choferes` (`id`, `usuario_id`, `nombre`, `apellido`, `dni`, `cuil`, `telefono`, `email`, `direccion`, `numero_licencia`, `categoria_licencia`, `fecha_vencimiento_licencia`, `estado`, `observaciones`) VALUES

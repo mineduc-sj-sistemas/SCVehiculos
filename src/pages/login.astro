@@ -1,5 +1,5 @@
 ---
-import { Bus, Eye, EyeOff, KeyRound, Lock, Mail, ShieldCheck } from 'lucide-astro'
+import { Bus, ClipboardCheck, Eye, EyeOff, KeyRound, Lock, Mail, ShieldCheck } from 'lucide-astro'
 import SanJuanLogo from '../frontend/components/ui/SanJuanLogo.astro'
 import { verifySessionToken, SESSION_COOKIE_NAME } from '../backend/index'
 import '../frontend/styles/global.css'
@@ -104,15 +104,25 @@ if (existingSession) {
 
         <!-- Divisor y Acceso Rápido Demo -->
         <div class="mt-6 pt-5 border-t border-line text-center">
-          <p class="text-[11px] font-semibold text-muted mb-3">Atajo de Acceso Rápido para Desarrollo:</p>
-          <button
-            type="button"
-            id="btn-quick-admin"
-            class="w-full flex items-center justify-center gap-2 rounded-xl border border-line bg-paper hover:bg-orange-50/50 hover:border-orangeGov/40 py-2.5 px-3 text-xs font-bold text-navy transition cursor-pointer"
-          >
-            <ShieldCheck size={16} class="text-orangeGov" />
-            <span>Rellenar con Administrador Demo</span>
-          </button>
+          <p class="text-[11px] font-semibold text-muted mb-3">Atajos de Acceso Rápido para Desarrollo:</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <button
+              type="button"
+              id="btn-quick-admin"
+              class="w-full flex items-center justify-center gap-2 rounded-xl border border-line bg-paper hover:bg-orange-50/50 hover:border-orangeGov/40 py-2.5 px-3 text-xs font-bold text-navy transition cursor-pointer"
+            >
+              <ShieldCheck size={16} class="text-orangeGov" />
+              <span>Admin Demo</span>
+            </button>
+            <button
+              type="button"
+              id="btn-quick-auditor"
+              class="w-full flex items-center justify-center gap-2 rounded-xl border border-line bg-paper hover:bg-blue-50/50 hover:border-blue/40 py-2.5 px-3 text-xs font-bold text-navy transition cursor-pointer"
+            >
+              <ClipboardCheck size={16} class="text-blue" />
+              <span>Auditor Demo</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -132,6 +142,7 @@ if (existingSession) {
       const btnSubmit = document.getElementById('btn-login-submit') as HTMLButtonElement | null
       const btnText = document.getElementById('btn-login-text')
       const btnQuickAdmin = document.getElementById('btn-quick-admin')
+      const btnQuickAuditor = document.getElementById('btn-quick-auditor')
       const togglePassword = document.getElementById('toggle-password')
       const iconEye = document.getElementById('icon-eye')
       const iconEyeOff = document.getElementById('icon-eye-off')
@@ -149,6 +160,15 @@ if (existingSession) {
       btnQuickAdmin?.addEventListener('click', () => {
         if (emailInput && passwordInput) {
           emailInput.value = 'maria.gutierrez@sanjuan.edu.ar'
+          passwordInput.value = 'admin123'
+          errorAlert?.classList.add('hidden')
+        }
+      })
+
+      // Rellenar con auditor demo
+      btnQuickAuditor?.addEventListener('click', () => {
+        if (emailInput && passwordInput) {
+          emailInput.value = 'auditor@sanjuan.edu.ar'
           passwordInput.value = 'admin123'
           errorAlert?.classList.add('hidden')
         }
