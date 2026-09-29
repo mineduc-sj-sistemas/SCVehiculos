@@ -21,18 +21,28 @@ const currentUser = verifySessionToken(sessionToken) || {
 
 const initials = `${currentUser.nombre.charAt(0)}${currentUser.apellido.charAt(0)}`.toUpperCase()
 
-const navItems = [
-  { id: 'panel', label: 'Panel principal', href: '/', icon: LayoutDashboard },
-  { id: 'flota', label: 'Vehículos / Flota', href: '/flota', icon: Truck },
-  { id: 'choferes', label: 'Choferes', href: '/choferes', icon: UsersRound },
-  { id: 'cronograma', label: 'Cronograma', href: '/cronograma', icon: CalendarDays },
-  { id: 'viajes', label: 'Viajes / Hojas de ruta', href: '/viajes', icon: Route },
-  { id: 'mantenimientos', label: 'Mantenimientos', href: '/mantenimientos', icon: Wrench },
-  { id: 'combustible', label: 'Combustible', href: '/combustible', icon: Fuel },
-]
+const isAuditor = currentUser.rolId === 5
 
-if (currentUser.rolId === 1) {
-  navItems.push({ id: 'usuarios', label: 'Usuarios / Accesos', href: '/usuarios', icon: ShieldCheck })
+let navItems = []
+
+if (isAuditor) {
+  navItems = [
+    { id: 'panel', label: 'Panel de Auditoría', href: '/', icon: LayoutDashboard },
+  ]
+} else {
+  navItems = [
+    { id: 'panel', label: 'Panel principal', href: '/', icon: LayoutDashboard },
+    { id: 'flota', label: 'Vehículos / Flota', href: '/flota', icon: Truck },
+    { id: 'choferes', label: 'Choferes', href: '/choferes', icon: UsersRound },
+    { id: 'cronograma', label: 'Cronograma', href: '/cronograma', icon: CalendarDays },
+    { id: 'viajes', label: 'Viajes / Hojas de ruta', href: '/viajes', icon: Route },
+    { id: 'mantenimientos', label: 'Mantenimientos', href: '/mantenimientos', icon: Wrench },
+    { id: 'combustible', label: 'Combustible', href: '/combustible', icon: Fuel },
+  ]
+
+  if (currentUser.rolId === 1) {
+    navItems.push({ id: 'usuarios', label: 'Usuarios / Accesos', href: '/usuarios', icon: ShieldCheck })
+  }
 }
 ---
 

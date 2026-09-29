@@ -1,13 +1,40 @@
 ---
-import { AlertTriangle, CalendarDays, Car, ChevronRight, Fuel, MoreHorizontal, Route, UsersRound, Wrench } from 'lucide-astro'
+import { AlertTriangle, CalendarDays, Car, ChevronRight, Fuel, MoreHorizontal, Route, ShieldCheck, UsersRound, Wrench } from 'lucide-astro'
 import DashboardLayout from '../frontend/layouts/DashboardLayout.astro'
 import DashboardStatCards from '../frontend/components/dashboard/DashboardStatCards.astro'
 import PlateBadge from '../frontend/components/ui/PlateBadge.astro'
 import StatusBadge from '../frontend/components/ui/StatusBadge.astro'
-import { getDashboardStats, getFleet, getActiveTravels, getDriverStats, getDashboardMaintenance, getFuelStats, getOperationalAlerts } from '../backend/index'
+import AuditorExecutiveView from '../frontend/components/auditoria/AuditorExecutiveView.astro'
+import {
+  getDashboardStats,
+  getFleet,
+  getActiveTravels,
+  getDriverStats,
+  getDashboardMaintenance,
+  getFuelStats,
+  getOperationalAlerts,
+  getViajesList,
+  getMaintenanceList,
+  verifySessionToken,
+  SESSION_COOKIE_NAME,
+} from '../backend/index'
+
+// Identificación del usuario activo
+const sessionToken = Astro.cookies.get(SESSION_COOKIE_NAME)?.value
+const currentUser = Astro.locals.user || verifySessionToken(sessionToken) || {
+  id: 1,
+  nombre: 'María',
+  apellido: 'Gutiérrez',
+  nombreCompleto: 'María Gutiérrez',
+  email: 'maria.gutierrez@sanjuan.edu.ar',
+  rolNombre: 'Administrador',
+  rolId: 1,
+}
+
+const isAuditor = currentUser.rolId === 5 || Astro.url.searchParams.get('vista') === 'auditor'
 
 // Consultas dinámicas a la base de datos MySQL (sc_vehiculos) a través de la capa Backend
-const [stats, fleet, travels, driverStats, maintenance, fuelStats, alertsSummary] = await Promise.all([
+const [stats, fleet, travels, driverStats, maintenance, fuelStats, alertsSummary, viajes, mantenimientos] = await Promise.all([
   getDashboardStats(),
   getFleet(),
   getActiveTravels(),
@@ -15,11 +42,28 @@ const [stats, fleet, travels, driverStats, maintenance, fuelStats, alertsSummary
   getDashboardMaintenance(),
   getFuelStats(),
   getOperationalAlerts(),
+  getViajesList(),
+  getMaintenanceList(),
 ])
 ---
 
-<DashboardLayout activeNav="panel" title="Panel principal · Movilidades · Ministerio de Educación">
-  <h1 slot="header-title" class="font-display text-xl font-bold text-navy sm:text-2xl">Panel principal</h1>
+<DashboardLayout activeNav="panel" title={isAuditor ? "Panel de Auditoría · Fiscalización de Flota · Ministerio de Educación" : "Panel principal · Movilidades · Ministerio de Educación"}>
+  <h1 slot="header-title" class="font-display text-xl font-bold text-navy sm:text-2xl">
+    {isAuditor ? "Panel de Auditoría y Fiscalización" : "Panel principal"}
+  </h1>
+
+  {isAuditor ? (
+    <AuditorExecutiveView
+      currentUser={currentUser}
+      stats={stats}
+      fleet={fleet}
+      viajes={viajes}
+      mantenimientos={mantenimientos}
+      alertsSummary={alertsSummary}
+    />
+  ) : (
+    <>
+
 
   <!-- Encabezado de bienvenida -->
   <div class="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -30,11 +74,19 @@ const [stats, fleet, travels, driverStats, maintenance, fuelStats, alertsSummary
         </span>
         <span class="text-xs font-semibold text-muted">· Gobierno de San Juan</span>
       </div>
-      <h2 class="font-display text-[27px] font-bold tracking-tight text-navy">Buen día, María</h2>
+      <h2 class="font-display text-[27px] font-bold tracking-tight text-navy">Buen día, {currentUser.nombre}</h2>
       <p class="mt-0.5 text-sm text-muted">Supervisión en tiempo real del parque automotor y comisiones oficiales.</p>
     </div>
     
     <div class="flex items-center gap-2">
+      <a
+        href="/?vista=auditor"
+        class="flex items-center gap-1.5 rounded-xl border border-line bg-white hover:bg-paper px-3.5 py-2.5 text-xs font-bold text-navy shadow-xs transition"
+        title="Ver el panel en formato ejecutivo para Auditoría"
+      >
+        <ShieldCheck size={14} class="text-[#ea580c]" />
+        <span>Vista Auditor</span>
+      </a>
       <a
         href="/flota"
         class="flex items-center gap-2 rounded-xl border border-line bg-white px-4 py-2.5 text-xs font-bold text-navy hover:bg-paper transition"
@@ -315,4 +367,6 @@ const [stats, fleet, travels, driverStats, maintenance, fuelStats, alertsSummary
       </a>
     </section>
   </div>
+    </>
+  )}
 </DashboardLayout>

@@ -225,6 +225,31 @@ export async function authenticateUser(emailInput: string, passwordInput: string
       }
     }
 
+    if (
+      process.env.NODE_ENV !== 'production' &&
+      email === 'auditor@sanjuan.edu.ar' &&
+      (password === 'admin123' || password === 'auditor123')
+    ) {
+      console.warn('ADVERTENCIA: Iniciando en Modo Demo Auditor.')
+      const demoSession: UserSession = {
+        id: 3,
+        email: 'auditor@sanjuan.edu.ar',
+        nombre: 'Roberto',
+        apellido: 'Méndez',
+        nombreCompleto: 'Roberto Méndez',
+        rolId: 5,
+        rolNombre: 'Auditor',
+        dependenciaId: null,
+        dependenciaNombre: 'Auditoría General / Control de Gestión',
+      }
+      return {
+        success: true,
+        message: 'Iniciando en Modo Demo Auditor.',
+        session: demoSession,
+        token: signSession(demoSession),
+      }
+    }
+
     return { success: false, message: 'Error en el servidor al intentar autenticar. Verifica la conexión con la base de datos.' }
   }
 }
