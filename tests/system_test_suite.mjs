@@ -664,7 +664,7 @@ async function runTestSuite() {
   const testC2 = choferesDisp[1]?.id || choferesDisp[0]?.id
   const testDep = depsDisp[0]?.id || 1
 
-  // Creamos comisión base: Día 2026-10-15 de 08:00 a 14:00 con Vehículo 1 y Chofer 1
+  // Creamos comisión base: Día 2026-09-25 de 08:00 a 14:00 con Vehículo 1 y Chofer 1
   const resBaseComision = await fetch(`${BASE_URL}/api/cronograma`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Cookie: `sc_session=${TOKENS.admin}` },
@@ -676,8 +676,8 @@ async function runTestSuite() {
       destino: 'Caucete - Escuela Manuel Belgrano',
       motivo: 'Entrega de módulos pedagógicos',
       cantidadPasajeros: 2,
-      fechaSalidaProgramada: '2026-10-15T08:00',
-      fechaRegresoEstimada: '2026-10-15T14:00',
+      fechaSalidaProgramada: '2026-09-25T08:00',
+      fechaRegresoEstimada: '2026-09-25T14:00',
     }),
   })
   const dataBaseComision = await resBaseComision.json()
@@ -695,8 +695,8 @@ async function runTestSuite() {
       destino: 'Pocito - Escuela Normal',
       motivo: 'Visita de supervisión escolar',
       cantidadPasajeros: 1,
-      fechaSalidaProgramada: '2026-10-15T10:00',
-      fechaRegresoEstimada: '2026-10-15T16:00',
+      fechaSalidaProgramada: '2026-09-25T10:00',
+      fechaRegresoEstimada: '2026-09-25T16:00',
     }),
   })
   const dataOverlapVeh = await resOverlapVeh.json()
@@ -723,8 +723,8 @@ async function runTestSuite() {
       destino: 'Rawson - Escuela Técnica',
       motivo: 'Relevamiento edilicio',
       cantidadPasajeros: 1,
-      fechaSalidaProgramada: '2026-10-15T12:00',
-      fechaRegresoEstimada: '2026-10-15T18:00',
+      fechaSalidaProgramada: '2026-09-25T12:00',
+      fechaRegresoEstimada: '2026-09-25T18:00',
     }),
   })
   const dataOverlapChofer = await resOverlapChofer.json()
@@ -739,10 +739,107 @@ async function runTestSuite() {
     `Conflicto interceptado exitosamente: "${dataOverlapChofer.error?.slice(0, 75)}..."`
   )
 
+  // TC-33: Bloqueo de despacho por exceso de pasajeros sobre la capacidad del móvil
+  const resExcesoPasajeros = await fetch(`${BASE_URL}/api/cronograma`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: `sc_session=${TOKENS.admin}` },
+    body: JSON.stringify({
+      vehiculoId: testV1,
+      choferId: testC2,
+      dependenciaId: testDep,
+      origen: 'Centro Cívico',
+      destino: 'Valle Fértil - Escuela Albergue',
+      motivo: 'Capacitación docente masiva',
+      cantidadPasajeros: 50, // Muy superior a cualquier vehículo de la flota
+      fechaSalidaProgramada: '2026-09-25T08:00',
+      fechaRegresoEstimada: '2026-09-25T18:00',
+    }),
+  })
+  const dataExcesoPasajeros = await resExcesoPasajeros.json()
+
+  assert(
+    resExcesoPasajeros.status === 400 &&
+    dataExcesoPasajeros.error &&
+    dataExcesoPasajeros.error.includes('Exceso de pasajeros'),
+    'TC-33',
+    'Bloqueo preventivo de despacho por exceso de pasajeros sobre la capacidad física del móvil',
+    `Rechazado con: "${dataExcesoPasajeros.error?.slice(0, 75)}..."`
+  )
+
+  // TC-34: Bloqueo de despacho ante chofer con licencia vencida para la fecha del viaje
+  const [insChoferVenc] = await db.execute(
+    `INSERT INTO choferes (nombre, apellido, dni, numero_licencia, categoria_licencia, fecha_vencimiento_licencia, estado)
+     VALUES ('Chofer', 'VencidoTest', '99988877', 'LIC-VENC-99', 'B1', '2026-01-01', 'disponible')`
+  )
+  const tempChoferVencId = insChoferVenc.insertId
+
+  const resLicenciaVencida = await fetch(`${BASE_URL}/api/cronograma`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: `sc_session=${TOKENS.admin}` },
+    body: JSON.stringify({
+      vehiculoId: testV1,
+      choferId: tempChoferVencId,
+      dependenciaId: testDep,
+      origen: 'Centro Cívico',
+      destino: 'Albardón - Escuela Rural',
+      motivo: 'Supervisión técnica',
+      cantidadPasajeros: 1,
+      fechaSalidaProgramada: '2026-09-25T08:00',
+      fechaRegresoEstimada: '2026-09-25T18:00',
+    }),
+  })
+  const dataLicenciaVencida = await resLicenciaVencida.json()
+
+  assert(
+    resLicenciaVencida.status === 400 &&
+    dataLicenciaVencida.error &&
+    dataLicenciaVencida.error.includes('Inhabilitación legal'),
+    'TC-34',
+    'Bloqueo preventivo de despacho por chofer con licencia de conducir inhabilitada/vencida',
+    `Rechazado con: "${dataLicenciaVencida.error?.slice(0, 75)}..."`
+  )
+
+  // TC-35: Bloqueo de finalización de comisión si odómetro de regreso es menor o igual al de salida
+  const [vehV1Data] = await db.execute('SELECT odometro_actual FROM vehiculos WHERE id = ?', [testV1])
+  const odomV1 = Number(vehV1Data[0]?.odometro_actual || 50000)
+
+  await fetch(`${BASE_URL}/api/cronograma/${tempComisionId1}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Cookie: `sc_session=${TOKENS.operador}` },
+    body: JSON.stringify({
+      estado: 'en_curso',
+      odometroSalida: odomV1 + 500,
+    }),
+  })
+
+  // Intentamos finalizar con odómetro menor a la salida
+  const resOdoInvalido = await fetch(`${BASE_URL}/api/cronograma/${tempComisionId1}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Cookie: `sc_session=${TOKENS.operador}` },
+    body: JSON.stringify({
+      estado: 'finalizada',
+      odometroRegreso: odomV1 + 200, // Menor que odomV1 + 500
+    }),
+  })
+  const dataOdoInvalido = await resOdoInvalido.json()
+
+  assert(
+    resOdoInvalido.status === 400 &&
+    dataOdoInvalido.error &&
+    dataOdoInvalido.error.includes('Inconsistencia de odómetro'),
+    'TC-35',
+    'Bloqueo de finalización de comisión ante inconsistencia de odómetro (regreso <= salida)',
+    `Rechazado con: "${dataOdoInvalido.error?.slice(0, 75)}..."`
+  )
+
   // -------------------------------------------------------------------------
   // LIMPIEZA DE DATOS TEMPORALES (TEARDOWN)
   // -------------------------------------------------------------------------
   console.log('\n--- LIMPIEZA DE DATOS TEMPORALES (TEARDOWN) ---')
+  if (tempChoferVencId) {
+    await db.execute('DELETE FROM choferes WHERE id = ?', [tempChoferVencId])
+    console.log(`  ✓ Chofer con licencia vencida temporal #${tempChoferVencId} eliminado.`)
+  }
   if (tempComisionId1) {
     await db.execute('DELETE FROM comisiones WHERE id = ?', [tempComisionId1])
     console.log(`  ✓ Comisión temporal #${tempComisionId1} eliminada.`)

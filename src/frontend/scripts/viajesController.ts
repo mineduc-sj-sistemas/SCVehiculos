@@ -451,6 +451,17 @@ function validateDispatchStep(step: number): boolean {
     if (!inputPasajeros || !inputPasajeros.value || parseInt(inputPasajeros.value, 10) < 1) {
       return showError('Debe indicar al menos 1 pasajero previsto.', inputPasajeros)
     }
+
+    const selectVehiculo = document.getElementById('dispatch-vehiculo') as HTMLSelectElement | null
+    const capStr = selectVehiculo?.selectedOptions[0]?.getAttribute('data-capacidad')
+    if (capStr) {
+      const cap = parseInt(capStr, 10)
+      const cant = parseInt(inputPasajeros.value, 10)
+      if (cant > cap) {
+        return showError(`La cantidad de pasajeros (${cant}) supera la capacidad máxima del móvil (${cap} asientos).`, inputPasajeros)
+      }
+    }
+
     if (!inputMotivo || !inputMotivo.value.trim()) {
       return showError('Indique el motivo o misión oficial del viaje.', inputMotivo)
     }
@@ -796,6 +807,14 @@ function initDetailModal() {
 
     if (!odo) {
       alert('Debes ingresar el odómetro de llegada para cerrar la comisión.')
+      inputOdoRegreso?.focus()
+      return
+    }
+
+    const elOdoSalida = document.getElementById('detail-odo-salida')
+    const odoSalidaVal = elOdoSalida?.innerText ? parseInt(elOdoSalida.innerText.replace(/\D/g, ''), 10) : 0
+    if (odoSalidaVal > 0 && odo <= odoSalidaVal) {
+      alert(`El odómetro de regreso (${odo} km) debe ser estrictamente mayor al odómetro de salida (${odoSalidaVal} km).`)
       inputOdoRegreso?.focus()
       return
     }

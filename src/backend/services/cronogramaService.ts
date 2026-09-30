@@ -613,17 +613,38 @@ export async function verificarConflictoHorario(
  */
 export async function crearComision(dto: NuevaComisionDTO): Promise<{ success: boolean; id?: number; codigoComision?: string; error?: string }> {
   try {
-    // Validar existencia de vehículo
-    const vehiculo = await query<any>(`SELECT id, estado, odometro_actual FROM vehiculos WHERE id = ? LIMIT 1`, [dto.vehiculoId])
+    // Validar existencia de vehículo, capacidad y vigencia de RTO
+    const vehiculo = await query<any>(
+      `SELECT id, patente, modelo, estado, odometro_actual, capacidad_pasajeros, fecha_vencimiento_vtv 
+       FROM vehiculos WHERE id = ? LIMIT 1`,
+      [dto.vehiculoId]
+    )
     if (!vehiculo || vehiculo.length === 0) {
       return { success: false, error: 'El vehículo seleccionado no existe.' }
     }
     if (vehiculo[0].estado === 'en_taller') {
       return { success: false, error: 'El vehículo se encuentra en taller o mantenimiento y no puede ser asignado.' }
     }
+    if (vehiculo[0].estado === 'baja') {
+      return { success: false, error: 'El vehículo se encuentra dado de baja del parque automotor.' }
+    }
 
-    // Validar existencia de chofer
-    const chofer = await query<any>(`SELECT id, estado FROM choferes WHERE id = ? LIMIT 1`, [dto.choferId])
+    // Validar capacidad física de pasajeros
+    const capMax = Number(vehiculo[0].capacidad_pasajeros) || 5
+    const cantPasajeros = Number(dto.cantidadPasajeros) || 1
+    if (cantPasajeros > capMax) {
+      return {
+        success: false,
+        error: `Exceso de pasajeros: La unidad ${vehiculo[0].patente} (${vehiculo[0].modelo}) tiene capacidad máxima para ${capMax} pasajeros (se solicitaron ${cantPasajeros}).`,
+      }
+    }
+
+    // Validar existencia de chofer y vigencia de su licencia
+    const chofer = await query<any>(
+      `SELECT id, nombre, apellido, estado, fecha_vencimiento_licencia 
+       FROM choferes WHERE id = ? LIMIT 1`,
+      [dto.choferId]
+    )
     if (!chofer || chofer.length === 0) {
       return { success: false, error: 'El chofer seleccionado no existe.' }
     }
@@ -639,6 +660,32 @@ export async function crearComision(dto: NuevaComisionDTO): Promise<{ success: b
     }
     if (regreso < salida) {
       return { success: false, error: 'La fecha y hora de regreso estimada no puede ser anterior a la salida.' }
+    }
+
+    // Validar que la RTO/VTV del vehículo no venza antes de la fecha de regreso estimada
+    if (vehiculo[0].fecha_vencimiento_vtv) {
+      const vtvDate = new Date(vehiculo[0].fecha_vencimiento_vtv)
+      vtvDate.setHours(23, 59, 59, 999)
+      if (vtvDate < regreso) {
+        const vtvStr = new Date(vehiculo[0].fecha_vencimiento_vtv).toLocaleDateString('es-AR')
+        return {
+          success: false,
+          error: `Inhabilitación técnica: El vehículo ${vehiculo[0].patente} posee su RTO/VTV vencida o vence antes del regreso del viaje (${vtvStr}). No puede ser despachado.`,
+        }
+      }
+    }
+
+    // Validar que la licencia del chofer no venza antes de la fecha de regreso estimada
+    if (chofer[0].fecha_vencimiento_licencia) {
+      const licDate = new Date(chofer[0].fecha_vencimiento_licencia)
+      licDate.setHours(23, 59, 59, 999)
+      if (licDate < regreso) {
+        const licStr = new Date(chofer[0].fecha_vencimiento_licencia).toLocaleDateString('es-AR')
+        return {
+          success: false,
+          error: `Inhabilitación legal: El chofer ${chofer[0].apellido}, ${chofer[0].nombre} posee su licencia de conducir vencida o vence antes del regreso del viaje (${licStr}). No puede ser asignado.`,
+        }
+      }
     }
 
     // Validar conflicto de horario (un vehículo y un chofer sólo pueden hacer un viaje al mismo tiempo)
@@ -709,13 +756,22 @@ export async function actualizarEstadoComision(id: number, dto: ActualizarEstado
       const pad = (n: number) => String(n).padStart(2, '0')
       const sqlAhora = `${ahora.getFullYear()}-${pad(ahora.getMonth() + 1)}-${pad(ahora.getDate())} ${pad(ahora.getHours())}:${pad(ahora.getMinutes())}:${pad(ahora.getSeconds())}`
 
-      // Obtener estado actual del vehículo para auditoría
-      const [vehRows] = await conn.execute<any>(`SELECT estado FROM vehiculos WHERE id = ?`, [comision.vehiculo_id])
-      const estadoAnteriorVehiculo = (vehRows as any[])[0]?.estado || 'disponible'
+      // Obtener estado y odómetro actual del vehículo para auditoría y validación
+      const [vehRows] = await conn.execute<any>(`SELECT estado, odometro_actual FROM vehiculos WHERE id = ?`, [comision.vehiculo_id])
+      const vehData = (vehRows as any[])[0]
+      const estadoAnteriorVehiculo = vehData?.estado || 'disponible'
+      const odoActualVehiculo = Number(vehData?.odometro_actual || 0)
 
       if (dto.estado === 'en_curso') {
         // Registrar salida real
-        const odoSalida = dto.odometroSalida ?? comision.odometro_salida
+        const odoSalida = dto.odometroSalida !== undefined ? dto.odometroSalida : comision.odometro_salida
+        if (odoSalida !== null && odoSalida !== undefined && Number(odoSalida) < odoActualVehiculo) {
+          return {
+            success: false,
+            error: `Inconsistencia de odómetro: El kilometraje de salida (${odoSalida} km) no puede ser inferior al odómetro actual registrado del vehículo (${odoActualVehiculo} km).`,
+          }
+        }
+
         await conn.execute(
           `UPDATE comisiones SET 
             estado = 'en_curso',
@@ -740,6 +796,16 @@ export async function actualizarEstadoComision(id: number, dto: ActualizarEstado
       } else if (dto.estado === 'finalizada') {
         // Registrar regreso real
         const odoRegreso = dto.odometroRegreso ?? null
+        const odoSalida = Number(comision.odometro_salida || 0)
+        if (odoRegreso !== null && odoRegreso !== undefined && odoSalida > 0) {
+          if (Number(odoRegreso) <= odoSalida) {
+            return {
+              success: false,
+              error: `Inconsistencia de odómetro: El odómetro de llegada (${odoRegreso} km) debe ser estrictamente mayor al odómetro de salida (${odoSalida} km).`,
+            }
+          }
+        }
+
         await conn.execute(
           `UPDATE comisiones SET 
             estado = 'finalizada',
@@ -895,6 +961,64 @@ export async function editarComision(
         return { success: false, error: 'La fecha y hora de regreso estimada no puede ser anterior a la salida.' }
       }
 
+      // Obtener datos del vehículo final (sea el actual o el nuevo)
+      const [finalVehRows] = await conn.execute<any>(
+        `SELECT id, patente, modelo, estado, odometro_actual, capacidad_pasajeros, fecha_vencimiento_vtv 
+         FROM vehiculos WHERE id = ? LIMIT 1`,
+        [nuevoVehiculoId]
+      )
+      const vehFinal = (finalVehRows as any[])[0]
+      if (!vehFinal) {
+        return { success: false, error: 'Vehículo no encontrado.' }
+      }
+
+      // Obtener datos del chofer final (sea el actual o el nuevo)
+      const [finalChoferRows] = await conn.execute<any>(
+        `SELECT id, nombre, apellido, estado, fecha_vencimiento_licencia 
+         FROM choferes WHERE id = ? LIMIT 1`,
+        [nuevoChoferId]
+      )
+      const choferFinal = (finalChoferRows as any[])[0]
+      if (!choferFinal) {
+        return { success: false, error: 'Chofer no encontrado.' }
+      }
+
+      // Validar capacidad de pasajeros
+      const nuevaCantidadPasajeros = dto.cantidadPasajeros !== undefined ? Number(dto.cantidadPasajeros) : Number(comision.cantidad_pasajeros)
+      const capMax = Number(vehFinal.capacidad_pasajeros) || 5
+      if (nuevaCantidadPasajeros > capMax) {
+        return {
+          success: false,
+          error: `Exceso de pasajeros: La unidad ${vehFinal.patente} (${vehFinal.modelo}) tiene capacidad para ${capMax} pasajeros (se indicaron ${nuevaCantidadPasajeros}).`,
+        }
+      }
+
+      // Validar RTO para la fecha de regreso estimada
+      if (vehFinal.fecha_vencimiento_vtv) {
+        const vtvDate = new Date(vehFinal.fecha_vencimiento_vtv)
+        vtvDate.setHours(23, 59, 59, 999)
+        if (vtvDate < regreso) {
+          const vtvStr = new Date(vehFinal.fecha_vencimiento_vtv).toLocaleDateString('es-AR')
+          return {
+            success: false,
+            error: `Inhabilitación técnica: El vehículo ${vehFinal.patente} posee su RTO/VTV vencida o vence antes del regreso del viaje (${vtvStr}).`,
+          }
+        }
+      }
+
+      // Validar licencia para la fecha de regreso estimada
+      if (choferFinal.fecha_vencimiento_licencia) {
+        const licDate = new Date(choferFinal.fecha_vencimiento_licencia)
+        licDate.setHours(23, 59, 59, 999)
+        if (licDate < regreso) {
+          const licStr = new Date(choferFinal.fecha_vencimiento_licencia).toLocaleDateString('es-AR')
+          return {
+            success: false,
+            error: `Inhabilitación legal: El chofer ${choferFinal.apellido}, ${choferFinal.nombre} posee su licencia de conducir vencida o vence antes del regreso (${licStr}).`,
+          }
+        }
+      }
+
       // Validar conflicto de horario al reprogramar o reasignar
       const conflicto = await verificarConflictoHorario(conn, nuevoVehiculoId, nuevoChoferId, salida, regreso, id)
       if (conflicto.tieneConflicto) {
@@ -911,7 +1035,6 @@ export async function editarComision(
       const nuevoMotivo = dto.motivo !== undefined ? dto.motivo : comision.motivo
       const nuevaDependenciaId = dto.dependenciaId !== undefined ? dto.dependenciaId : comision.dependencia_solicitante_id
       const nuevoSolicitante = dto.solicitanteNombre !== undefined ? dto.solicitanteNombre : comision.solicitante_nombre
-      const nuevaCantidadPasajeros = dto.cantidadPasajeros !== undefined ? dto.cantidadPasajeros : comision.cantidad_pasajeros
       const nuevasObservaciones = dto.observaciones !== undefined ? dto.observaciones : comision.observaciones
 
       await conn.execute(
