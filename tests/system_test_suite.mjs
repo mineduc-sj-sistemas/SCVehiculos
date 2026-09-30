@@ -833,9 +833,103 @@ async function runTestSuite() {
   )
 
   // -------------------------------------------------------------------------
+  // MÓDULO 13: PORTAL MÓVIL DEL CHOFER Y CHECK-IN GEOLOCALIZADO GPS
+  // -------------------------------------------------------------------------
+  console.log('\n--- MÓDULO 13: PORTAL MÓVIL DEL CHOFER Y CHECK-IN GEOLOCALIZADO GPS ---')
+
+  // TC-36: Portal del Chofer - Consulta de Mi Viaje Activo e Itinerario (GET /api/chofer/mi-viaje)
+  const resMiViaje = await fetch(`${BASE_URL}/api/chofer/mi-viaje?choferId=${testC1}`, {
+    method: 'GET',
+    headers: { Cookie: `sc_session=${TOKENS.chofer}` },
+  })
+  const dataMiViaje = await resMiViaje.json()
+
+  assert(
+    resMiViaje.status === 200 &&
+    dataMiViaje.success &&
+    dataMiViaje.chofer &&
+    dataMiViaje.viajeActivo &&
+    Number(dataMiViaje.viajeActivo.id) === Number(tempComisionId1) &&
+    Array.isArray(dataMiViaje.paradas) &&
+    dataMiViaje.paradas.length > 0,
+    'TC-36',
+    'Portal del Chofer: consulta exitosa de comisión activa, datos del chofer e itinerario de paradas',
+    `Viaje Activo #${dataMiViaje.viajeActivo?.codigoComision || dataMiViaje.viajeActivo?.codigo_comision} obtenido para Chofer ${dataMiViaje.chofer?.nombre} ${dataMiViaje.chofer?.apellido}`
+  )
+
+  // TC-37: Registro de Check-in con Coordenadas GPS y confirmación en Hoja de Ruta (POST /api/chofer/checkin)
+  let createdCheckinId = null
+  const resCheckin = await fetch(`${BASE_URL}/api/chofer/checkin`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: `sc_session=${TOKENS.chofer}` },
+    body: JSON.stringify({
+      comisionId: tempComisionId1,
+      choferId: dataMiViaje.chofer.id,
+      paradaIndex: 1,
+      destinoNombre: dataMiViaje.paradas[0].nombre,
+      latitud: -31.5375000,
+      longitud: -68.5364000,
+      precisionGps: 8.5,
+      observaciones: 'Arribo a destino escolar con alumnos. Comisión sin novedades.',
+    }),
+  })
+  const dataCheckin = await resCheckin.json()
+  createdCheckinId = dataCheckin.id
+
+  const [dbCheckin] = await db.execute('SELECT * FROM checkins_comision WHERE id = ?', [createdCheckinId || 0])
+
+  // Verificar que el endpoint de detalle de cronograma incluya el check-in registrado
+  const resDetalleConCheckin = await fetch(`${BASE_URL}/api/cronograma/${tempComisionId1}`, {
+    method: 'GET',
+    headers: { Cookie: `sc_session=${TOKENS.admin}` },
+  })
+  const dataDetalleConCheckin = await resDetalleConCheckin.json()
+
+  assert(
+    resCheckin.status === 201 &&
+    dataCheckin.success &&
+    dbCheckin.length > 0 &&
+    Number(dbCheckin[0].comision_id) === Number(tempComisionId1) &&
+    Array.isArray(dataDetalleConCheckin.checkins) &&
+    dataDetalleConCheckin.checkins.some((chk) => Number(chk.id) === Number(createdCheckinId)),
+    'TC-37',
+    'Registro de Check-in GPS de parada: persistencia en BD y reflejo automático en la Hoja de Ruta de Coordinación',
+    `Check-in #${createdCheckinId} registrado con GPS (-31.5375, -68.5364)`
+  )
+
+  // TC-38: Bloqueo de registro de check-in si la comisión no se encuentra "en_curso" o no existe
+  const resCheckinInvalido = await fetch(`${BASE_URL}/api/chofer/checkin`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: `sc_session=${TOKENS.chofer}` },
+    body: JSON.stringify({
+      comisionId: 999999, // Inexistente
+      choferId: dataMiViaje.chofer.id,
+      paradaIndex: 1,
+      destinoNombre: 'Parada Fake',
+      latitud: -31.5,
+      longitud: -68.5,
+    }),
+  })
+  const dataCheckinInvalido = await resCheckinInvalido.json()
+
+  assert(
+    resCheckinInvalido.status === 400 &&
+    !dataCheckinInvalido.success &&
+    dataCheckinInvalido.error &&
+    dataCheckinInvalido.error.includes('Comisión no encontrada'),
+    'TC-38',
+    'Seguridad e integridad de check-ins: rechazo HTTP 400 ante comisión inválida o fuera de ruta',
+    `Rechazo validado: "${dataCheckinInvalido.error}"`
+  )
+
+  // -------------------------------------------------------------------------
   // LIMPIEZA DE DATOS TEMPORALES (TEARDOWN)
   // -------------------------------------------------------------------------
   console.log('\n--- LIMPIEZA DE DATOS TEMPORALES (TEARDOWN) ---')
+  if (createdCheckinId) {
+    await db.execute('DELETE FROM checkins_comision WHERE id = ?', [createdCheckinId])
+    console.log(`  ✓ Check-in temporal #${createdCheckinId} eliminado.`)
+  }
   if (tempChoferVencId) {
     await db.execute('DELETE FROM choferes WHERE id = ?', [tempChoferVencId])
     console.log(`  ✓ Chofer con licencia vencida temporal #${tempChoferVencId} eliminado.`)

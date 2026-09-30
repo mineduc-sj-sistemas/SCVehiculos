@@ -146,6 +146,20 @@ import {
         </div>
       </div>
 
+      <!-- Check-ins en Ruta del Chofer -->
+      <div id="detail-checkins-container" class="space-y-2">
+        <div class="flex items-center justify-between border-b border-gray-100 pb-1">
+          <h4 class="font-bold text-navy text-[13px] flex items-center gap-1.5">
+            <Radio size={15} class="text-blue" />
+            <span>Check-ins de Paradas del Chofer (GPS)</span>
+          </h4>
+          <span id="detail-checkins-count" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue/10 text-blue border border-blue/20">0 paradas</span>
+        </div>
+        <div id="detail-checkins-list" class="space-y-2">
+          <!-- Renderizado dinámico -->
+        </div>
+      </div>
+
       <!-- Observaciones -->
       <div id="detail-obs-container">
         <span class="text-[10px] font-bold uppercase text-muted">Observaciones del Viaje</span>

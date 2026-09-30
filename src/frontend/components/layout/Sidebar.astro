@@ -1,9 +1,9 @@
 ---
-import { CalendarDays, Fuel, LayoutDashboard, LogOut, Route, Settings, ShieldCheck, Truck, UsersRound, Wrench } from 'lucide-astro'
+import { CalendarDays, Fuel, LayoutDashboard, LogOut, Navigation, Route, Settings, ShieldCheck, Truck, UsersRound, Wrench } from 'lucide-astro'
 import { verifySessionToken, SESSION_COOKIE_NAME } from '../../../backend/index'
 
 interface Props {
-  activeNav?: 'panel' | 'flota' | 'choferes' | 'cronograma' | 'viajes' | 'mantenimientos' | 'combustible' | 'usuarios' | 'configuracion'
+  activeNav?: 'panel' | 'flota' | 'choferes' | 'cronograma' | 'viajes' | 'mantenimientos' | 'combustible' | 'usuarios' | 'configuracion' | 'mi-viaje'
 }
 
 const { activeNav = 'panel' } = Astro.props
@@ -21,6 +21,7 @@ const currentUser = verifySessionToken(sessionToken) || {
 const initials = `${currentUser.nombre.charAt(0)}${currentUser.apellido.charAt(0)}`.toUpperCase()
 
 const isAuditor = currentUser.rolId === 5
+const isChofer = currentUser.rolId === 4
 
 let navItems = []
 
@@ -28,9 +29,16 @@ if (isAuditor) {
   navItems = [
     { id: 'panel', label: 'Panel de Auditoría', href: '/', icon: LayoutDashboard },
   ]
+} else if (isChofer) {
+  navItems = [
+    { id: 'mi-viaje', label: 'Mi Viaje Oficial', href: '/mi-viaje', icon: Navigation },
+    { id: 'viajes', label: 'Mis Comisiones', href: '/viajes', icon: Route },
+    { id: 'combustible', label: 'Cargas de Combustible', href: '/combustible', icon: Fuel },
+  ]
 } else {
   navItems = [
     { id: 'panel', label: 'Panel principal', href: '/', icon: LayoutDashboard },
+    { id: 'mi-viaje', label: 'Portal Chofer (Móvil)', href: '/mi-viaje', icon: Navigation },
     { id: 'flota', label: 'Vehículos / Flota', href: '/flota', icon: Truck },
     { id: 'choferes', label: 'Choferes', href: '/choferes', icon: UsersRound },
     { id: 'cronograma', label: 'Cronograma', href: '/cronograma', icon: CalendarDays },

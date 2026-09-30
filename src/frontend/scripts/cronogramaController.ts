@@ -1406,6 +1406,43 @@ async function openDetailModalForId(id: number) {
       }
     }
 
+    // Check-ins de paradas registrados por el chofer
+    const elCheckinsCount = document.getElementById('detail-checkins-count')
+    const elCheckinsList = document.getElementById('detail-checkins-list')
+    if (elCheckinsList) {
+      if (!c.checkins || c.checkins.length === 0) {
+        if (elCheckinsCount) elCheckinsCount.innerText = '0 paradas'
+        elCheckinsList.innerHTML = '<p class="text-muted italic py-1">Sin paradas o arribos intermedios registrados aún.</p>'
+      } else {
+        if (elCheckinsCount) elCheckinsCount.innerText = `${c.checkins.length} parada${c.checkins.length > 1 ? 's' : ''}`
+        elCheckinsList.innerHTML = c.checkins
+          .map((chk: any) => {
+            const hora = chk.fechaRegistro ? new Date(chk.fechaRegistro).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) : '--'
+            const fecha = chk.fechaRegistro ? new Date(chk.fechaRegistro).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' }) : ''
+            const mapsUrl = chk.latitud && chk.longitud ? `https://maps.google.com/?q=${chk.latitud},${chk.longitud}` : null
+            return `
+              <div class="flex items-start justify-between p-2.5 rounded-xl border border-gray-100 bg-gray-50/80 hover:bg-gray-50 transition">
+                <div class="flex items-start gap-2">
+                  <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue text-white text-[10px] font-bold mt-0.5">${chk.numeroParada}</span>
+                  <div>
+                    <p class="font-bold text-navy text-xs">${chk.destinoNombre}</p>
+                    <p class="text-[11px] text-muted">${fecha} ${hora} ${chk.odometro ? `· <span class="font-mono font-medium">${chk.odometro.toLocaleString('es-AR')} km</span>` : ''}</p>
+                    ${chk.observacion ? `<p class="text-[11px] text-gray-700 italic mt-0.5">"${chk.observacion}"</p>` : ''}
+                  </div>
+                </div>
+                ${mapsUrl ? `
+                  <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" class="shrink-0 flex items-center gap-1 text-[10px] font-bold text-blue hover:text-blue-700 bg-blue/10 hover:bg-blue/20 px-2 py-1 rounded-lg transition" title="Ver en Google Maps">
+                    <span>GPS</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                  </a>
+                ` : '<span class="text-[10px] text-muted font-medium">Sin GPS</span>'}
+              </div>
+            `
+          })
+          .join('')
+      }
+    }
+
     if (c.estado === 'programada') {
       secAcciones?.classList.remove('hidden')
       formSalida?.classList.remove('hidden')

@@ -322,6 +322,29 @@ export async function getComisionDetalle(id: number): Promise<ComisionGridItem |
   if (!rows || rows.length === 0) return null
 
   const r = rows[0]
+
+  // Obtener check-ins registrados por el chofer
+  const checkinsRows = await query<any>(
+    `SELECT id, comision_id, chofer_id, parada_index, destino_nombre, latitud, longitud, precision_gps, observaciones, fecha_hora
+     FROM checkins_comision
+     WHERE comision_id = ?
+     ORDER BY parada_index ASC, fecha_hora ASC`,
+    [id]
+  )
+
+  const checkins = (checkinsRows || []).map((ch: any) => ({
+    id: Number(ch.id),
+    comisionId: Number(ch.comision_id),
+    choferId: Number(ch.chofer_id),
+    numeroParada: Number(ch.parada_index),
+    destinoNombre: ch.destino_nombre,
+    latitud: ch.latitud !== null && ch.latitud !== undefined ? Number(ch.latitud) : null,
+    longitud: ch.longitud !== null && ch.longitud !== undefined ? Number(ch.longitud) : null,
+    precisionGps: ch.precision_gps !== null && ch.precision_gps !== undefined ? Number(ch.precision_gps) : null,
+    fechaRegistro: ch.fecha_hora instanceof Date ? ch.fecha_hora.toISOString() : String(ch.fecha_hora),
+    observacion: ch.observaciones || null,
+  }))
+
   return {
     id: Number(r.id),
     codigoComision: r.codigo_comision,
@@ -347,6 +370,7 @@ export async function getComisionDetalle(id: number): Promise<ComisionGridItem |
     kmRecorridos: r.km_recorridos ? Number(r.km_recorridos) : null,
     estado: r.estado as EstadoComision,
     observaciones: r.observaciones ?? null,
+    checkins,
   }
 }
 

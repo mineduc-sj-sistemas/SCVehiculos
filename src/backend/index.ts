@@ -16,4 +16,5 @@ export * from './services/fuelService'
 export * from './services/viajesService'
 export * from './services/reportService'
 export * from './services/alertService'
+export * from './services/choferPortalService'
 

@@ -25,6 +25,20 @@ export interface ComisionGridItem {
   kmRecorridos?: number | null
   estado: EstadoComision
   observaciones: string | null
+  checkins?: CheckinDetalleItem[]
+}
+
+export interface CheckinDetalleItem {
+  id: number
+  comisionId: number
+  choferId: number
+  numeroParada: number
+  destinoNombre: string
+  latitud: number | null
+  longitud: number | null
+  fechaRegistro: string
+  odometro: number | null
+  observacion: string | null
 }
 
 export interface CronogramaDiaHeader {
