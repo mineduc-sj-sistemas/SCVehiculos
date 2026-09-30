@@ -245,9 +245,21 @@ async function runTestSuite() {
   // -------------------------------------------------------------------------
   console.log('\n--- [MÓDULO 5] CRONOGRAMA DE COMISIONES & AUDITORÍA DE ESTADOS ---')
 
-  // Elegir un vehículo y chofer disponibles
-  const [vehDisp] = await db.execute("SELECT id, odometro_actual FROM vehiculos WHERE estado = 'disponible' LIMIT 1")
-  const [chDisp] = await db.execute("SELECT id FROM choferes WHERE estado = 'disponible' LIMIT 1")
+  // Elegir un vehículo y chofer disponibles sin comisiones en el rango de prueba (2026-09-23)
+  const testSalida = '2026-09-23T08:00'
+  const testRegreso = '2026-09-23T18:00'
+  const [vehDisp] = await db.execute(
+    `SELECT id, odometro_actual FROM vehiculos 
+     WHERE estado = 'disponible' 
+       AND id NOT IN (SELECT vehiculo_id FROM comisiones WHERE estado IN ('programada', 'en_curso') AND fecha_salida_programada < '2026-09-23 18:00:00' AND fecha_regreso_estimada > '2026-09-23 08:00:00')
+     LIMIT 1`
+  )
+  const [chDisp] = await db.execute(
+    `SELECT id FROM choferes 
+     WHERE estado = 'disponible' 
+       AND id NOT IN (SELECT chofer_id FROM comisiones WHERE estado IN ('programada', 'en_curso') AND fecha_salida_programada < '2026-09-23 18:00:00' AND fecha_regreso_estimada > '2026-09-23 08:00:00')
+     LIMIT 1`
+  )
   const vId = vehDisp[0]?.id || 1
   const odomSalida = Number(vehDisp[0]?.odometro_actual || 50000)
   const cId = chDisp[0]?.id || 1
@@ -262,8 +274,8 @@ async function runTestSuite() {
       dependenciaId: 1,
       destino: 'Jáchal - Escuela Albergue',
       motivo: 'Entrega de módulos alimentarios y relevamiento pedagógico',
-      fechaSalidaProgramada: '2026-09-22T08:00',
-      fechaRegresoEstimada: '2026-09-22T18:00',
+      fechaSalidaProgramada: testSalida,
+      fechaRegresoEstimada: testRegreso,
       pasajerosAcompaniantes: 'Lic. Morales, Prof. Castro',
       observaciones: 'Viaje oficial de prueba automatizada',
     }),
@@ -635,9 +647,106 @@ async function runTestSuite() {
   )
 
   // -------------------------------------------------------------------------
+  // MÓDULO 12: CRONOGRAMA, DESPACHO Y CONTROL DE SOLAPAMIENTO HORARIO
+  // -------------------------------------------------------------------------
+  console.log('\n--- MÓDULO 12: CRONOGRAMA, DESPACHO Y CONTROL DE SOLAPAMIENTO HORARIO ---')
+
+  let tempComisionId1 = null
+
+  // Obtenemos un vehículo y dos choferes disponibles para la prueba
+  const [vehiculosDisp] = await db.execute('SELECT id FROM vehiculos WHERE estado = "disponible" LIMIT 2')
+  const [choferesDisp] = await db.execute('SELECT id FROM choferes WHERE estado = "disponible" LIMIT 2')
+  const [depsDisp] = await db.execute('SELECT id FROM dependencias LIMIT 1')
+
+  const testV1 = vehiculosDisp[0]?.id
+  const testV2 = vehiculosDisp[1]?.id || vehiculosDisp[0]?.id
+  const testC1 = choferesDisp[0]?.id
+  const testC2 = choferesDisp[1]?.id || choferesDisp[0]?.id
+  const testDep = depsDisp[0]?.id || 1
+
+  // Creamos comisión base: Día 2026-10-15 de 08:00 a 14:00 con Vehículo 1 y Chofer 1
+  const resBaseComision = await fetch(`${BASE_URL}/api/cronograma`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: `sc_session=${TOKENS.admin}` },
+    body: JSON.stringify({
+      vehiculoId: testV1,
+      choferId: testC1,
+      dependenciaId: testDep,
+      origen: 'Ministerio de Educación - Centro Cívico',
+      destino: 'Caucete - Escuela Manuel Belgrano',
+      motivo: 'Entrega de módulos pedagógicos',
+      cantidadPasajeros: 2,
+      fechaSalidaProgramada: '2026-10-15T08:00',
+      fechaRegresoEstimada: '2026-10-15T14:00',
+    }),
+  })
+  const dataBaseComision = await resBaseComision.json()
+  tempComisionId1 = dataBaseComision.id
+
+  // TC-31: Prevención de conflicto horario en Vehículos (solapamiento de 10:00 a 16:00 en mismo Vehículo 1 con Chofer 2)
+  const resOverlapVeh = await fetch(`${BASE_URL}/api/cronograma`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: `sc_session=${TOKENS.admin}` },
+    body: JSON.stringify({
+      vehiculoId: testV1,
+      choferId: testC2,
+      dependenciaId: testDep,
+      origen: 'Centro Cívico',
+      destino: 'Pocito - Escuela Normal',
+      motivo: 'Visita de supervisión escolar',
+      cantidadPasajeros: 1,
+      fechaSalidaProgramada: '2026-10-15T10:00',
+      fechaRegresoEstimada: '2026-10-15T16:00',
+    }),
+  })
+  const dataOverlapVeh = await resOverlapVeh.json()
+
+  assert(
+    resOverlapVeh.status === 400 &&
+    dataOverlapVeh.error &&
+    dataOverlapVeh.error.includes('El móvil') &&
+    dataOverlapVeh.error.includes('ya tiene asignada la comisión'),
+    'TC-31',
+    'Prevención de solapamiento horario en Vehículo: rechazo HTTP 400 con mensaje explicativo',
+    `Conflicto interceptado exitosamente: "${dataOverlapVeh.error?.slice(0, 75)}..."`
+  )
+
+  // TC-32: Prevención de conflicto horario en Choferes (solapamiento de 12:00 a 18:00 en Vehículo 2 con Chofer 1)
+  const resOverlapChofer = await fetch(`${BASE_URL}/api/cronograma`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: `sc_session=${TOKENS.admin}` },
+    body: JSON.stringify({
+      vehiculoId: testV2,
+      choferId: testC1,
+      dependenciaId: testDep,
+      origen: 'Centro Cívico',
+      destino: 'Rawson - Escuela Técnica',
+      motivo: 'Relevamiento edilicio',
+      cantidadPasajeros: 1,
+      fechaSalidaProgramada: '2026-10-15T12:00',
+      fechaRegresoEstimada: '2026-10-15T18:00',
+    }),
+  })
+  const dataOverlapChofer = await resOverlapChofer.json()
+
+  assert(
+    resOverlapChofer.status === 400 &&
+    dataOverlapChofer.error &&
+    dataOverlapChofer.error.includes('El chofer') &&
+    dataOverlapChofer.error.includes('ya tiene asignada la comisión'),
+    'TC-32',
+    'Prevención de solapamiento horario en Chofer: rechazo HTTP 400 con mensaje explicativo',
+    `Conflicto interceptado exitosamente: "${dataOverlapChofer.error?.slice(0, 75)}..."`
+  )
+
+  // -------------------------------------------------------------------------
   // LIMPIEZA DE DATOS TEMPORALES (TEARDOWN)
   // -------------------------------------------------------------------------
   console.log('\n--- LIMPIEZA DE DATOS TEMPORALES (TEARDOWN) ---')
+  if (tempComisionId1) {
+    await db.execute('DELETE FROM comisiones WHERE id = ?', [tempComisionId1])
+    console.log(`  ✓ Comisión temporal #${tempComisionId1} eliminada.`)
+  }
   if (tempFuelId) {
     await db.execute('DELETE FROM cargas_combustible WHERE id = ?', [tempFuelId])
     console.log(`  ✓ Carga de combustible temporal #${tempFuelId} eliminada.`)

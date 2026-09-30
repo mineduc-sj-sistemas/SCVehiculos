@@ -38,10 +38,12 @@ const { dias, filas } = Astro.props
           <!-- 7 Columnas de Días -->
           {dias.map((d) => (
             <th
+              data-fecha={d.fecha}
               class:list={[
-                'w-[180px] min-w-[170px] px-3 py-3 text-center border-r border-gray-200 transition-colors',
+                'w-[180px] min-w-[170px] px-3 py-3 text-center border-r border-gray-200 transition-colors cursor-pointer hover:bg-blue/15 group/day-th',
                 d.esHoy ? 'bg-blue/10 border-blue/30' : (d.esFinDeSemana ? 'bg-gray-100/50' : 'bg-gray-50/50')
               ]}
+              title={`Click para programar comisión el ${d.diaNombre} ${d.diaNumero}`}
             >
               <div class="flex flex-col items-center justify-center gap-0.5">
                 <span class:list={[

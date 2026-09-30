@@ -11,6 +11,7 @@ import {
   Compass,
   FileText,
   Info,
+  Lock,
   MapPin,
   Pencil,
   Plus,
@@ -381,36 +382,66 @@ const DEPARTAMENTOS_SAN_JUAN = [
           <span><strong>Paso 4 de 4:</strong> Cronograma temporal, cupo de pasajeros y misión oficial.</span>
         </div>
 
-        <!-- Fila de Fechas/Horarios -->
-        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <!-- Salida Programada -->
-          <div>
-            <label for="dispatch-salida" class="block text-xs font-bold text-navy mb-1">
-              Fecha y Hora de Salida *
-            </label>
-            <input
-              type="datetime-local"
-              id="dispatch-salida"
-              name="fechaSalidaProgramada"
-              required
-              class="w-full rounded-xl border border-gray-200 bg-gray-50/40 px-3 py-2 text-xs text-navy focus:border-orangeGov focus:bg-white focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
-            />
+        <!-- Bloque de Fecha Fijada por Calendario (No modificable) -->
+        <div class="rounded-xl border border-blue/30 bg-blue/5 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 shadow-2xs">
+          <div class="flex items-center gap-2.5">
+            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue/15 text-blue">
+              <Calendar size={16} />
+            </div>
+            <div>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-muted block">Día del Viaje (Fijado por Calendario)</span>
+              <span id="dispatch-fecha-fijada-display" class="text-xs font-black text-navy">Cargando fecha...</span>
+            </div>
           </div>
-
-          <!-- Regreso Estimado -->
-          <div>
-            <label for="dispatch-regreso" class="block text-xs font-bold text-navy mb-1">
-              Fecha y Hora de Regreso Estimada *
-            </label>
-            <input
-              type="datetime-local"
-              id="dispatch-regreso"
-              name="fechaRegresoEstimada"
-              required
-              class="w-full rounded-xl border border-gray-200 bg-gray-50/40 px-3 py-2 text-xs text-navy focus:border-orangeGov focus:bg-white focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
-            />
+          <div class="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-full bg-slate-200/80 px-2.5 py-1 text-[10px] font-bold text-slate-700 border border-slate-300 shadow-2xs">
+            <Lock size={12} class="text-slate-600" />
+            <span>Fecha Bloqueada</span>
           </div>
         </div>
+
+        <!-- Fila de Horarios (Salida y Regreso) -->
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <!-- Hora de Salida -->
+          <div>
+            <label for="dispatch-hora-salida" class="block text-xs font-bold text-navy mb-1 flex items-center justify-between">
+              <span>Hora de Salida *</span>
+              <span class="text-[10px] font-medium text-muted">Horario programado</span>
+            </label>
+            <div class="relative">
+              <Clock size={15} class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="time"
+                id="dispatch-hora-salida"
+                value="08:00"
+                required
+                class="w-full rounded-xl border border-gray-200 bg-white py-2 pl-9 pr-3 text-xs font-semibold text-navy focus:border-orangeGov focus:outline-none focus:ring-1 focus:ring-orangeGov transition shadow-2xs"
+              />
+            </div>
+          </div>
+
+          <!-- Hora Estimada de Regreso -->
+          <div>
+            <label for="dispatch-hora-regreso" class="block text-xs font-bold text-navy mb-1 flex items-center justify-between">
+              <span>Hora Estimada de Regreso *</span>
+              <span class="text-[10px] font-medium text-muted">Horario estimado</span>
+            </label>
+            <div class="relative">
+              <Clock size={15} class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="time"
+                id="dispatch-hora-regreso"
+                value="17:00"
+                required
+                class="w-full rounded-xl border border-gray-200 bg-white py-2 pl-9 pr-3 text-xs font-semibold text-navy focus:border-orangeGov focus:outline-none focus:ring-1 focus:ring-orangeGov transition shadow-2xs"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Campos de soporte y compatibilidad con APIs -->
+        <input type="hidden" id="dispatch-fecha-fijada-val" value="" />
+        <input type="hidden" id="dispatch-salida" name="fechaSalidaProgramada" value="" />
+        <input type="hidden" id="dispatch-regreso" name="fechaRegresoEstimada" value="" />
 
         <!-- Fila de Pasajeros y Motivo -->
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">

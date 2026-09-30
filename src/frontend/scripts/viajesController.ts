@@ -149,6 +149,55 @@ function setWizardStep(step: number) {
   }
 }
 
+/**
+ * Fija y bloquea la fecha seleccionada en el Paso 4 del modal de despacho.
+ */
+function setLockedDate(dateStr: string) {
+  if (!dateStr) return
+  const datePart = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr.split(' ')[0]
+  const hiddenFecha = document.getElementById('dispatch-fecha-fijada-val') as HTMLInputElement | null
+  const displayFecha = document.getElementById('dispatch-fecha-fijada-display')
+
+  if (hiddenFecha) hiddenFecha.value = datePart
+
+  if (displayFecha) {
+    try {
+      const [y, m, d] = datePart.split('-').map(Number)
+      const dateObj = new Date(y, m - 1, d)
+      const options: Intl.DateTimeFormatOptions = {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }
+      const formatted = dateObj.toLocaleDateString('es-AR', options)
+      displayFecha.innerText = formatted.charAt(0).toUpperCase() + formatted.slice(1)
+    } catch (e) {
+      displayFecha.innerText = datePart
+    }
+  }
+
+  syncLockedDatetimes()
+}
+
+/**
+ * Sincroniza la fecha bloqueada con las horas de salida y regreso en los campos ocultos
+ */
+function syncLockedDatetimes() {
+  const hiddenFecha = document.getElementById('dispatch-fecha-fijada-val') as HTMLInputElement | null
+  const inputHoraSalida = document.getElementById('dispatch-hora-salida') as HTMLInputElement | null
+  const inputHoraRegreso = document.getElementById('dispatch-hora-regreso') as HTMLInputElement | null
+  const inputSalida = document.getElementById('dispatch-salida') as HTMLInputElement | null
+  const inputRegreso = document.getElementById('dispatch-regreso') as HTMLInputElement | null
+
+  const fecha = hiddenFecha?.value || new Date().toISOString().split('T')[0]
+  const horaSalida = inputHoraSalida?.value || '08:00'
+  const horaRegreso = inputHoraRegreso?.value || '17:00'
+
+  if (inputSalida) inputSalida.value = `${fecha}T${horaSalida}`
+  if (inputRegreso) inputRegreso.value = `${fecha}T${horaRegreso}`
+}
+
 function getCompiledDestinos(): string {
   const container = document.getElementById('destinos-container')
   if (!container) {
@@ -376,19 +425,28 @@ function validateDispatchStep(step: number): boolean {
   }
 
   if (step === 4) {
+    syncLockedDatetimes()
+    const inputHoraSalida = document.getElementById('dispatch-hora-salida') as HTMLInputElement | null
+    const inputHoraRegreso = document.getElementById('dispatch-hora-regreso') as HTMLInputElement | null
     const inputSalida = document.getElementById('dispatch-salida') as HTMLInputElement | null
     const inputRegreso = document.getElementById('dispatch-regreso') as HTMLInputElement | null
     const inputPasajeros = document.getElementById('dispatch-pasajeros') as HTMLInputElement | null
     const inputMotivo = document.getElementById('dispatch-motivo') as HTMLInputElement | null
 
+    if (!inputHoraSalida || !inputHoraSalida.value) {
+      return showError('Indique la hora de salida programada.', inputHoraSalida)
+    }
+    if (!inputHoraRegreso || !inputHoraRegreso.value) {
+      return showError('Indique la hora estimada de regreso.', inputHoraRegreso)
+    }
+    if (inputHoraRegreso.value <= inputHoraSalida.value) {
+      return showError(`La hora estimada de regreso (${inputHoraRegreso.value}) debe ser posterior a la de salida (${inputHoraSalida.value}).`, inputHoraRegreso)
+    }
     if (!inputSalida || !inputSalida.value) {
-      return showError('Indique la fecha y hora de salida programada.', inputSalida)
+      return showError('Fecha y hora de salida no configurada correctamente.', inputHoraSalida)
     }
     if (!inputRegreso || !inputRegreso.value) {
-      return showError('Indique la fecha y hora estimada de regreso.', inputRegreso)
-    }
-    if (new Date(inputRegreso.value) <= new Date(inputSalida.value)) {
-      return showError('La fecha y hora de regreso debe ser posterior a la de salida.', inputRegreso)
+      return showError('Fecha y hora de regreso no configurada correctamente.', inputHoraRegreso)
     }
     if (!inputPasajeros || !inputPasajeros.value || parseInt(inputPasajeros.value, 10) < 1) {
       return showError('Debe indicar al menos 1 pasajero previsto.', inputPasajeros)
@@ -414,6 +472,11 @@ function resetDispatchModalToCreate() {
   const selectChofer = document.getElementById('dispatch-chofer') as HTMLSelectElement | null
   const inputSalida = document.getElementById('dispatch-salida') as HTMLInputElement | null
   const capBadge = document.getElementById('dispatch-vehiculo-cap-badge')
+  const inputHoraSalida = document.getElementById('dispatch-hora-salida') as HTMLInputElement | null
+  const inputHoraRegreso = document.getElementById('dispatch-hora-regreso') as HTMLInputElement | null
+
+  if (inputHoraSalida) inputHoraSalida.value = '08:00'
+  if (inputHoraRegreso) inputHoraRegreso.value = '17:00'
 
   // Limpiar paradas adicionales dinámicas
   const container = document.getElementById('destinos-container')
@@ -470,6 +533,13 @@ function initDispatchModal() {
   const inputRegreso = document.getElementById('dispatch-regreso') as HTMLInputElement | null
   const inputPasajeros = document.getElementById('dispatch-pasajeros') as HTMLInputElement | null
   const capBadge = document.getElementById('dispatch-vehiculo-cap-badge')
+  const inputHoraSalida = document.getElementById('dispatch-hora-salida') as HTMLInputElement | null
+  const inputHoraRegreso = document.getElementById('dispatch-hora-regreso') as HTMLInputElement | null
+
+  inputHoraSalida?.addEventListener('input', syncLockedDatetimes)
+  inputHoraSalida?.addEventListener('change', syncLockedDatetimes)
+  inputHoraRegreso?.addEventListener('input', syncLockedDatetimes)
+  inputHoraRegreso?.addEventListener('change', syncLockedDatetimes)
 
   const openModal = () => {
     if (!modal) return
@@ -491,8 +561,7 @@ function initDispatchModal() {
     const now = new Date()
     const pad = (n: number) => String(n).padStart(2, '0')
     const hoyStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
-    if (inputSalida) inputSalida.value = `${hoyStr}T08:00`
-    if (inputRegreso) inputRegreso.value = `${hoyStr}T17:00`
+    setLockedDate(hoyStr)
     openModal()
   })
 
@@ -1021,16 +1090,25 @@ async function openEditModalForId(id: number) {
       }
     }
 
-    const formatToLocalInput = (dateStr: string | null) => {
-      if (!dateStr) return ''
-      const d = new Date(dateStr)
-      if (isNaN(d.getTime())) return ''
+    const inputHoraSalida = document.getElementById('dispatch-hora-salida') as HTMLInputElement | null
+    const inputHoraRegreso = document.getElementById('dispatch-hora-regreso') as HTMLInputElement | null
+
+    if (c.fechaSalidaProgramada) {
+      const d = new Date(c.fechaSalidaProgramada)
       const pad = (n: number) => String(n).padStart(2, '0')
-      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+      const dateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+      setLockedDate(dateStr)
+      if (inputHoraSalida) inputHoraSalida.value = `${pad(d.getHours())}:${pad(d.getMinutes())}`
     }
 
-    if (inputSalida) inputSalida.value = formatToLocalInput(c.fechaSalidaProgramada)
-    if (inputRegreso) inputRegreso.value = formatToLocalInput(c.fechaRegresoEstimada)
+    if (c.fechaRegresoEstimada) {
+      const d = new Date(c.fechaRegresoEstimada)
+      const pad = (n: number) => String(n).padStart(2, '0')
+      if (inputHoraRegreso) inputHoraRegreso.value = `${pad(d.getHours())}:${pad(d.getMinutes())}`
+    }
+
+    syncLockedDatetimes()
+
     if (inputPasajeros) inputPasajeros.value = String(c.cantidadPasajeros || 1)
     if (inputMotivo) inputMotivo.value = c.motivo || ''
     if (inputObservaciones) inputObservaciones.value = c.observaciones || ''
@@ -1038,11 +1116,11 @@ async function openEditModalForId(id: number) {
     if (c.estado === 'en_curso') {
       if (selectVehiculo) selectVehiculo.disabled = true
       if (selectChofer) selectChofer.disabled = true
-      if (inputSalida) inputSalida.disabled = true
+      if (inputHoraSalida) inputHoraSalida.disabled = true
     } else {
       if (selectVehiculo) selectVehiculo.disabled = false
       if (selectChofer) selectChofer.disabled = false
-      if (inputSalida) inputSalida.disabled = false
+      if (inputHoraSalida) inputHoraSalida.disabled = false
     }
 
     if (modal) {

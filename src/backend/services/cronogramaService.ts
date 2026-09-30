@@ -1,4 +1,4 @@
-import { query, withTransaction } from '../config/db'
+import { pool, query, withTransaction } from '../config/db'
 import type {
   ActualizarEstadoComisionDTO,
   ComisionGridItem,
@@ -518,6 +518,97 @@ async function generarSiguienteCodigoComision(): Promise<string> {
 }
 
 /**
+ * Verifica si existe superposición horaria para el vehículo o el chofer con comisiones activas (programada o en_curso).
+ * Dos intervalos [S1, R1] y [S2, R2] se solapan si S1 < R2 AND R1 > S2.
+ */
+export async function verificarConflictoHorario(
+  connOrPool: any,
+  vehiculoId: number,
+  choferId: number,
+  salida: Date,
+  regreso: Date,
+  excludeComisionId?: number
+): Promise<{ tieneConflicto: boolean; error?: string }> {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const formatSqlDatetime = (d: Date) =>
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+
+  const salidaSql = formatSqlDatetime(salida)
+  const regresoSql = formatSqlDatetime(regreso)
+
+  const formatHora = (dStr: any) => {
+    const d = new Date(dStr)
+    return isNaN(d.getTime()) ? '' : d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+  }
+  const formatFecha = (dStr: any) => {
+    const d = new Date(dStr)
+    return isNaN(d.getTime()) ? '' : d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  }
+
+  // 1. Validar solapamiento del vehículo
+  const vehParams: any[] = [vehiculoId, regresoSql, salidaSql]
+  let vehSql = `
+    SELECT c.id, c.codigo_comision, c.fecha_salida_programada, c.fecha_regreso_estimada,
+           v.patente, v.marca, v.modelo
+    FROM comisiones c
+    JOIN vehiculos v ON v.id = c.vehiculo_id
+    WHERE c.vehiculo_id = ?
+      AND c.estado IN ('programada', 'en_curso')
+      AND c.fecha_salida_programada < ?
+      AND c.fecha_regreso_estimada > ?
+  `
+  if (excludeComisionId) {
+    vehSql += ' AND c.id != ?'
+    vehParams.push(excludeComisionId)
+  }
+  vehSql += ' LIMIT 1'
+
+  const [vehConflictos] = await connOrPool.execute(vehSql, vehParams)
+  if (vehConflictos && (vehConflictos as any[]).length > 0) {
+    const conf = (vehConflictos as any[])[0]
+    const hsSalida = formatHora(conf.fecha_salida_programada)
+    const hsRegreso = formatHora(conf.fecha_regreso_estimada)
+    const dia = formatFecha(conf.fecha_salida_programada)
+    return {
+      tieneConflicto: true,
+      error: `Conflicto de horario: El móvil ${conf.patente} (${conf.marca} ${conf.modelo}) ya tiene asignada la comisión ${conf.codigo_comision} el día ${dia} de ${hsSalida} a ${hsRegreso} hs. Cada vehículo solo puede realizar un viaje a la vez.`,
+    }
+  }
+
+  // 2. Validar solapamiento del chofer
+  const choferParams: any[] = [choferId, regresoSql, salidaSql]
+  let choferSql = `
+    SELECT c.id, c.codigo_comision, c.fecha_salida_programada, c.fecha_regreso_estimada,
+           ch.nombre, ch.apellido
+    FROM comisiones c
+    JOIN choferes ch ON ch.id = c.chofer_id
+    WHERE c.chofer_id = ?
+      AND c.estado IN ('programada', 'en_curso')
+      AND c.fecha_salida_programada < ?
+      AND c.fecha_regreso_estimada > ?
+  `
+  if (excludeComisionId) {
+    choferSql += ' AND c.id != ?'
+    choferParams.push(excludeComisionId)
+  }
+  choferSql += ' LIMIT 1'
+
+  const [choferConflictos] = await connOrPool.execute(choferSql, choferParams)
+  if (choferConflictos && (choferConflictos as any[]).length > 0) {
+    const conf = (choferConflictos as any[])[0]
+    const hsSalida = formatHora(conf.fecha_salida_programada)
+    const hsRegreso = formatHora(conf.fecha_regreso_estimada)
+    const dia = formatFecha(conf.fecha_salida_programada)
+    return {
+      tieneConflicto: true,
+      error: `Conflicto de horario: El chofer ${conf.apellido}, ${conf.nombre} ya tiene asignada la comisión ${conf.codigo_comision} el día ${dia} de ${hsSalida} a ${hsRegreso} hs. Un conductor no puede realizar dos viajes simultáneos.`,
+    }
+  }
+
+  return { tieneConflicto: false }
+}
+
+/**
  * Registra y despacha una nueva comisión en el cronograma
  */
 export async function crearComision(dto: NuevaComisionDTO): Promise<{ success: boolean; id?: number; codigoComision?: string; error?: string }> {
@@ -548,6 +639,12 @@ export async function crearComision(dto: NuevaComisionDTO): Promise<{ success: b
     }
     if (regreso < salida) {
       return { success: false, error: 'La fecha y hora de regreso estimada no puede ser anterior a la salida.' }
+    }
+
+    // Validar conflicto de horario (un vehículo y un chofer sólo pueden hacer un viaje al mismo tiempo)
+    const conflicto = await verificarConflictoHorario(pool, dto.vehiculoId, dto.choferId, salida, regreso)
+    if (conflicto.tieneConflicto) {
+      return { success: false, error: conflicto.error }
     }
 
     const codigoComision = await generarSiguienteCodigoComision()
@@ -796,6 +893,12 @@ export async function editarComision(
       }
       if (regreso < salida) {
         return { success: false, error: 'La fecha y hora de regreso estimada no puede ser anterior a la salida.' }
+      }
+
+      // Validar conflicto de horario al reprogramar o reasignar
+      const conflicto = await verificarConflictoHorario(conn, nuevoVehiculoId, nuevoChoferId, salida, regreso, id)
+      if (conflicto.tieneConflicto) {
+        return { success: false, error: conflicto.error }
       }
 
       const formatSqlDatetime = (d: Date) => {
