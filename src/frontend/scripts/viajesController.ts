@@ -49,8 +49,213 @@ function initFiltrosViajes() {
 }
 
 /**
- * 2. Modal de Despacho (Nueva Comisión / Editar Comisión)
+ * 2. Modal de Despacho (Nueva Comisión / Editar Comisión) - Modo Wizard por Pasos
  */
+let currentDispatchStep = 1
+
+function setWizardStep(step: number) {
+  currentDispatchStep = Math.max(1, Math.min(4, step))
+
+  // 1. Mostrar/ocultar panes
+  for (let i = 1; i <= 4; i++) {
+    const pane = document.getElementById(`dispatch-step-pane-${i}`)
+    if (pane) {
+      if (i === currentDispatchStep) {
+        pane.classList.remove('hidden')
+      } else {
+        pane.classList.add('hidden')
+      }
+    }
+
+    const indicator = document.getElementById(`step-indicator-${i}`)
+    const numSpan = indicator?.querySelector('.step-number') as HTMLElement | null
+    const checkIcon = indicator?.querySelector('.step-check') as HTMLElement | null
+    const label = document.getElementById(`step-label-${i}`)
+
+    if (indicator) {
+      if (i < currentDispatchStep) {
+        // Completado
+        indicator.className = 'flex h-7 w-7 items-center justify-center rounded-full bg-emerald-600 text-white text-xs font-bold shadow-xs ring-2 ring-emerald-100 transition-all'
+        numSpan?.classList.add('hidden')
+        checkIcon?.classList.remove('hidden')
+        if (label) {
+          label.className = 'text-[10px] font-bold text-emerald-700 whitespace-nowrap'
+        }
+      } else if (i === currentDispatchStep) {
+        // Activo
+        indicator.className = 'flex h-7 w-7 items-center justify-center rounded-full bg-orangeGov text-white text-xs font-black shadow-sm ring-4 ring-orange-100 transition-all'
+        numSpan?.classList.remove('hidden')
+        checkIcon?.classList.add('hidden')
+        if (label) {
+          label.className = 'text-[10px] font-bold text-navy whitespace-nowrap'
+        }
+      } else {
+        // Futuro / Pendiente
+        indicator.className = 'flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 text-gray-600 text-xs font-bold transition-all'
+        numSpan?.classList.remove('hidden')
+        checkIcon?.classList.add('hidden')
+        if (label) {
+          label.className = 'text-[10px] font-medium text-gray-500 whitespace-nowrap'
+        }
+      }
+    }
+  }
+
+  // 2. Barra de progreso conectora
+  const progressBar = document.getElementById('dispatch-wizard-progress')
+  if (progressBar) {
+    const percentages = ['0%', '33.3%', '66.6%', '100%']
+    progressBar.style.width = percentages[currentDispatchStep - 1]
+  }
+
+  // 3. Botones de navegación
+  const btnPrev = document.getElementById('btn-wizard-prev')
+  const btnNext = document.getElementById('btn-wizard-next')
+  const btnSubmit = document.getElementById('btn-submit-dispatch')
+
+  if (btnPrev) {
+    if (currentDispatchStep === 1) {
+      btnPrev.classList.add('hidden')
+      btnPrev.classList.remove('flex')
+    } else {
+      btnPrev.classList.remove('hidden')
+      btnPrev.classList.add('flex')
+    }
+  }
+
+  if (btnNext) {
+    if (currentDispatchStep === 4) {
+      btnNext.classList.add('hidden')
+      btnNext.classList.remove('flex')
+    } else {
+      btnNext.classList.remove('hidden')
+      btnNext.classList.add('flex')
+    }
+  }
+
+  if (btnSubmit) {
+    if (currentDispatchStep === 4) {
+      btnSubmit.classList.remove('hidden')
+      btnSubmit.classList.add('flex')
+    } else {
+      btnSubmit.classList.add('hidden')
+      btnSubmit.classList.remove('flex')
+    }
+  }
+
+  // 4. Actualizar resumen si estamos en el paso 4
+  if (currentDispatchStep === 4) {
+    updateDispatchSummaryBox()
+  }
+}
+
+function updateDispatchSummaryBox() {
+  const selectVehiculo = document.getElementById('dispatch-vehiculo') as HTMLSelectElement | null
+  const selectChofer = document.getElementById('dispatch-chofer') as HTMLSelectElement | null
+  const selectDependencia = document.getElementById('dispatch-dependencia') as HTMLSelectElement | null
+  const inputOrigen = document.getElementById('dispatch-origen') as HTMLInputElement | null
+  const inputDestino = document.getElementById('dispatch-destino') as HTMLInputElement | null
+  const selectDepto = document.getElementById('dispatch-depto') as HTMLSelectElement | null
+
+  const sumMovil = document.getElementById('summary-movil')
+  const sumChofer = document.getElementById('summary-chofer')
+  const sumDep = document.getElementById('summary-dep')
+  const sumDestino = document.getElementById('summary-destino')
+
+  if (sumMovil) {
+    const selectedOption = selectVehiculo?.selectedOptions[0]
+    sumMovil.innerText = selectedOption && selectVehiculo?.value ? selectedOption.innerText.split('(')[0].trim() : 'No asignado'
+  }
+  if (sumChofer) {
+    const selectedOption = selectChofer?.selectedOptions[0]
+    sumChofer.innerText = selectedOption && selectChofer?.value ? selectedOption.innerText.split('(')[0].trim() : 'No asignado'
+  }
+  if (sumDep) {
+    const selectedOption = selectDependencia?.selectedOptions[0]
+    sumDep.innerText = selectedOption && selectDependencia?.value ? selectedOption.innerText.trim() : 'No asignada'
+  }
+  if (sumDestino) {
+    const origen = inputOrigen?.value.trim() || 'Centro Cívico'
+    const destino = inputDestino?.value.trim() || (selectDepto?.value ? selectDepto.value : 'Sin destino')
+    sumDestino.innerText = `${origen} ➔ ${destino}`
+  }
+}
+
+function validateDispatchStep(step: number): boolean {
+  const errorMsg = document.getElementById('dispatch-error-msg')
+  const errorText = document.getElementById('dispatch-error-text')
+
+  const showError = (msg: string, elementToFocus?: HTMLElement | null) => {
+    if (errorMsg && errorText) {
+      errorText.innerText = msg
+      errorMsg.classList.remove('hidden')
+    }
+    elementToFocus?.focus()
+    return false
+  }
+
+  if (errorMsg) errorMsg.classList.add('hidden')
+
+  if (step === 1) {
+    const selectVehiculo = document.getElementById('dispatch-vehiculo') as HTMLSelectElement | null
+    const selectChofer = document.getElementById('dispatch-chofer') as HTMLSelectElement | null
+    if (!selectVehiculo || !selectVehiculo.value) {
+      return showError('Debe seleccionar un vehículo oficial disponible.', selectVehiculo)
+    }
+    if (!selectChofer || !selectChofer.value) {
+      return showError('Debe seleccionar un chofer oficial habilitado.', selectChofer)
+    }
+  }
+
+  if (step === 2) {
+    const selectDependencia = document.getElementById('dispatch-dependencia') as HTMLSelectElement | null
+    if (!selectDependencia || !selectDependencia.value) {
+      return showError('Debe seleccionar el área o dependencia solicitante.', selectDependencia)
+    }
+  }
+
+  if (step === 3) {
+    const inputOrigen = document.getElementById('dispatch-origen') as HTMLInputElement | null
+    const selectDepto = document.getElementById('dispatch-depto') as HTMLSelectElement | null
+    const inputDestino = document.getElementById('dispatch-destino') as HTMLInputElement | null
+
+    if (!inputOrigen || !inputOrigen.value.trim()) {
+      return showError('Indique el lugar específico de salida.', inputOrigen)
+    }
+    if (!selectDepto || !selectDepto.value) {
+      return showError('Seleccione el departamento de destino de San Juan.', selectDepto)
+    }
+    if (!inputDestino || !inputDestino.value.trim()) {
+      return showError('Indique el destino específico, escuela o localidad a visitar.', inputDestino)
+    }
+  }
+
+  if (step === 4) {
+    const inputSalida = document.getElementById('dispatch-salida') as HTMLInputElement | null
+    const inputRegreso = document.getElementById('dispatch-regreso') as HTMLInputElement | null
+    const inputPasajeros = document.getElementById('dispatch-pasajeros') as HTMLInputElement | null
+    const inputMotivo = document.getElementById('dispatch-motivo') as HTMLInputElement | null
+
+    if (!inputSalida || !inputSalida.value) {
+      return showError('Indique la fecha y hora de salida programada.', inputSalida)
+    }
+    if (!inputRegreso || !inputRegreso.value) {
+      return showError('Indique la fecha y hora estimada de regreso.', inputRegreso)
+    }
+    if (new Date(inputRegreso.value) <= new Date(inputSalida.value)) {
+      return showError('La fecha y hora de regreso debe ser posterior a la de salida.', inputRegreso)
+    }
+    if (!inputPasajeros || !inputPasajeros.value || parseInt(inputPasajeros.value, 10) < 1) {
+      return showError('Debe indicar al menos 1 pasajero previsto.', inputPasajeros)
+    }
+    if (!inputMotivo || !inputMotivo.value.trim()) {
+      return showError('Indique el motivo o misión oficial del viaje.', inputMotivo)
+    }
+  }
+
+  return true
+}
+
 function resetDispatchModalToCreate() {
   const hiddenId = document.getElementById('dispatch-comision-id') as HTMLInputElement | null
   const title = document.getElementById('modal-dispatch-title')
@@ -63,10 +268,11 @@ function resetDispatchModalToCreate() {
   const selectVehiculo = document.getElementById('dispatch-vehiculo') as HTMLSelectElement | null
   const selectChofer = document.getElementById('dispatch-chofer') as HTMLSelectElement | null
   const inputSalida = document.getElementById('dispatch-salida') as HTMLInputElement | null
+  const capBadge = document.getElementById('dispatch-vehiculo-cap-badge')
 
   if (hiddenId) hiddenId.value = ''
   if (title) title.innerText = 'Despachar Nueva Comisión Oficial'
-  if (subtitle) subtitle.innerText = 'Asignación de móvil, conductor y hoja de ruta ministerial'
+  if (subtitle) subtitle.innerText = 'Asignación de móvil, conductor y emisión de hoja de ruta ministerial'
   if (btnSubmitText) btnSubmitText.innerText = 'Generar Despacho'
   iconSend?.classList.remove('hidden')
   iconEdit?.classList.add('hidden')
@@ -76,6 +282,9 @@ function resetDispatchModalToCreate() {
   if (selectVehiculo) selectVehiculo.disabled = false
   if (selectChofer) selectChofer.disabled = false
   if (inputSalida) inputSalida.disabled = false
+  if (capBadge) capBadge.innerText = ''
+
+  setWizardStep(1)
 }
 
 function initDispatchModal() {
@@ -84,20 +293,27 @@ function initDispatchModal() {
   const btnOpen = document.getElementById('btn-abrir-nueva-comision')
   const btnClose = document.getElementById('btn-close-dispatch-modal')
   const btnCancel = document.getElementById('btn-cancel-dispatch')
+  const btnPrev = document.getElementById('btn-wizard-prev')
+  const btnNext = document.getElementById('btn-wizard-next')
   const errorMsg = document.getElementById('dispatch-error-msg')
   const errorText = document.getElementById('dispatch-error-text')
 
   const selectVehiculo = document.getElementById('dispatch-vehiculo') as HTMLSelectElement | null
   const selectChofer = document.getElementById('dispatch-chofer') as HTMLSelectElement | null
+  const selectOrigenDepto = document.getElementById('dispatch-origen-depto') as HTMLSelectElement | null
+  const inputOrigen = document.getElementById('dispatch-origen') as HTMLInputElement | null
   const selectDepto = document.getElementById('dispatch-depto') as HTMLSelectElement | null
   const inputDestino = document.getElementById('dispatch-destino') as HTMLInputElement | null
   const inputSalida = document.getElementById('dispatch-salida') as HTMLInputElement | null
   const inputRegreso = document.getElementById('dispatch-regreso') as HTMLInputElement | null
+  const inputPasajeros = document.getElementById('dispatch-pasajeros') as HTMLInputElement | null
+  const capBadge = document.getElementById('dispatch-vehiculo-cap-badge')
 
   const openModal = () => {
     if (!modal) return
     modal.classList.remove('opacity-0', 'pointer-events-none')
     if (errorMsg) errorMsg.classList.add('hidden')
+    setWizardStep(1)
   }
 
   const closeModal = () => {
@@ -121,7 +337,62 @@ function initDispatchModal() {
   btnClose?.addEventListener('click', closeModal)
   btnCancel?.addEventListener('click', closeModal)
 
-  // Sincronizar Departamento con Destino
+  // Navegación Wizard: Anterior
+  btnPrev?.addEventListener('click', () => {
+    if (currentDispatchStep > 1) {
+      if (errorMsg) errorMsg.classList.add('hidden')
+      setWizardStep(currentDispatchStep - 1)
+    }
+  })
+
+  // Navegación Wizard: Siguiente
+  btnNext?.addEventListener('click', () => {
+    if (validateDispatchStep(currentDispatchStep)) {
+      setWizardStep(currentDispatchStep + 1)
+    }
+  })
+
+  // Clicks directos en botones del stepper
+  document.querySelectorAll('.step-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const targetStep = parseInt(btn.getAttribute('data-step-target') || '1', 10)
+      if (targetStep < currentDispatchStep) {
+        if (errorMsg) errorMsg.classList.add('hidden')
+        setWizardStep(targetStep)
+      } else if (targetStep > currentDispatchStep) {
+        // Validar paso actual antes de permitir saltar hacia adelante
+        if (validateDispatchStep(currentDispatchStep)) {
+          setWizardStep(targetStep)
+        }
+      }
+    })
+  })
+
+  // Actualizar capacidad al cambiar móvil
+  selectVehiculo?.addEventListener('change', () => {
+    const selectedOpt = selectVehiculo.selectedOptions[0]
+    const cap = selectedOpt?.getAttribute('data-capacidad')
+    if (cap) {
+      if (capBadge) capBadge.innerText = `Capacidad máx: ${cap} pas.`
+      if (inputPasajeros) inputPasajeros.max = cap
+    } else {
+      if (capBadge) capBadge.innerText = ''
+      if (inputPasajeros) inputPasajeros.max = '30'
+    }
+  })
+
+  // Sincronizar Departamento de Salida
+  selectOrigenDepto?.addEventListener('change', () => {
+    if (selectOrigenDepto.value && inputOrigen) {
+      if (selectOrigenDepto.value === 'Capital') {
+        inputOrigen.value = 'Ministerio de Educación - Centro Cívico'
+      } else {
+        inputOrigen.value = `Sede Departamental ${selectOrigenDepto.value}`
+      }
+    }
+  })
+
+  // Sincronizar selector de Departamento con input de destino
   selectDepto?.addEventListener('change', () => {
     if (selectDepto.value && inputDestino) {
       if (selectDepto.value === 'Fuera de la Provincia') {
@@ -571,6 +842,7 @@ async function openEditModalForId(id: number) {
     }
 
     if (modal) {
+      setWizardStep(1)
       modal.classList.remove('opacity-0', 'pointer-events-none')
     }
   } catch (err: any) {

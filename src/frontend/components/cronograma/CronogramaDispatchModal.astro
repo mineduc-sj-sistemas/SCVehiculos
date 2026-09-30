@@ -1,12 +1,21 @@
 ---
 import {
   AlertTriangle,
+  ArrowLeft,
+  ArrowRight,
+  Building,
   Calendar,
+  Car,
+  Check,
   Clock,
+  Compass,
+  FileText,
+  Info,
   MapPin,
   Pencil,
   Save,
   Send,
+  User,
   Users,
   X,
 } from 'lucide-astro'
@@ -44,24 +53,27 @@ const DEPARTAMENTOS_SAN_JUAN = [
 
 <div
   id="modal-dispatch"
-  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/60 backdrop-blur-xs opacity-0 pointer-events-none transition-opacity duration-200"
+  class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-navy/60 backdrop-blur-xs opacity-0 pointer-events-none transition-opacity duration-200"
   role="dialog"
   aria-modal="true"
   aria-labelledby="modal-dispatch-title"
 >
-  <div class="relative w-full max-w-2xl rounded-2xl bg-white shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95">
+  <div class="relative w-full max-w-2xl rounded-2xl bg-white shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95">
+    
     <!-- Cabecera del Modal -->
-    <div class="flex items-center justify-between border-b border-gray-100 bg-navy px-6 py-4 text-white">
+    <div class="flex items-center justify-between border-b border-gray-100 bg-navy px-6 py-3.5 text-white">
       <div class="flex items-center gap-2.5">
-        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-gold text-navy shadow-sm">
+        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-orangeGov text-white shadow-sm">
           <Send size={18} strokeWidth={2.5} id="dispatch-header-icon-send" />
           <Pencil size={18} strokeWidth={2.5} id="dispatch-header-icon-edit" class="hidden" />
         </div>
         <div>
-          <h3 id="modal-dispatch-title" class="font-display text-base font-bold">
+          <h3 id="modal-dispatch-title" class="font-display text-base font-bold text-white">
             Despachar Nueva Comisión Oficial
           </h3>
-          <p id="modal-dispatch-subtitle" class="text-[11px] text-white/60">Asignación de móvil, conductor y hoja de ruta ministerial</p>
+          <p id="modal-dispatch-subtitle" class="text-[11px] text-white/70">
+            Asignación de móvil, conductor y emisión de hoja de ruta ministerial
+          </p>
         </div>
       </div>
       <button
@@ -74,233 +86,386 @@ const DEPARTAMENTOS_SAN_JUAN = [
       </button>
     </div>
 
-    <!-- Formulario de Despacho -->
-    <form id="form-dispatch" class="overflow-y-auto p-6 space-y-4">
+    <!-- Barra de Progreso del Wizard (Stepper) -->
+    <div class="border-b border-gray-100 bg-gray-50/90 px-4 sm:px-6 py-2.5">
+      <div class="flex items-center justify-between relative">
+        <!-- Líneas conectoras de fondo -->
+        <div class="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-0.5 bg-gray-200 z-0"></div>
+        <div id="dispatch-wizard-progress" class="absolute left-6 top-1/2 -translate-y-1/2 h-0.5 bg-orangeGov z-0 transition-all duration-300" style="width: 0%;"></div>
+
+        <!-- Paso 1 -->
+        <button type="button" class="step-btn relative z-10 flex flex-col items-center gap-1 cursor-pointer group" data-step-target="1">
+          <div id="step-indicator-1" class="flex h-7 w-7 items-center justify-center rounded-full bg-orangeGov text-white text-xs font-black shadow-sm ring-4 ring-orange-100 transition-all">
+            <span class="step-number">1</span>
+            <Check size={13} strokeWidth={3} class="step-check hidden" />
+          </div>
+          <span id="step-label-1" class="text-[10px] font-bold text-navy whitespace-nowrap">1. Movilidad & Chofer</span>
+        </button>
+
+        <!-- Paso 2 -->
+        <button type="button" class="step-btn relative z-10 flex flex-col items-center gap-1 cursor-pointer group" data-step-target="2">
+          <div id="step-indicator-2" class="flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 text-gray-600 text-xs font-bold transition-all">
+            <span class="step-number">2</span>
+            <Check size={13} strokeWidth={3} class="step-check hidden" />
+          </div>
+          <span id="step-label-2" class="text-[10px] font-medium text-gray-500 whitespace-nowrap">2. Solicitante</span>
+        </button>
+
+        <!-- Paso 3 -->
+        <button type="button" class="step-btn relative z-10 flex flex-col items-center gap-1 cursor-pointer group" data-step-target="3">
+          <div id="step-indicator-3" class="flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 text-gray-600 text-xs font-bold transition-all">
+            <span class="step-number">3</span>
+            <Check size={13} strokeWidth={3} class="step-check hidden" />
+          </div>
+          <span id="step-label-3" class="text-[10px] font-medium text-gray-500 whitespace-nowrap">3. Trayecto</span>
+        </button>
+
+        <!-- Paso 4 -->
+        <button type="button" class="step-btn relative z-10 flex flex-col items-center gap-1 cursor-pointer group" data-step-target="4">
+          <div id="step-indicator-4" class="flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 text-gray-600 text-xs font-bold transition-all">
+            <span class="step-number">4</span>
+            <Check size={13} strokeWidth={3} class="step-check hidden" />
+          </div>
+          <span id="step-label-4" class="text-[10px] font-medium text-gray-500 whitespace-nowrap">4. Horarios & Misión</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Formulario de Despacho (Cuerpo del Wizard) -->
+    <form id="form-dispatch" class="overflow-y-auto p-5 sm:p-6 flex-1 flex flex-col justify-between">
       <input type="hidden" id="dispatch-comision-id" name="comisionId" value="" />
-      <div id="dispatch-error-msg" class="hidden rounded-xl bg-red-50 border border-red-200 p-3 text-xs text-red-700 flex items-center gap-2">
-        <AlertTriangle size={16} class="shrink-0" />
+      
+      <!-- Mensaje de Error / Alerta -->
+      <div id="dispatch-error-msg" class="hidden mb-4 rounded-xl bg-red-50 border border-red-200 p-3 text-xs text-red-700 flex items-center gap-2">
+        <AlertTriangle size={16} class="shrink-0 text-red-600" />
         <span id="dispatch-error-text">Ocurrió un error al guardar.</span>
       </div>
 
-      <!-- Fila 1: Móvil y Chofer -->
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <!-- Móvil / Vehículo -->
-        <div>
-          <label for="dispatch-vehiculo" class="block text-xs font-bold text-navy mb-1">
-            Vehículo / Móvil Oficial *
-          </label>
-          <select
-            id="dispatch-vehiculo"
-            name="vehiculoId"
-            required
-            class="w-full rounded-lg border border-gray-200 bg-gray-50/40 px-3 py-2 text-xs font-semibold text-navy focus:border-blue focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue transition"
-          >
-            <option value="">-- Seleccionar Movilidad --</option>
-            {datosAuxiliares.vehiculos.map((v) => (
-              <option
-                value={v.id}
-                disabled={v.estado === 'en_taller'}
-                data-patente={v.patente}
-              >
-                {v.patente} - {v.marca} {v.modelo} ({v.capacidadPasajeros} pas.){v.estado === 'en_taller' ? ' [EN TALLER]' : ''}
-              </option>
-            ))}
-          </select>
+      <!-- ============================================================== -->
+      <!-- PASO 1: CHOFER Y MOVILIDAD OFICIAL                             -->
+      <!-- ============================================================== -->
+      <div id="dispatch-step-pane-1" class="step-pane space-y-4">
+        <div class="flex items-center gap-2 bg-orange-50/60 border border-orange-100 rounded-xl px-3 py-2 text-xs text-orange-900">
+          <Car size={16} class="text-orangeGov shrink-0" />
+          <span><strong>Paso 1 de 4:</strong> Seleccione la unidad del parque automotor y el conductor habilitado.</span>
         </div>
 
-        <!-- Chofer Oficial -->
-        <div>
-          <label for="dispatch-chofer" class="block text-xs font-bold text-navy mb-1">
-            Chofer Oficial *
-          </label>
-          <select
-            id="dispatch-chofer"
-            name="choferId"
-            required
-            class="w-full rounded-lg border border-gray-200 bg-gray-50/40 px-3 py-2 text-xs font-semibold text-navy focus:border-blue focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue transition"
-          >
-            <option value="">-- Seleccionar Chofer --</option>
-            {datosAuxiliares.choferes.map((c) => (
-              <option
-                value={c.id}
-                disabled={c.estado === 'licencia' || c.licenciaVencida}
-              >
-                {c.apellido}, {c.nombre} (Cat. {c.categoriaLicencia || 'N/A'}){c.licenciaVencida ? ' [CARNET VENCIDO]' : c.estado === 'licencia' ? ' [LICENCIA]' : ''}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <!-- Fila 2: Dependencia y Solicitante -->
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <!-- Dependencia Solicitante -->
-        <div>
-          <label for="dispatch-dependencia" class="block text-xs font-bold text-navy mb-1">
-            Dependencia Solicitante *
-          </label>
-          <select
-            id="dispatch-dependencia"
-            name="dependenciaId"
-            required
-            class="w-full rounded-lg border border-gray-200 bg-gray-50/40 px-3 py-2 text-xs font-semibold text-navy focus:border-blue focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue transition"
-          >
-            <option value="">-- Seleccionar Área / Dirección --</option>
-            {datosAuxiliares.dependencias.map((d) => (
-              <option value={d.id}>{d.nombre}</option>
-            ))}
-          </select>
-        </div>
-
-        <!-- Responsable / Solicitante -->
-        <div>
-          <label for="dispatch-solicitante" class="block text-xs font-bold text-navy mb-1">
-            Funcionario o Solicitante Responsable
-          </label>
-          <input
-            type="text"
-            id="dispatch-solicitante"
-            name="solicitanteNombre"
-            class="w-full rounded-lg border border-gray-200 bg-gray-50/40 px-3 py-2 text-xs text-navy focus:border-blue focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue transition"
-          />
-        </div>
-      </div>
-
-      <!-- Fila 3: Origen y Destino Departamental -->
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <!-- Origen -->
-        <div>
-          <label for="dispatch-origen" class="block text-xs font-bold text-navy mb-1">
-            Lugar de Salida (Origen) *
-          </label>
-          <input
-            type="text"
-            id="dispatch-origen"
-            name="origen"
-            value="Ministerio de Educación - Centro Cívico"
-            required
-            class="w-full rounded-lg border border-gray-200 bg-gray-50/40 px-3 py-2 text-xs text-navy focus:border-blue focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue transition"
-          />
-        </div>
-
-        <!-- Departamento de San Juan -->
-        <div>
-          <label for="dispatch-depto" class="block text-xs font-bold text-navy mb-1">
-            Departamento de San Juan (Destino) *
-          </label>
-          <select
-            id="dispatch-depto"
-            required
-            class="w-full rounded-lg border border-gray-200 bg-gray-50/40 px-3 py-2 text-xs font-semibold text-navy focus:border-blue focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue transition"
-          >
-            <option value="">-- Seleccionar Departamento --</option>
-            {DEPARTAMENTOS_SAN_JUAN.map((depto) => (
-              <option value={depto}>{depto}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <!-- Destino Específico / Establecimiento -->
-      <div>
-        <label for="dispatch-destino" class="block text-xs font-bold text-navy mb-1">
-          Destino Detallado / Escuela / Localidad *
-        </label>
-        <div class="relative">
-          <MapPin size={15} class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            id="dispatch-destino"
-            name="destino"
-            required
-            class="w-full rounded-lg border border-gray-200 bg-gray-50/40 py-2 pl-9 pr-3 text-xs text-navy focus:border-blue focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue transition"
-          />
-        </div>
-      </div>
-
-      <!-- Fila 4: Fechas y Horas Programadas -->
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <!-- Salida Programada -->
-        <div>
-          <label for="dispatch-salida" class="block text-xs font-bold text-navy mb-1">
-            Fecha y Hora de Salida *
-          </label>
-          <input
-            type="datetime-local"
-            id="dispatch-salida"
-            name="fechaSalidaProgramada"
-            required
-            class="w-full rounded-lg border border-gray-200 bg-gray-50/40 px-3 py-2 text-xs text-navy focus:border-blue focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue transition"
-          />
-        </div>
-
-        <!-- Regreso Estimado -->
-        <div>
-          <label for="dispatch-regreso" class="block text-xs font-bold text-navy mb-1">
-            Fecha y Hora de Regreso Estimada *
-          </label>
-          <input
-            type="datetime-local"
-            id="dispatch-regreso"
-            name="fechaRegresoEstimada"
-            required
-            class="w-full rounded-lg border border-gray-200 bg-gray-50/40 px-3 py-2 text-xs text-navy focus:border-blue focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue transition"
-          />
-        </div>
-      </div>
-
-      <!-- Fila 5: Pasajeros y Motivo -->
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <!-- Cantidad de Pasajeros -->
-        <div>
-          <label for="dispatch-pasajeros" class="block text-xs font-bold text-navy mb-1">
-            Pasajeros Previstos *
-          </label>
-          <div class="relative">
-            <Users size={15} class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="number"
-              id="dispatch-pasajeros"
-              name="cantidadPasajeros"
-              value="1"
-              min="1"
-              max="30"
+        <div class="space-y-4">
+          <!-- Móvil / Vehículo -->
+          <div>
+            <label for="dispatch-vehiculo" class="block text-xs font-bold text-navy mb-1.5 flex items-center justify-between">
+              <span>Vehículo / Móvil Oficial *</span>
+              <span id="dispatch-vehiculo-cap-badge" class="text-[11px] font-semibold text-muted"></span>
+            </label>
+            <select
+              id="dispatch-vehiculo"
+              name="vehiculoId"
               required
-              class="w-full rounded-lg border border-gray-200 bg-gray-50/40 py-2 pl-9 pr-3 text-xs text-navy focus:border-blue focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue transition"
+              class="w-full rounded-xl border border-gray-200 bg-gray-50/40 px-3.5 py-2.5 text-xs font-semibold text-navy focus:border-orangeGov focus:bg-white focus:outline-none focus:ring-1 focus:ring-orangeGov transition shadow-2xs"
+            >
+              <option value="">-- Seleccionar Movilidad Oficial --</option>
+              {datosAuxiliares.vehiculos.map((v) => (
+                <option
+                  value={v.id}
+                  disabled={v.estado === 'en_taller'}
+                  data-patente={v.patente}
+                  data-capacidad={v.capacidadPasajeros}
+                >
+                  {v.patente} - {v.marca} {v.modelo} ({v.capacidadPasajeros} pas.){v.estado === 'en_taller' ? ' [EN TALLER]' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <!-- Chofer Oficial -->
+          <div>
+            <label for="dispatch-chofer" class="block text-xs font-bold text-navy mb-1.5">
+              Chofer Oficial Asignado *
+            </label>
+            <select
+              id="dispatch-chofer"
+              name="choferId"
+              required
+              class="w-full rounded-xl border border-gray-200 bg-gray-50/40 px-3.5 py-2.5 text-xs font-semibold text-navy focus:border-orangeGov focus:bg-white focus:outline-none focus:ring-1 focus:ring-orangeGov transition shadow-2xs"
+            >
+              <option value="">-- Seleccionar Chofer Oficial --</option>
+              {datosAuxiliares.choferes.map((c) => (
+                <option
+                  value={c.id}
+                  disabled={c.estado === 'licencia' || c.licenciaVencida}
+                >
+                  {c.apellido}, {c.nombre} (Cat. {c.categoriaLicencia || 'N/A'}){c.licenciaVencida ? ' [CARNET VENCIDO]' : c.estado === 'licencia' ? ' [LICENCIA]' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div class="p-3 bg-gray-50 rounded-xl border border-gray-100 text-[11px] text-gray-500 flex items-start gap-2">
+          <Info size={14} class="shrink-0 text-gray-400 mt-0.5" />
+          <span>El sistema inhabilita automáticamente vehículos en servicio técnico o choferes con carnet expirado para garantizar la seguridad jurídica del despacho.</span>
+        </div>
+      </div>
+
+      <!-- ============================================================== -->
+      <!-- PASO 2: DATOS DEL SOLICITANTE                                  -->
+      <!-- ============================================================== -->
+      <div id="dispatch-step-pane-2" class="step-pane space-y-4 hidden">
+        <div class="flex items-center gap-2 bg-blue/10 border border-blue/20 rounded-xl px-3 py-2 text-xs text-navy">
+          <Building size={16} class="text-blue shrink-0" />
+          <span><strong>Paso 2 de 4:</strong> Indique el área ministerial requirente y el funcionario responsable.</span>
+        </div>
+
+        <div class="space-y-4">
+          <!-- Dependencia Solicitante -->
+          <div>
+            <label for="dispatch-dependencia" class="block text-xs font-bold text-navy mb-1.5">
+              Dependencia / Área Solicitante *
+            </label>
+            <select
+              id="dispatch-dependencia"
+              name="dependenciaId"
+              required
+              class="w-full rounded-xl border border-gray-200 bg-gray-50/40 px-3.5 py-2.5 text-xs font-semibold text-navy focus:border-orangeGov focus:bg-white focus:outline-none focus:ring-1 focus:ring-orangeGov transition shadow-2xs"
+            >
+              <option value="">-- Seleccionar Área / Dirección Ministerial --</option>
+              {datosAuxiliares.dependencias.map((d) => (
+                <option value={d.id}>{d.nombre}</option>
+              ))}
+            </select>
+          </div>
+
+          <!-- Funcionario o Solicitante Responsable -->
+          <div>
+            <label for="dispatch-solicitante" class="block text-xs font-bold text-navy mb-1.5">
+              Funcionario o Solicitante Responsable
+            </label>
+            <div class="relative">
+              <User size={15} class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                id="dispatch-solicitante"
+                name="solicitanteNombre"
+                placeholder="Ej. Prof. Laura Morales (Directora de Nivel Inicial)"
+                class="w-full rounded-xl border border-gray-200 bg-gray-50/40 py-2.5 pl-10 pr-3.5 text-xs text-navy focus:border-orangeGov focus:bg-white focus:outline-none focus:ring-1 focus:ring-orangeGov transition shadow-2xs"
+              />
+            </div>
+            <p class="mt-1 text-[11px] text-gray-400">Nombre del funcionario que suscribirá la Hoja de Ruta Oficial A4.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================== -->
+      <!-- PASO 3: LUGAR Y DEPARTAMENTO DE SALIDA / DESTINO               -->
+      <!-- ============================================================== -->
+      <div id="dispatch-step-pane-3" class="step-pane space-y-4 hidden">
+        <div class="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 text-xs text-emerald-900">
+          <Compass size={16} class="text-emerald-600 shrink-0" />
+          <span><strong>Paso 3 de 4:</strong> Trayecto e itinerario oficial de salida y arribo.</span>
+        </div>
+
+        <div class="space-y-4">
+          <!-- Bloque Salida (Origen) -->
+          <div class="rounded-xl border border-gray-200 bg-gray-50/50 p-3.5 space-y-3">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-muted block">1. Origen del Viaje</span>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label for="dispatch-origen-depto" class="block text-xs font-bold text-navy mb-1">
+                  Departamento de Salida
+                </label>
+                <select
+                  id="dispatch-origen-depto"
+                  class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-navy focus:border-orangeGov focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
+                >
+                  {DEPARTAMENTOS_SAN_JUAN.map((depto) => (
+                    <option value={depto} selected={depto === 'Capital'}>{depto}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label for="dispatch-origen" class="block text-xs font-bold text-navy mb-1">
+                  Lugar Específico de Salida *
+                </label>
+                <input
+                  type="text"
+                  id="dispatch-origen"
+                  name="origen"
+                  value="Ministerio de Educación - Centro Cívico"
+                  required
+                  class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-navy focus:border-orangeGov focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Bloque Destino -->
+          <div class="rounded-xl border border-gray-200 bg-gray-50/50 p-3.5 space-y-3">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-muted block">2. Destino del Viaje</span>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label for="dispatch-depto" class="block text-xs font-bold text-navy mb-1">
+                  Departamento de San Juan (Destino) *
+                </label>
+                <select
+                  id="dispatch-depto"
+                  required
+                  class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-navy focus:border-orangeGov focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
+                >
+                  <option value="">-- Seleccionar Departamento --</option>
+                  {DEPARTAMENTOS_SAN_JUAN.map((depto) => (
+                    <option value={depto}>{depto}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label for="dispatch-destino" class="block text-xs font-bold text-navy mb-1">
+                  Destino Detallado / Escuela / Localidad *
+                </label>
+                <div class="relative">
+                  <MapPin size={15} class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    id="dispatch-destino"
+                    name="destino"
+                    placeholder="Ej. Escuela Albergue Álvarez Condarco"
+                    required
+                    class="w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-xs text-navy focus:border-orangeGov focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================== -->
+      <!-- PASO 4: HORARIOS, PASAJEROS, MISIÓN Y RESUMEN FINAL            -->
+      <!-- ============================================================== -->
+      <div id="dispatch-step-pane-4" class="step-pane space-y-3.5 hidden">
+        <div class="flex items-center gap-2 bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800">
+          <Calendar size={16} class="text-orangeGov shrink-0" />
+          <span><strong>Paso 4 de 4:</strong> Cronograma temporal, cupo de pasajeros y misión oficial.</span>
+        </div>
+
+        <!-- Fila de Fechas/Horarios -->
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <!-- Salida Programada -->
+          <div>
+            <label for="dispatch-salida" class="block text-xs font-bold text-navy mb-1">
+              Fecha y Hora de Salida *
+            </label>
+            <input
+              type="datetime-local"
+              id="dispatch-salida"
+              name="fechaSalidaProgramada"
+              required
+              class="w-full rounded-xl border border-gray-200 bg-gray-50/40 px-3 py-2 text-xs text-navy focus:border-orangeGov focus:bg-white focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
+            />
+          </div>
+
+          <!-- Regreso Estimado -->
+          <div>
+            <label for="dispatch-regreso" class="block text-xs font-bold text-navy mb-1">
+              Fecha y Hora de Regreso Estimada *
+            </label>
+            <input
+              type="datetime-local"
+              id="dispatch-regreso"
+              name="fechaRegresoEstimada"
+              required
+              class="w-full rounded-xl border border-gray-200 bg-gray-50/40 px-3 py-2 text-xs text-navy focus:border-orangeGov focus:bg-white focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
             />
           </div>
         </div>
 
-        <!-- Motivo / Objeto de la Comisión -->
-        <div class="sm:col-span-2">
-          <label for="dispatch-motivo" class="block text-xs font-bold text-navy mb-1">
-            Motivo / Misión Oficial *
+        <!-- Fila de Pasajeros y Motivo -->
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <!-- Cantidad de Pasajeros -->
+          <div>
+            <label for="dispatch-pasajeros" class="block text-xs font-bold text-navy mb-1">
+              Pasajeros Previstos *
+            </label>
+            <div class="relative">
+              <Users size={15} class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="number"
+                id="dispatch-pasajeros"
+                name="cantidadPasajeros"
+                value="1"
+                min="1"
+                max="30"
+                required
+                class="w-full rounded-xl border border-gray-200 bg-gray-50/40 py-2 pl-9 pr-3 text-xs text-navy focus:border-orangeGov focus:bg-white focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
+              />
+            </div>
+          </div>
+
+          <!-- Motivo de la Misión -->
+          <div class="sm:col-span-2">
+            <label for="dispatch-motivo" class="block text-xs font-bold text-navy mb-1">
+              Motivo / Misión Oficial *
+            </label>
+            <input
+              type="text"
+              id="dispatch-motivo"
+              name="motivo"
+              placeholder="Ej. Traslado de comitiva ministerial para supervisión escolar"
+              required
+              class="w-full rounded-xl border border-gray-200 bg-gray-50/40 px-3 py-2 text-xs text-navy focus:border-orangeGov focus:bg-white focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
+            />
+          </div>
+        </div>
+
+        <!-- Observaciones -->
+        <div>
+          <label for="dispatch-observaciones" class="block text-xs font-bold text-navy mb-1">
+            Observaciones Adicionales
           </label>
-          <input
-            type="text"
-            id="dispatch-motivo"
-            name="motivo"
-            required
-            class="w-full rounded-lg border border-gray-200 bg-gray-50/40 px-3 py-2 text-xs text-navy focus:border-blue focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue transition"
-          />
+          <textarea
+            id="dispatch-observaciones"
+            name="observaciones"
+            rows="2"
+            placeholder="Novedades de itinerario, autorizaciones especiales o indicaciones para el chofer..."
+            class="w-full rounded-xl border border-gray-200 bg-gray-50/40 px-3 py-2 text-xs text-navy focus:border-orangeGov focus:bg-white focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
+          ></textarea>
+        </div>
+
+        <!-- Tarjeta de Resumen Previo al Despacho -->
+        <div id="dispatch-summary-box" class="rounded-xl border border-slate-200 bg-slate-50/80 p-3 space-y-1.5 text-xs">
+          <div class="flex items-center justify-between border-b border-slate-200/60 pb-1">
+            <span class="font-bold text-navy text-[11px] flex items-center gap-1.5">
+              <FileText size={13} class="text-orangeGov" />
+              <span>Resumen de la Comisión Oficial</span>
+            </span>
+            <span class="text-[10px] text-muted">Revisión previa a confirmación</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-[11px]">
+            <div>
+              <span class="text-gray-400">Móvil:</span>
+              <strong id="summary-movil" class="text-navy ml-1">No asignado</strong>
+            </div>
+            <div>
+              <span class="text-gray-400">Conductor:</span>
+              <strong id="summary-chofer" class="text-navy ml-1">No asignado</strong>
+            </div>
+            <div>
+              <span class="text-gray-400">Dependencia:</span>
+              <strong id="summary-dep" class="text-navy ml-1">No asignada</strong>
+            </div>
+            <div>
+              <span class="text-gray-400">Trayecto:</span>
+              <strong id="summary-destino" class="text-navy ml-1">No definido</strong>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Observaciones -->
-      <div>
-        <label for="dispatch-observaciones" class="block text-xs font-bold text-navy mb-1">
-          Observaciones Adicionales
-        </label>
-        <textarea
-          id="dispatch-observaciones"
-          name="observaciones"
-          rows="2"
-          class="w-full rounded-lg border border-gray-200 bg-gray-50/40 px-3 py-2 text-xs text-navy focus:border-blue focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue transition"
-        ></textarea>
-      </div>
-
-      <!-- Botones de Acción -->
-      <div class="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
+      <!-- ============================================================== -->
+      <!-- BARRA DE NAVEGACIÓN DEL WIZARD (FOOTER)                        -->
+      <!-- ============================================================== -->
+      <div class="flex items-center justify-between pt-4 border-t border-gray-100 mt-5">
         <button
           type="button"
           id="btn-cancel-dispatch"
@@ -309,15 +474,38 @@ const DEPARTAMENTOS_SAN_JUAN = [
           Cancelar
         </button>
 
-        <button
-          type="submit"
-          id="btn-submit-dispatch"
-          class="flex items-center gap-2 rounded-xl bg-blue px-5 py-2 text-xs font-bold text-white shadow-sm shadow-blue/20 hover:opacity-95 transition cursor-pointer disabled:opacity-50"
-        >
-          <Send size={14} id="btn-submit-icon-send" />
-          <Save size={14} id="btn-submit-icon-save" class="hidden" />
-          <span id="btn-submit-dispatch-text">Generar Despacho</span>
-        </button>
+        <div class="flex items-center gap-2">
+          <!-- Botón Anterior -->
+          <button
+            type="button"
+            id="btn-wizard-prev"
+            class="hidden items-center gap-1.5 rounded-xl border border-gray-300 bg-white px-4 py-2 text-xs font-bold text-navy hover:bg-gray-50 transition cursor-pointer shadow-2xs"
+          >
+            <ArrowLeft size={14} />
+            <span>Anterior</span>
+          </button>
+
+          <!-- Botón Siguiente -->
+          <button
+            type="button"
+            id="btn-wizard-next"
+            class="flex items-center gap-1.5 rounded-xl bg-orangeGov hover:bg-orange-700 px-5 py-2 text-xs font-bold text-white shadow-sm shadow-orange-500/20 active:scale-98 transition cursor-pointer"
+          >
+            <span>Siguiente</span>
+            <ArrowRight size={14} />
+          </button>
+
+          <!-- Botón Submit (Paso 4) -->
+          <button
+            type="submit"
+            id="btn-submit-dispatch"
+            class="hidden items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-5 py-2 text-xs font-bold text-white shadow-sm shadow-emerald-600/20 active:scale-98 transition cursor-pointer disabled:opacity-50"
+          >
+            <Send size={14} id="btn-submit-icon-send" />
+            <Save size={14} id="btn-submit-icon-save" class="hidden" />
+            <span id="btn-submit-dispatch-text">Generar Despacho</span>
+          </button>
+        </div>
       </div>
     </form>
   </div>
