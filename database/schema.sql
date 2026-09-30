@@ -180,7 +180,7 @@ CREATE TABLE `comisiones` (
   `dependencia_solicitante_id` INT UNSIGNED NOT NULL,
   `solicitante_nombre` VARCHAR(150) NULL,
   `origen` VARCHAR(150) NOT NULL DEFAULT 'Ministerio de Educación - Centro Cívico',
-  `destino` VARCHAR(150) NOT NULL,
+  `destino` VARCHAR(500) NOT NULL,
   `motivo` TEXT NOT NULL,
   `cantidad_pasajeros` TINYINT UNSIGNED NOT NULL DEFAULT 1,
   `fecha_salida_programada` DATETIME NOT NULL,

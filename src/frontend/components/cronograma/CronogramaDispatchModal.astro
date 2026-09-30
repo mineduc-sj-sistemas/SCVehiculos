@@ -13,8 +13,10 @@ import {
   Info,
   MapPin,
   Pencil,
+  Plus,
   Save,
   Send,
+  Trash2,
   User,
   Users,
   X,
@@ -299,40 +301,70 @@ const DEPARTAMENTOS_SAN_JUAN = [
             </div>
           </div>
 
-          <!-- Bloque Destino -->
+          <!-- Bloque Destinos (Soporta Múltiples Paradas en el mismo viaje) -->
           <div class="rounded-xl border border-gray-200 bg-gray-50/50 p-3.5 space-y-3">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-muted block">2. Destino del Viaje</span>
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div>
-                <label for="dispatch-depto" class="block text-xs font-bold text-navy mb-1">
-                  Departamento de San Juan (Destino) *
-                </label>
-                <select
-                  id="dispatch-depto"
-                  required
-                  class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-navy focus:border-orangeGov focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
-                >
-                  <option value="">-- Seleccionar Departamento --</option>
-                  {DEPARTAMENTOS_SAN_JUAN.map((depto) => (
-                    <option value={depto}>{depto}</option>
-                  ))}
-                </select>
-              </div>
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-muted block">
+                2. Destinos e Itinerario del Viaje
+              </span>
+              <!-- Botón Signo Más (+) para agregar otro destino -->
+              <button
+                type="button"
+                id="btn-agregar-destino"
+                data-departamentos={JSON.stringify(DEPARTAMENTOS_SAN_JUAN)}
+                class="inline-flex items-center gap-1.5 text-[11px] font-bold text-orangeGov hover:text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-200 px-3 py-1.5 rounded-lg transition cursor-pointer shadow-2xs active:scale-98"
+                title="Agregar otra parada o destino en el mismo viaje"
+              >
+                <Plus size={14} strokeWidth={2.5} />
+                <span>Agregar Destino (+)</span>
+              </button>
+            </div>
 
-              <div>
-                <label for="dispatch-destino" class="block text-xs font-bold text-navy mb-1">
-                  Destino Detallado / Escuela / Localidad *
-                </label>
-                <div class="relative">
-                  <MapPin size={15} class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="text"
-                    id="dispatch-destino"
-                    name="destino"
-                    placeholder="Ej. Escuela Albergue Álvarez Condarco"
-                    required
-                    class="w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-xs text-navy focus:border-orangeGov focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
-                  />
+            <!-- Contenedor de Destinos / Paradas -->
+            <div id="destinos-container" class="space-y-3">
+              <!-- Destino 1 (Principal) -->
+              <div class="destino-item bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs space-y-2.5 relative" data-destino-index="1">
+                <div class="flex items-center justify-between text-[11px] font-bold text-navy">
+                  <span class="flex items-center gap-1.5">
+                    <span class="destino-num-badge flex h-4 w-4 items-center justify-center rounded-full bg-navy text-white text-[9px] font-bold">1</span>
+                    <span class="destino-title-text">Destino Principal *</span>
+                  </span>
+                  <span class="text-[10px] text-gray-400 font-medium">Primera parada oficial</span>
+                </div>
+
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <label for="dispatch-depto" class="block text-xs font-bold text-navy mb-1">
+                      Departamento de San Juan (Destino) *
+                    </label>
+                    <select
+                      id="dispatch-depto"
+                      required
+                      class="dispatch-depto-select w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-navy focus:border-orangeGov focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
+                    >
+                      <option value="">-- Seleccionar Departamento --</option>
+                      {DEPARTAMENTOS_SAN_JUAN.map((depto) => (
+                        <option value={depto}>{depto}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label for="dispatch-destino" class="block text-xs font-bold text-navy mb-1">
+                      Destino Detallado / Escuela / Localidad *
+                    </label>
+                    <div class="relative">
+                      <MapPin size={15} class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="text"
+                        id="dispatch-destino"
+                        name="destino"
+                        placeholder="Ej. Escuela Albergue Álvarez Condarco"
+                        required
+                        class="dispatch-destino-input w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-xs text-navy focus:border-orangeGov focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

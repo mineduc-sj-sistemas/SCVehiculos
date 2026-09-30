@@ -149,13 +149,144 @@ function setWizardStep(step: number) {
   }
 }
 
+function getCompiledDestinos(): string {
+  const container = document.getElementById('destinos-container')
+  if (!container) {
+    const inputDestino = document.getElementById('dispatch-destino') as HTMLInputElement | null
+    return inputDestino?.value.trim() || ''
+  }
+  const items = container.querySelectorAll('.destino-item')
+  const destinos: string[] = []
+
+  items.forEach((item) => {
+    const input = item.querySelector('.dispatch-destino-input') as HTMLInputElement | null
+    const val = input?.value.trim()
+    if (val) {
+      destinos.push(val)
+    }
+  })
+
+  const compiled = destinos.join(' // ')
+  const mainInput = document.getElementById('dispatch-destino') as HTMLInputElement | null
+  if (mainInput && destinos.length > 0) {
+    mainInput.value = compiled
+  }
+  return compiled
+}
+
+function reindexDestinos() {
+  const container = document.getElementById('destinos-container')
+  if (!container) return
+  const items = container.querySelectorAll('.destino-item')
+  items.forEach((item, idx) => {
+    const num = idx + 1
+    item.setAttribute('data-destino-index', String(num))
+    const badge = item.querySelector('.destino-num-badge')
+    const title = item.querySelector('.destino-title-text')
+    if (badge) badge.textContent = String(num)
+    if (title) {
+      title.textContent = num === 1 ? 'Destino Principal *' : `Parada Adicional #${num}`
+    }
+  })
+}
+
+function agregarDestinoItem(initialDepto = '', initialDestino = '') {
+  const container = document.getElementById('destinos-container')
+  const btnAgregar = document.getElementById('btn-agregar-destino')
+  if (!container) return
+
+  let departamentos: string[] = []
+  try {
+    departamentos = JSON.parse(btnAgregar?.getAttribute('data-departamentos') || '[]')
+  } catch (e) {
+    departamentos = []
+  }
+
+  const items = container.querySelectorAll('.destino-item')
+  const nextIndex = items.length + 1
+
+  const itemDiv = document.createElement('div')
+  itemDiv.className = 'destino-item bg-white p-3.5 rounded-xl border border-orange-200/80 shadow-2xs space-y-2.5 relative animate-in fade-in zoom-in-95'
+  itemDiv.setAttribute('data-destino-index', String(nextIndex))
+
+  const optionsHtml = departamentos
+    .map((d) => `<option value="${d}" ${d === initialDepto ? 'selected' : ''}>${d}</option>`)
+    .join('')
+
+  itemDiv.innerHTML = `
+    <div class="flex items-center justify-between text-[11px] font-bold text-navy">
+      <span class="flex items-center gap-1.5 text-orangeGov">
+        <span class="destino-num-badge flex h-4 w-4 items-center justify-center rounded-full bg-orangeGov text-white text-[9px] font-bold">${nextIndex}</span>
+        <span class="destino-title-text">Parada Adicional #${nextIndex}</span>
+      </span>
+      <button
+        type="button"
+        class="btn-eliminar-destino text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-0.5 rounded-md transition text-[11px] font-bold flex items-center gap-1 cursor-pointer"
+        title="Quitar parada"
+      >
+        <span>✕ Quitar Parada</span>
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div>
+        <label class="block text-xs font-bold text-navy mb-1">
+          Departamento de San Juan *
+        </label>
+        <select
+          required
+          class="dispatch-depto-select w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-navy focus:border-orangeGov focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
+        >
+          <option value="">-- Seleccionar Departamento --</option>
+          ${optionsHtml}
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-navy mb-1">
+          Destino Detallado / Escuela / Localidad *
+        </label>
+        <input
+          type="text"
+          value="${initialDestino.replace(/"/g, '&quot;')}"
+          placeholder="Ej. Escuela Albergue Colola"
+          required
+          class="dispatch-destino-input w-full rounded-lg border border-gray-200 bg-white py-2 px-3 text-xs text-navy focus:border-orangeGov focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
+        />
+      </div>
+    </div>
+  `
+
+  const select = itemDiv.querySelector('.dispatch-depto-select') as HTMLSelectElement | null
+  const input = itemDiv.querySelector('.dispatch-destino-input') as HTMLInputElement | null
+  const btnEliminar = itemDiv.querySelector('.btn-eliminar-destino')
+
+  select?.addEventListener('change', () => {
+    if (select.value && input) {
+      if (!input.value.trim() || input.value.includes(' - ')) {
+        input.value = `${select.value} - `
+      }
+      input.focus()
+    }
+  })
+
+  btnEliminar?.addEventListener('click', () => {
+    itemDiv.remove()
+    reindexDestinos()
+    getCompiledDestinos()
+  })
+
+  container.appendChild(itemDiv)
+  if (input && !initialDestino) {
+    input.focus()
+  }
+}
+
 function updateDispatchSummaryBox() {
   const selectVehiculo = document.getElementById('dispatch-vehiculo') as HTMLSelectElement | null
   const selectChofer = document.getElementById('dispatch-chofer') as HTMLSelectElement | null
   const selectDependencia = document.getElementById('dispatch-dependencia') as HTMLSelectElement | null
   const inputOrigen = document.getElementById('dispatch-origen') as HTMLInputElement | null
-  const inputDestino = document.getElementById('dispatch-destino') as HTMLInputElement | null
-  const selectDepto = document.getElementById('dispatch-depto') as HTMLSelectElement | null
 
   const sumMovil = document.getElementById('summary-movil')
   const sumChofer = document.getElementById('summary-chofer')
@@ -176,8 +307,8 @@ function updateDispatchSummaryBox() {
   }
   if (sumDestino) {
     const origen = inputOrigen?.value.trim() || 'Centro Cívico'
-    const destino = inputDestino?.value.trim() || (selectDepto?.value ? selectDepto.value : 'Sin destino')
-    sumDestino.innerText = `${origen} ➔ ${destino}`
+    const destinosCompiled = getCompiledDestinos()
+    sumDestino.innerText = `${origen} ➔ ${destinosCompiled || 'Sin destino'}`
   }
 }
 
@@ -216,18 +347,32 @@ function validateDispatchStep(step: number): boolean {
 
   if (step === 3) {
     const inputOrigen = document.getElementById('dispatch-origen') as HTMLInputElement | null
-    const selectDepto = document.getElementById('dispatch-depto') as HTMLSelectElement | null
-    const inputDestino = document.getElementById('dispatch-destino') as HTMLInputElement | null
-
     if (!inputOrigen || !inputOrigen.value.trim()) {
       return showError('Indique el lugar específico de salida.', inputOrigen)
     }
-    if (!selectDepto || !selectDepto.value) {
-      return showError('Seleccione el departamento de destino de San Juan.', selectDepto)
+
+    const container = document.getElementById('destinos-container')
+    const items = container ? container.querySelectorAll('.destino-item') : []
+    if (items.length === 0) {
+      return showError('Debe indicar al menos un destino para el viaje.')
     }
-    if (!inputDestino || !inputDestino.value.trim()) {
-      return showError('Indique el destino específico, escuela o localidad a visitar.', inputDestino)
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i]
+      const num = i + 1
+      const select = item.querySelector('.dispatch-depto-select') as HTMLSelectElement | null
+      const input = item.querySelector('.dispatch-destino-input') as HTMLInputElement | null
+
+      if (!select || !select.value) {
+        return showError(`Seleccione el departamento en el destino #${num}.`, select)
+      }
+      if (!input || !input.value.trim()) {
+        return showError(`Indique la escuela, localidad o destino en la parada #${num}.`, input)
+      }
     }
+
+    // Compilar destinos al pasar al siguiente paso
+    getCompiledDestinos()
   }
 
   if (step === 4) {
@@ -270,6 +415,22 @@ function resetDispatchModalToCreate() {
   const inputSalida = document.getElementById('dispatch-salida') as HTMLInputElement | null
   const capBadge = document.getElementById('dispatch-vehiculo-cap-badge')
 
+  // Limpiar paradas adicionales dinámicas
+  const container = document.getElementById('destinos-container')
+  if (container) {
+    const extraItems = container.querySelectorAll('.destino-item:not([data-destino-index="1"])')
+    extraItems.forEach((el) => el.remove())
+    const firstItem = container.querySelector('.destino-item[data-destino-index="1"]')
+    if (firstItem) {
+      const sel = firstItem.querySelector('.dispatch-depto-select') as HTMLSelectElement | null
+      const inp = firstItem.querySelector('.dispatch-destino-input') as HTMLInputElement | null
+      if (sel) sel.value = ''
+      if (inp) inp.value = ''
+    }
+  }
+  const inputDestino = document.getElementById('dispatch-destino') as HTMLInputElement | null
+  if (inputDestino) inputDestino.value = ''
+
   if (hiddenId) hiddenId.value = ''
   if (title) title.innerText = 'Despachar Nueva Comisión Oficial'
   if (subtitle) subtitle.innerText = 'Asignación de móvil, conductor y emisión de hoja de ruta ministerial'
@@ -295,6 +456,7 @@ function initDispatchModal() {
   const btnCancel = document.getElementById('btn-cancel-dispatch')
   const btnPrev = document.getElementById('btn-wizard-prev')
   const btnNext = document.getElementById('btn-wizard-next')
+  const btnAgregarDestino = document.getElementById('btn-agregar-destino')
   const errorMsg = document.getElementById('dispatch-error-msg')
   const errorText = document.getElementById('dispatch-error-text')
 
@@ -336,6 +498,11 @@ function initDispatchModal() {
 
   btnClose?.addEventListener('click', closeModal)
   btnCancel?.addEventListener('click', closeModal)
+
+  // Agregar nuevo destino / parada dinámica al hacer click en el botón "+"
+  btnAgregarDestino?.addEventListener('click', () => {
+    agregarDestinoItem()
+  })
 
   // Navegación Wizard: Anterior
   btnPrev?.addEventListener('click', () => {
@@ -421,13 +588,14 @@ function initDispatchModal() {
 
     if (errorMsg) errorMsg.classList.add('hidden')
 
+    const compiledDestinos = getCompiledDestinos()
     const formData = new FormData(form)
     const payload = {
       vehiculoId: selectVehiculo?.value || formData.get('vehiculoId'),
       choferId: selectChofer?.value || formData.get('choferId'),
       dependenciaId: formData.get('dependenciaId'),
       origen: formData.get('origen') || 'Ministerio de Educación - Centro Cívico',
-      destino: formData.get('destino'),
+      destino: compiledDestinos || formData.get('destino'),
       motivo: formData.get('motivo'),
       solicitanteNombre: formData.get('solicitanteNombre') || null,
       cantidadPasajeros: formData.get('cantidadPasajeros') ? Number(formData.get('cantidadPasajeros')) : 1,
@@ -677,7 +845,16 @@ async function openDetailModalForId(id: number) {
     if (elChoferNombre) elChoferNombre.innerText = `${c.choferNombre} ${c.choferApellido}`
     if (elDependenciaNombre) elDependenciaNombre.innerText = c.dependenciaNombre
     if (elOrigen) elOrigen.innerText = c.origen
-    if (elDestino) elDestino.innerText = c.destino
+    if (elDestino) {
+      if (c.destino && c.destino.includes(' // ')) {
+        const paradas = c.destino.split(' // ')
+        elDestino.innerHTML = paradas
+          .map((p: string, idx: number) => `<div class="flex items-center gap-1.5"><span class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orangeGov text-[10px] font-bold">${idx + 1}</span><span>${p}</span></div>`)
+          .join('')
+      } else {
+        elDestino.innerText = c.destino || '--'
+      }
+    }
     if (elMotivo) elMotivo.innerText = c.motivo
     if (elSolicitante) elSolicitante.innerText = c.solicitanteNombre || 'No especificado'
     if (elPasajeros) elPasajeros.innerText = `${c.cantidadPasajeros} personas`
@@ -806,14 +983,41 @@ async function openEditModalForId(id: number) {
     if (selectDependencia) selectDependencia.value = String(c.dependenciaId)
     if (inputSolicitante) inputSolicitante.value = c.solicitanteNombre || ''
     if (inputOrigen) inputOrigen.value = c.origen || 'Ministerio de Educación - Centro Cívico'
-    if (inputDestino) inputDestino.value = c.destino || ''
+    // Limpiar paradas adicionales dinámicas previas
+    const destinosContainer = document.getElementById('destinos-container')
+    if (destinosContainer) {
+      destinosContainer.querySelectorAll('.destino-item:not([data-destino-index="1"])').forEach((el) => el.remove())
+    }
 
-    if (selectDepto && c.destino) {
-      const match = Array.from(selectDepto.options).find((opt) => opt.value && c.destino.startsWith(opt.value))
-      if (match) {
-        selectDepto.value = match.value
-      } else {
-        selectDepto.value = ''
+    if (c.destino && c.destino.includes(' // ')) {
+      const paradas = c.destino.split(' // ')
+      const parada1 = paradas[0]
+      if (selectDepto) {
+        const match = Array.from(selectDepto.options).find((opt) => opt.value && parada1.startsWith(opt.value))
+        selectDepto.value = match ? match.value : ''
+      }
+      if (inputDestino) inputDestino.value = parada1
+
+      const btnAgregar = document.getElementById('btn-agregar-destino')
+      let deptos: string[] = []
+      try {
+        deptos = JSON.parse(btnAgregar?.getAttribute('data-departamentos') || '[]')
+      } catch (e) {}
+
+      for (let i = 1; i < paradas.length; i++) {
+        const paradaExtra = paradas[i]
+        const foundDepto = deptos.find((d) => paradaExtra.startsWith(d)) || ''
+        agregarDestinoItem(foundDepto, paradaExtra)
+      }
+    } else {
+      if (inputDestino) inputDestino.value = c.destino || ''
+      if (selectDepto && c.destino) {
+        const match = Array.from(selectDepto.options).find((opt) => opt.value && c.destino.startsWith(opt.value))
+        if (match) {
+          selectDepto.value = match.value
+        } else {
+          selectDepto.value = ''
+        }
       }
     }
 

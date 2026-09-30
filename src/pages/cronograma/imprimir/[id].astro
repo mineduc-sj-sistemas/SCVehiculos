@@ -164,8 +164,16 @@ const emitidoEl = new Intl.DateTimeFormat('es-AR', {
             </div>
 
             <div>
-              <span class="text-[10px] font-bold text-gray-500 uppercase block">Destino</span>
-              <p class="font-bold text-gray-900">{data.destino}</p>
+              <span class="text-[10px] font-bold text-gray-500 uppercase block">Destino(s)</span>
+              {data.destino && data.destino.includes(' // ') ? (
+                <ol class="list-decimal list-inside font-bold text-gray-900 space-y-0.5 text-[11px]">
+                  {data.destino.split(' // ').map((d: string) => (
+                    <li>{d}</li>
+                  ))}
+                </ol>
+              ) : (
+                <p class="font-bold text-gray-900">{data.destino}</p>
+              )}
             </div>
           </div>
 
