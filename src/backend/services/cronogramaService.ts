@@ -7,6 +7,7 @@ import type {
   CronogramaStats,
   CronogramaVehiculoRow,
   DatosAuxiliaresDespacho,
+  EditarComisionDTO,
   EstadoComision,
   NuevaComisionDTO,
 } from '../types/cronograma.types'
@@ -708,3 +709,145 @@ export async function actualizarEstadoComision(id: number, dto: ActualizarEstado
     return { success: false, error: error.message || 'Error al actualizar comisión' }
   }
 }
+
+/**
+ * Edita los datos de una comisión oficial existente
+ */
+export async function editarComision(
+  id: number,
+  dto: EditarComisionDTO
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    return await withTransaction(async (conn) => {
+      const [comisionRows] = await conn.execute<any>(
+        `SELECT id, codigo_comision, vehiculo_id, chofer_id, dependencia_solicitante_id,
+                solicitante_nombre, origen, destino, motivo, cantidad_pasajeros,
+                fecha_salida_programada, fecha_regreso_estimada, estado, observaciones, odometro_salida
+         FROM comisiones WHERE id = ? LIMIT 1`,
+        [id]
+      )
+
+      if (!comisionRows || (comisionRows as any[]).length === 0) {
+        return { success: false, error: 'Comisión no encontrada.' }
+      }
+
+      const comision = (comisionRows as any[])[0]
+
+      if (comision.estado === 'cancelada') {
+        return { success: false, error: 'No se puede editar una comisión cancelada.' }
+      }
+      if (comision.estado === 'finalizada') {
+        return { success: false, error: 'No se puede editar una comisión que ya ha finalizado.' }
+      }
+
+      // Validar vehículo si se cambia
+      let nuevoVehiculoId = comision.vehiculo_id
+      let nuevoOdometroSalida = comision.odometro_salida
+
+      if (dto.vehiculoId && dto.vehiculoId !== comision.vehiculo_id) {
+        if (comision.estado === 'en_curso') {
+          return { success: false, error: 'No se puede cambiar el vehículo de una comisión que ya se encuentra en viaje.' }
+        }
+
+        const [vehiculoRows] = await conn.execute<any>(
+          `SELECT id, estado, odometro_actual FROM vehiculos WHERE id = ? AND activo = 1 LIMIT 1`,
+          [dto.vehiculoId]
+        )
+        if (!vehiculoRows || (vehiculoRows as any[]).length === 0) {
+          return { success: false, error: 'El vehículo seleccionado no existe o no está activo.' }
+        }
+        if ((vehiculoRows as any[])[0].estado === 'en_taller') {
+          return { success: false, error: 'El vehículo seleccionado se encuentra en taller o mantenimiento.' }
+        }
+
+        nuevoVehiculoId = dto.vehiculoId
+        nuevoOdometroSalida = (vehiculoRows as any[])[0].odometro_actual
+      }
+
+      // Validar chofer si se cambia
+      let nuevoChoferId = comision.chofer_id
+      if (dto.choferId && dto.choferId !== comision.chofer_id) {
+        if (comision.estado === 'en_curso') {
+          return { success: false, error: 'No se puede cambiar el chofer de una comisión que ya se encuentra en viaje.' }
+        }
+
+        const [choferRows] = await conn.execute<any>(
+          `SELECT id, estado FROM choferes WHERE id = ? AND estado != 'inactivo' LIMIT 1`,
+          [dto.choferId]
+        )
+        if (!choferRows || (choferRows as any[]).length === 0) {
+          return { success: false, error: 'El chofer seleccionado no existe o está inactivo.' }
+        }
+        if ((choferRows as any[])[0].estado === 'licencia') {
+          return { success: false, error: 'El chofer seleccionado se encuentra de licencia médica.' }
+        }
+
+        nuevoChoferId = dto.choferId
+      }
+
+      // Validar fechas
+      const salidaStr = dto.fechaSalidaProgramada || comision.fecha_salida_programada
+      const regresoStr = dto.fechaRegresoEstimada || comision.fecha_regreso_estimada
+      const salida = new Date(salidaStr)
+      const regreso = new Date(regresoStr)
+
+      if (isNaN(salida.getTime()) || isNaN(regreso.getTime())) {
+        return { success: false, error: 'Las fechas de salida y regreso son inválidas.' }
+      }
+      if (regreso < salida) {
+        return { success: false, error: 'La fecha y hora de regreso estimada no puede ser anterior a la salida.' }
+      }
+
+      const formatSqlDatetime = (d: Date) => {
+        const pad = (n: number) => String(n).padStart(2, '0')
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+      }
+
+      const nuevoOrigen = dto.origen !== undefined ? dto.origen : comision.origen
+      const nuevoDestino = dto.destino !== undefined ? dto.destino : comision.destino
+      const nuevoMotivo = dto.motivo !== undefined ? dto.motivo : comision.motivo
+      const nuevaDependenciaId = dto.dependenciaId !== undefined ? dto.dependenciaId : comision.dependencia_solicitante_id
+      const nuevoSolicitante = dto.solicitanteNombre !== undefined ? dto.solicitanteNombre : comision.solicitante_nombre
+      const nuevaCantidadPasajeros = dto.cantidadPasajeros !== undefined ? dto.cantidadPasajeros : comision.cantidad_pasajeros
+      const nuevasObservaciones = dto.observaciones !== undefined ? dto.observaciones : comision.observaciones
+
+      await conn.execute(
+        `UPDATE comisiones SET
+          vehiculo_id = ?,
+          chofer_id = ?,
+          dependencia_solicitante_id = ?,
+          solicitante_nombre = ?,
+          origen = ?,
+          destino = ?,
+          motivo = ?,
+          cantidad_pasajeros = ?,
+          fecha_salida_programada = ?,
+          fecha_regreso_estimada = ?,
+          odometro_salida = ?,
+          observaciones = ?
+         WHERE id = ?`,
+        [
+          nuevoVehiculoId,
+          nuevoChoferId,
+          nuevaDependenciaId,
+          nuevoSolicitante,
+          nuevoOrigen,
+          nuevoDestino,
+          nuevoMotivo,
+          nuevaCantidadPasajeros,
+          formatSqlDatetime(salida),
+          formatSqlDatetime(regreso),
+          nuevoOdometroSalida,
+          nuevasObservaciones,
+          id,
+        ]
+      )
+
+      return { success: true }
+    })
+  } catch (error: any) {
+    console.error('Error al editar comisión en cronogramaService:', error)
+    return { success: false, error: error.message || 'Error al persistir cambios de la comisión' }
+  }
+}
+

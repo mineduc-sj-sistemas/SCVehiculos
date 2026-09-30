@@ -8,8 +8,8 @@ import {
 export const prerender = false
 
 export const PATCH: APIRoute = async ({ params, request, cookies }) => {
-  // Roles autorizados: Administrador (1), Operador (2), Mecánico (3)
-  const auth = requireAuth(cookies, [1, 2, 3])
+  // Roles autorizados: Administrador (1), Operador (2)
+  const auth = requireAuth(cookies, [1, 2])
   if (!auth.authorized) return auth.response!
 
   const id = Number(params.id)

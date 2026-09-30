@@ -5,9 +5,8 @@ import type { Usuario, Rol, UserCreateInput, UserUpdateInput, UserStats, ChoferP
 const MOCK_ROLES: Rol[] = [
   { id: 1, nombre: 'Administrador', descripcion: 'Acceso total al sistema y gestión de usuarios' },
   { id: 2, nombre: 'Operador / Despachante', descripcion: 'Gestión de comisiones, cronograma y hojas de ruta' },
-  { id: 3, nombre: 'Mecánico / Taller', descripcion: 'Registro y seguimiento de servicios de mantenimiento' },
   { id: 4, nombre: 'Chofer', descripcion: 'Consulta de viajes y asignaciones oficiales' },
-  { id: 5, nombre: 'Auditor', descripcion: 'Lectura de estadísticas e informes de uso' },
+  { id: 5, nombre: 'Auditor', descripcion: 'Lectura de estadísticas, auditoría e informes de gestión' },
 ]
 
 const MOCK_USUARIOS: Usuario[] = [
@@ -43,17 +42,17 @@ const MOCK_USUARIOS: Usuario[] = [
   },
   {
     id: 3,
-    rolId: 3,
-    rolNombre: 'Mecánico / Taller',
-    dependenciaId: 3,
-    dependenciaNombre: 'Dirección de Infraestructura Escolar',
-    nombre: 'Esteban',
-    apellido: 'Benítez',
-    email: 'esteban.benitez@sanjuan.edu.ar',
-    dni: '30998124',
-    telefono: '264-4891122',
+    rolId: 5,
+    rolNombre: 'Auditor',
+    dependenciaId: null,
+    dependenciaNombre: 'Auditoría General / Control de Gestión',
+    nombre: 'Roberto',
+    apellido: 'Méndez',
+    email: 'auditor@sanjuan.edu.ar',
+    dni: '24112334',
+    telefono: '264-4209988',
     activo: true,
-    ultimoAcceso: '18/09/2024',
+    ultimoAcceso: 'Hoy, 09:15',
     createdAt: '2024-09-10',
   },
 ]
@@ -309,7 +308,6 @@ export async function createUsuario(input: UserCreateInput): Promise<{ success: 
     const rolMap: Record<number, string> = {
       1: 'Administrador',
       2: 'Operador / Despachante',
-      3: 'Mecánico / Taller',
       4: 'Chofer',
       5: 'Auditor',
     }

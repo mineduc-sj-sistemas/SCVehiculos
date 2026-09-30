@@ -48,8 +48,8 @@ export const GET: APIRoute = async ({ request, cookies }) => {
 }
 
 export const POST: APIRoute = async ({ request, cookies }) => {
-  // Roles autorizados para gestionar vehículos: 1 (Admin), 2 (Operador), 3 (Mecánico)
-  const auth = requireAuth(cookies, [1, 2, 3])
+  // Roles autorizados para gestionar vehículos: 1 (Admin), 2 (Operador)
+  const auth = requireAuth(cookies, [1, 2])
   if (!auth.authorized) return auth.response!
 
   try {

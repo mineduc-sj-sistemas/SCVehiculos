@@ -75,6 +75,7 @@ export function verifySessionToken(token: string | undefined): UserSession | nul
 export interface AuthCheckResult {
   authorized: boolean
   user?: UserSession
+  session?: UserSession
   response?: Response
 }
 
@@ -99,6 +100,7 @@ export function requireAuth(cookies: any, allowedRoleIds?: number[]): AuthCheckR
     return {
       authorized: false,
       user,
+      session: user,
       response: new Response(
         JSON.stringify({ success: false, message: 'Acceso no autorizado: tu rol no tiene permisos para realizar esta operación.' }),
         { status: 403, headers: { 'Content-Type': 'application/json; charset=utf-8' } }
@@ -106,7 +108,7 @@ export function requireAuth(cookies: any, allowedRoleIds?: number[]): AuthCheckR
     }
   }
 
-  return { authorized: true, user }
+  return { authorized: true, user, session: user }
 }
 
 /**
@@ -218,6 +220,31 @@ export async function authenticateUser(emailInput: string, passwordInput: string
       return {
         success: true,
         message: 'Conexión a BD no disponible. Iniciando en Modo Demo Administrador.',
+        session: demoSession,
+        token: signSession(demoSession),
+      }
+    }
+
+    if (
+      process.env.NODE_ENV !== 'production' &&
+      email === 'auditor@sanjuan.edu.ar' &&
+      (password === 'admin123' || password === 'auditor123')
+    ) {
+      console.warn('ADVERTENCIA: Iniciando en Modo Demo Auditor.')
+      const demoSession: UserSession = {
+        id: 3,
+        email: 'auditor@sanjuan.edu.ar',
+        nombre: 'Roberto',
+        apellido: 'Méndez',
+        nombreCompleto: 'Roberto Méndez',
+        rolId: 5,
+        rolNombre: 'Auditor',
+        dependenciaId: null,
+        dependenciaNombre: 'Auditoría General / Control de Gestión',
+      }
+      return {
+        success: true,
+        message: 'Iniciando en Modo Demo Auditor.',
         session: demoSession,
         token: signSession(demoSession),
       }

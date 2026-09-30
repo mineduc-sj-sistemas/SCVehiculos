@@ -1,0 +1,51 @@
+---
+import DashboardLayout from '../frontend/layouts/DashboardLayout.astro'
+import AuditorExecutiveView from '../frontend/components/auditoria/AuditorExecutiveView.astro'
+import {
+  getDashboardStats,
+  getFleet,
+  getActiveTravels,
+  getOperationalAlerts,
+  getViajesList,
+  getMaintenanceList,
+  verifySessionToken,
+  SESSION_COOKIE_NAME,
+} from '../backend/index'
+
+// Identificación del usuario activo
+const sessionToken = Astro.cookies.get(SESSION_COOKIE_NAME)?.value
+const currentUser = Astro.locals.user || verifySessionToken(sessionToken) || {
+  id: 3,
+  nombre: 'Roberto',
+  apellido: 'Méndez',
+  nombreCompleto: 'Roberto Méndez',
+  email: 'auditor@sanjuan.edu.ar',
+  rolNombre: 'Auditor',
+  rolId: 5,
+}
+
+// Consultas dinámicas a través de la capa backend
+const [stats, fleet, travels, alertsSummary, viajes, mantenimientos] = await Promise.all([
+  getDashboardStats(),
+  getFleet(),
+  getActiveTravels(),
+  getOperationalAlerts(),
+  getViajesList(),
+  getMaintenanceList(),
+])
+---
+
+<DashboardLayout activeNav="panel" title="Panel de Auditoría · Fiscalización de Flota · Ministerio de Educación">
+  <h1 slot="header-title" class="font-display text-xl font-bold text-navy sm:text-2xl">
+    Panel de Auditoría y Fiscalización
+  </h1>
+
+  <AuditorExecutiveView
+    currentUser={currentUser}
+    stats={stats}
+    fleet={fleet}
+    viajes={viajes}
+    mantenimientos={mantenimientos}
+    alertsSummary={alertsSummary}
+  />
+</DashboardLayout>

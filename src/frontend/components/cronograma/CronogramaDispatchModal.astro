@@ -4,6 +4,8 @@ import {
   Calendar,
   Clock,
   MapPin,
+  Pencil,
+  Save,
   Send,
   Users,
   X,
@@ -52,13 +54,14 @@ const DEPARTAMENTOS_SAN_JUAN = [
     <div class="flex items-center justify-between border-b border-gray-100 bg-navy px-6 py-4 text-white">
       <div class="flex items-center gap-2.5">
         <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-gold text-navy shadow-sm">
-          <Send size={18} strokeWidth={2.5} />
+          <Send size={18} strokeWidth={2.5} id="dispatch-header-icon-send" />
+          <Pencil size={18} strokeWidth={2.5} id="dispatch-header-icon-edit" class="hidden" />
         </div>
         <div>
           <h3 id="modal-dispatch-title" class="font-display text-base font-bold">
             Despachar Nueva Comisión Oficial
           </h3>
-          <p class="text-[11px] text-white/60">Asignación de móvil, conductor y hoja de ruta ministerial</p>
+          <p id="modal-dispatch-subtitle" class="text-[11px] text-white/60">Asignación de móvil, conductor y hoja de ruta ministerial</p>
         </div>
       </div>
       <button
@@ -73,6 +76,7 @@ const DEPARTAMENTOS_SAN_JUAN = [
 
     <!-- Formulario de Despacho -->
     <form id="form-dispatch" class="overflow-y-auto p-6 space-y-4">
+      <input type="hidden" id="dispatch-comision-id" name="comisionId" value="" />
       <div id="dispatch-error-msg" class="hidden rounded-xl bg-red-50 border border-red-200 p-3 text-xs text-red-700 flex items-center gap-2">
         <AlertTriangle size={16} class="shrink-0" />
         <span id="dispatch-error-text">Ocurrió un error al guardar.</span>
@@ -310,8 +314,9 @@ const DEPARTAMENTOS_SAN_JUAN = [
           id="btn-submit-dispatch"
           class="flex items-center gap-2 rounded-xl bg-blue px-5 py-2 text-xs font-bold text-white shadow-sm shadow-blue/20 hover:opacity-95 transition cursor-pointer disabled:opacity-50"
         >
-          <Send size={14} />
-          <span>Generar Despacho</span>
+          <Send size={14} id="btn-submit-icon-send" />
+          <Save size={14} id="btn-submit-icon-save" class="hidden" />
+          <span id="btn-submit-dispatch-text">Generar Despacho</span>
         </button>
       </div>
     </form>
