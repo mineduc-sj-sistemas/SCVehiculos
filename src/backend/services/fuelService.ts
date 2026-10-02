@@ -66,38 +66,60 @@ function formatDate(d: any): string {
 }
 
 /**
- * Obtiene métricas ejecutivas de combustible para el mes en curso
+ * Obtiene métricas ejecutivas de combustible para el mes en curso (global de flota o específico de chofer)
  */
-export async function getFuelKpis(): Promise<FuelKpis> {
+export async function getFuelKpis(choferId?: number): Promise<FuelKpis> {
   const currentMonthStart = new Date()
   currentMonthStart.setDate(1)
   const fechaInicioMes = formatDate(currentMonthStart)
 
+  let sqlTotales = `
+    SELECT 
+      COUNT(*) AS total_cargas,
+      COALESCE(SUM(litros), 0) AS total_litros,
+      COALESCE(SUM(importe_total), 0) AS total_importe
+    FROM cargas_combustible
+    WHERE fecha_carga >= ?
+  `
+  const paramsTotales: any[] = [fechaInicioMes]
+
+  if (choferId) {
+    sqlTotales += ` AND chofer_id = ?`
+    paramsTotales.push(choferId)
+  }
+
+  let sqlRendimiento = `
+    SELECT AVG(rendimiento_km_l) AS rend_promedio 
+    FROM cargas_combustible 
+    WHERE rendimiento_km_l IS NOT NULL AND rendimiento_km_l BETWEEN 3.5 AND 30.0
+  `
+  const paramsRendimiento: any[] = []
+
+  if (choferId) {
+    sqlRendimiento += ` AND chofer_id = ?`
+    paramsRendimiento.push(choferId)
+  }
+
   const [resTotales, resRendimiento] = await Promise.all([
-    query<any>(
-      `SELECT 
-        COUNT(*) AS total_cargas,
-        COALESCE(SUM(litros), 0) AS total_litros,
-        COALESCE(SUM(importe_total), 0) AS total_importe
-       FROM cargas_combustible
-       WHERE fecha_carga >= ?`,
-      [fechaInicioMes]
-    ),
-    query<any>(
-      `SELECT AVG(rendimiento_km_l) AS rend_promedio 
-       FROM cargas_combustible 
-       WHERE rendimiento_km_l IS NOT NULL AND rendimiento_km_l > 0`
-    ),
+    query<any>(sqlTotales, paramsTotales),
+    query<any>(sqlRendimiento, paramsRendimiento),
   ])
 
   const t = resTotales[0] || {}
   const r = resRendimiento[0] || {}
 
+  let rendPromedio = 0
+  if (r.rend_promedio != null) {
+    rendPromedio = Number(Number(r.rend_promedio).toFixed(2))
+  } else if (!choferId) {
+    rendPromedio = 10.5 // Valor referencial para flota
+  }
+
   return {
     totalLitrosMes: Number(Number(t.total_litros ?? 0).toFixed(1)),
     gastoTotalMes: Number(t.total_importe ?? 0),
     cargasCountMes: Number(t.total_cargas ?? 0),
-    rendimientoPromedioKmL: Number(Number(r.rend_promedio ?? 10.5).toFixed(2)),
+    rendimientoPromedioKmL: rendPromedio,
   }
 }
 
@@ -190,7 +212,7 @@ export async function createFuelCharge(dto: NuevaCargaCombustibleDTO): Promise<{
     // 3. Buscar la última carga anterior para calcular rendimiento en Km/L
     let rendimientoKmL: number | null = null
     const [ultimasCargas] = await conn.execute<any>(
-      `SELECT odometro_carga, litros 
+      `SELECT odometro_carga, litros, tanque_lleno 
        FROM cargas_combustible 
        WHERE vehiculo_id = ? 
        ORDER BY fecha_carga DESC, id DESC 
@@ -200,9 +222,20 @@ export async function createFuelCharge(dto: NuevaCargaCombustibleDTO): Promise<{
 
     if (ultimasCargas && ultimasCargas.length > 0) {
       const odoAnterior = Number(ultimasCargas[0].odometro_carga)
-      if (dto.odometroCarga > odoAnterior && litros > 0) {
+      const fueTanqueLlenoAnterior = Boolean(ultimasCargas[0].tanque_lleno)
+      const esTanqueLlenoActual = dto.tanqueLleno !== false
+
+      // El rendimiento exacto (Km/L) solo es estadísticamente válido si:
+      // - Ambas cargas consecutivas fueron a tanque completo
+      // - La distancia es lógica para una autonomía vehicular normal (entre 50 y 1.500 km)
+      if (esTanqueLlenoActual && fueTanqueLlenoAnterior && dto.odometroCarga > odoAnterior && litros > 0) {
         const kmRecorridos = dto.odometroCarga - odoAnterior
-        rendimientoKmL = Number((kmRecorridos / litros).toFixed(2))
+        if (kmRecorridos >= 30 && kmRecorridos <= 1500) {
+          const rend = Number((kmRecorridos / litros).toFixed(2))
+          if (rend >= 3.5 && rend <= 30.0) {
+            rendimientoKmL = rend
+          }
+        }
       }
     }
 

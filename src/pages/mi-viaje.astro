@@ -1,11 +1,12 @@
 ---
-import { AlertCircle, AlertTriangle, ArrowRight, Calendar, Check, CheckCircle2, ChevronRight, Clock, Compass, FileText, Fuel, Gauge, MapPin, Navigation, Phone, Play, ShieldAlert, Sparkles, StopCircle, Truck, User, Users } from 'lucide-astro'
+import { AlertCircle, AlertTriangle, ArrowRight, Calendar, Camera, Check, CheckCircle2, ChevronRight, Clock, Compass, FileText, Fuel, Gauge, MapPin, Navigation, Phone, Play, Receipt, ShieldAlert, Sparkles, StopCircle, Truck, User, Users } from 'lucide-astro'
 import DashboardLayout from '../frontend/layouts/DashboardLayout.astro'
 import PlateBadge from '../frontend/components/ui/PlateBadge.astro'
 import StatusBadge from '../frontend/components/ui/StatusBadge.astro'
 import {
   getMiViajeActivo,
   getChoferesParaSelector,
+  getAlertasChofer,
   verifySessionToken,
   SESSION_COOKIE_NAME,
 } from '../backend/index'
@@ -27,6 +28,7 @@ const choferIdOverride = choferIdQuery ? parseInt(choferIdQuery, 10) : undefined
 
 const { success, chofer, viajeActivo, paradas = [], checkins = [], historial = [] } = await getMiViajeActivo(currentUser.id, choferIdOverride)
 const listaChoferesSelector = isStaff ? await getChoferesParaSelector() : []
+const alertasChofer = chofer ? await getAlertasChofer(chofer.id) : []
 
 // Formateador de fechas
 const formatHora = (dStr: string | null) => {
@@ -106,6 +108,32 @@ const formatFechaCorta = (dStr: string | null) => {
             ))}
           </select>
         </div>
+      </div>
+    )}
+
+    {/* Alertas personales del Chofer */}
+    {alertasChofer.length > 0 && (
+      <div class="space-y-2">
+        {alertasChofer.map((al) => (
+          <div class={`rounded-2xl border p-3.5 flex items-center justify-between gap-3 text-xs ${
+            al.severidad === 'danger'
+              ? 'border-rose-200 bg-rose-50 text-rose-800'
+              : al.severidad === 'warning'
+              ? 'border-amber-200 bg-amber-50 text-amber-800'
+              : 'border-blue-200 bg-blue-50 text-blue-800'
+          }`}>
+            <div class="flex items-center gap-2.5">
+              <AlertTriangle size={18} class="shrink-0 text-amber-600" />
+              <p class="font-bold">{al.mensaje}</p>
+            </div>
+            <a
+              href="/mi-perfil"
+              class="shrink-0 rounded-xl bg-white/90 px-3 py-1.5 text-[11px] font-bold shadow-2xs hover:bg-white transition"
+            >
+              Ver Mi Perfil
+            </a>
+          </div>
+        ))}
       </div>
     )}
 
@@ -381,16 +409,33 @@ const formatFechaCorta = (dStr: string | null) => {
     <!-- ========================================================================= -->
     <!-- MODAL 1: CONFIRMAR SALIDA (DESPACHO DEL CHOFER) -->
     <!-- ========================================================================= -->
-    <div id="modal-salida-chofer" class="fixed inset-0 z-50 flex items-center justify-center bg-navy/60 backdrop-blur-xs p-4 hidden">
-      <div class="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl space-y-4 border border-line animate-in zoom-in-95">
+    <div id="modal-salida-chofer" class="fixed inset-0 z-50 flex items-center justify-center bg-navy/60 backdrop-blur-xs p-3 sm:p-4 hidden">
+      <div class="w-full max-w-sm rounded-3xl bg-white p-5 sm:p-6 shadow-2xl space-y-4 border border-line animate-in zoom-in-95 max-h-[92vh] overflow-y-auto">
         <div class="flex items-center justify-between">
           <h3 class="text-sm font-bold text-navy">Iniciar Salida de Comisión</h3>
-          <button type="button" id="btn-close-modal-salida" class="text-muted hover:text-navy text-lg cursor-pointer">✕</button>
+          <button type="button" id="btn-close-modal-salida" class="text-muted hover:text-navy text-lg p-1 cursor-pointer">✕</button>
         </div>
 
         <p class="text-xs text-muted">
           Verifica el kilometraje en el tablero de la unidad antes de emprender viaje hacia el primer destino.
         </p>
+
+        <!-- Scanner IA para Salida (Optimizado para móvil) -->
+        <div class="rounded-2xl border border-dashed border-orangeGov/40 bg-orange-50/60 p-3 space-y-2">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold text-orangeGov flex items-center gap-1.5">
+              <Camera size={15} />
+              Escanear Tablero con IA
+            </span>
+            <span class="text-[10px] font-semibold text-muted">Gemini Flash</span>
+          </div>
+          <label class="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl bg-orangeGov hover:bg-orange-700 text-white font-bold text-xs shadow-md shadow-orange-500/20 active:scale-98 transition cursor-pointer">
+            <Camera size={16} />
+            <span>Sacar Foto con la Cámara</span>
+            <input type="file" accept="image/*" capture="environment" id="scan-odo-salida" class="hidden" />
+          </label>
+          <div id="status-odo-salida" class="hidden text-xs font-medium p-2.5 rounded-xl"></div>
+        </div>
 
         <form id="form-confirmar-salida-chofer" class="space-y-4">
           <div>
@@ -398,14 +443,16 @@ const formatFechaCorta = (dStr: string | null) => {
               Odómetro en Tablero (Km) *
             </label>
             <div class="relative">
-              <Gauge size={16} class="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
+              <Gauge size={18} class="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
               <input
                 type="number"
+                inputmode="numeric"
+                pattern="[0-9]*"
                 id="input-odo-salida-chofer"
                 required
                 min={viajeActivo?.vehiculo_odometro || 0}
                 value={viajeActivo?.vehiculo_odometro || 0}
-                class="w-full rounded-xl border border-line bg-paper pl-10 pr-3.5 py-2.5 text-xs font-bold font-mono text-navy focus:border-orangeGov focus:outline-none"
+                class="w-full rounded-2xl border border-line bg-paper pl-11 pr-3.5 py-3 text-base sm:text-xs font-bold font-mono text-navy focus:border-orangeGov focus:outline-none"
               />
             </div>
             <p class="mt-1 text-[10px] text-muted">
@@ -487,14 +534,45 @@ const formatFechaCorta = (dStr: string | null) => {
             </div>
           </div>
 
+          <!-- Scanners IA para Combustible (Ticket Edenred o Tablero) -->
+          <div class="rounded-2xl border border-dashed border-orangeGov/40 bg-orange-50/60 p-3 space-y-2">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-bold text-orangeGov flex items-center gap-1.5">
+                <Receipt size={14} />
+                Escanear con IA (Autocompletar)
+              </span>
+              <span class="text-[10px] font-semibold text-muted">Gemini Flash</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <label class="flex flex-col items-center justify-center gap-1 p-2.5 rounded-xl bg-white border border-orange-200 text-xs font-bold text-orange-950 hover:bg-orange-100/50 cursor-pointer shadow-2xs active:scale-98 transition text-center">
+                <span class="text-base">🧾</span>
+                <span>Foto del Ticket</span>
+                <span class="text-[9px] font-normal text-muted leading-tight">Edenred / Cupón</span>
+                <input type="file" accept="image/*" capture="environment" id="scan-ticket-fuel" class="hidden" />
+              </label>
+
+              <label class="flex flex-col items-center justify-center gap-1 p-2.5 rounded-xl bg-white border border-orange-200 text-xs font-bold text-orange-950 hover:bg-orange-100/50 cursor-pointer shadow-2xs active:scale-98 transition text-center">
+                <span class="text-base">📸</span>
+                <span>Foto del Tablero</span>
+                <span class="text-[9px] font-normal text-muted leading-tight">Solo odómetro (Km)</span>
+                <input type="file" accept="image/*" capture="environment" id="scan-odo-fuel" class="hidden" />
+              </label>
+            </div>
+
+            <div id="status-fuel-scanner" class="hidden text-xs font-medium p-2.5 rounded-xl"></div>
+          </div>
+
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="block font-bold text-navy mb-1">Odómetro Tablero</label>
               <input
                 type="number"
+                inputmode="numeric"
+                pattern="[0-9]*"
                 id="fuel-odometro"
                 placeholder="Km actual"
-                class="w-full rounded-xl border border-line bg-paper px-3 py-2 font-mono font-bold text-navy focus:border-orangeGov focus:outline-none"
+                class="w-full rounded-2xl border border-line bg-paper px-3 py-2.5 text-base sm:text-xs font-mono font-bold text-navy focus:border-orangeGov focus:outline-none"
               />
             </div>
             <div>
@@ -503,7 +581,7 @@ const formatFechaCorta = (dStr: string | null) => {
                 type="text"
                 id="fuel-ticket"
                 placeholder="TKT-00123"
-                class="w-full rounded-xl border border-line bg-paper px-3 py-2 font-mono text-navy focus:border-orangeGov focus:outline-none"
+                class="w-full rounded-2xl border border-line bg-paper px-3 py-2.5 text-base sm:text-xs font-mono text-navy focus:border-orangeGov focus:outline-none"
               />
             </div>
           </div>
@@ -511,7 +589,7 @@ const formatFechaCorta = (dStr: string | null) => {
           <button
             type="submit"
             id="btn-submit-fuel-chofer"
-            class="w-full mt-2 rounded-xl bg-orangeGov hover:bg-orange-700 py-3 text-xs font-bold text-white shadow-md transition cursor-pointer"
+            class="w-full mt-2 rounded-2xl bg-orangeGov hover:bg-orange-700 py-3.5 text-xs font-bold text-white shadow-md active:scale-98 transition cursor-pointer"
           >
             Guardar Ticket de Combustible
           </button>
@@ -522,16 +600,33 @@ const formatFechaCorta = (dStr: string | null) => {
     <!-- ========================================================================= -->
     <!-- MODAL 3: FINALIZAR VIAJE (REGRESO AL CENTRO CÍVICO) -->
     <!-- ========================================================================= -->
-    <div id="modal-llegada-chofer" class="fixed inset-0 z-50 flex items-center justify-center bg-navy/60 backdrop-blur-xs p-4 hidden">
-      <div class="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl space-y-4 border border-line animate-in zoom-in-95">
+    <div id="modal-llegada-chofer" class="fixed inset-0 z-50 flex items-center justify-center bg-navy/60 backdrop-blur-xs p-3 sm:p-4 hidden">
+      <div class="w-full max-w-sm rounded-3xl bg-white p-5 sm:p-6 shadow-2xl space-y-4 border border-line animate-in zoom-in-95 max-h-[92vh] overflow-y-auto">
         <div class="flex items-center justify-between">
           <h3 class="text-sm font-bold text-navy">Finalizar Comisión Oficial</h3>
-          <button type="button" id="btn-close-modal-llegada" class="text-muted hover:text-navy text-lg cursor-pointer">✕</button>
+          <button type="button" id="btn-close-modal-llegada" class="text-muted hover:text-navy text-lg p-1 cursor-pointer">✕</button>
         </div>
 
         <p class="text-xs text-muted">
           Ingresa el odómetro final al llegar a destino. El vehículo y tu legajo quedarán liberados en el sistema.
         </p>
+
+        <!-- Scanner IA para Llegada (Optimizado para móvil) -->
+        <div class="rounded-2xl border border-dashed border-orangeGov/40 bg-orange-50/60 p-3 space-y-2">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold text-orangeGov flex items-center gap-1.5">
+              <Camera size={15} />
+              Escanear Tablero con IA
+            </span>
+            <span class="text-[10px] font-semibold text-muted">Gemini Flash</span>
+          </div>
+          <label class="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl bg-orangeGov hover:bg-orange-700 text-white font-bold text-xs shadow-md shadow-orange-500/20 active:scale-98 transition cursor-pointer">
+            <Camera size={16} />
+            <span>Sacar Foto con la Cámara</span>
+            <input type="file" accept="image/*" capture="environment" id="scan-odo-llegada" class="hidden" />
+          </label>
+          <div id="status-odo-llegada" class="hidden text-xs font-medium p-2.5 rounded-xl"></div>
+        </div>
 
         <form id="form-confirmar-llegada-chofer" class="space-y-3">
           <div>
@@ -539,14 +634,16 @@ const formatFechaCorta = (dStr: string | null) => {
               Odómetro de Regreso (Km) *
             </label>
             <div class="relative">
-              <Gauge size={16} class="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
+              <Gauge size={18} class="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
               <input
                 type="number"
+                inputmode="numeric"
+                pattern="[0-9]*"
                 id="input-odo-llegada-chofer"
                 required
                 min={viajeActivo?.odometro_salida || viajeActivo?.vehiculo_odometro || 0}
                 placeholder="Ej: 66300"
-                class="w-full rounded-xl border border-line bg-paper pl-10 pr-3.5 py-2.5 text-xs font-bold font-mono text-navy focus:border-orangeGov focus:outline-none"
+                class="w-full rounded-2xl border border-line bg-paper pl-11 pr-3.5 py-3 text-base sm:text-xs font-bold font-mono text-navy focus:border-orangeGov focus:outline-none"
               />
             </div>
             <p class="mt-1 text-[10px] text-muted">

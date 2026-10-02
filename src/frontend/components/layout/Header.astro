@@ -1,16 +1,29 @@
 ---
 import { AlertTriangle, Bell, CheckCircle2, Menu, Moon, Search, Sun } from 'lucide-astro'
-import { getOperationalAlerts } from '../../../backend/index'
+import { getOperationalAlerts, verifySessionToken, SESSION_COOKIE_NAME, query } from '../../../backend/index'
 
 const todayFormatted = new Intl.DateTimeFormat('es-AR', {
   weekday: 'long',
   day: 'numeric',
   month: 'long',
   year: 'numeric',
+  timeZone: 'America/Argentina/Buenos_Aires',
 }).format(new Date())
 const capitalizedDate = todayFormatted.charAt(0).toUpperCase() + todayFormatted.slice(1)
 
-const alertsSummary = await getOperationalAlerts()
+const sessionToken = Astro.cookies.get(SESSION_COOKIE_NAME)?.value
+const currentUser = Astro.locals.user || verifySessionToken(sessionToken)
+const isChofer = currentUser?.rolId === 4
+
+let choferId: number | undefined = undefined
+if (isChofer && currentUser) {
+  const choferRows = await query<any[]>(`SELECT id FROM choferes WHERE usuario_id = ? LIMIT 1`, [currentUser.id])
+  if (choferRows && choferRows.length > 0) {
+    choferId = choferRows[0].id
+  }
+}
+
+const alertsSummary = await getOperationalAlerts(isChofer ? { rolId: 4, choferId, usuarioId: currentUser?.id } : undefined)
 ---
 
 <header class="dashboard-header flex h-[76px] items-center justify-between border-b border-line bg-white px-4 pt-[3px] sm:px-7">
@@ -27,14 +40,16 @@ const alertsSummary = await getOperationalAlerts()
   </div>
   
   <div class="flex items-center gap-2 sm:gap-3">
-    <div class="relative hidden md:block">
-      <Search size={17} class="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-      <input
-        aria-label="Buscar"
-        placeholder="Buscar vehículo..."
-        class="h-9 w-[190px] rounded-xl border border-line bg-paper pl-10 pr-3.5 text-xs font-semibold text-navy outline-none transition focus:border-orangeGov focus:bg-white focus:ring-2 focus:ring-orangeGov/15 lg:w-[210px]"
-      />
-    </div>
+    {!isChofer && (
+      <div class="relative hidden md:block">
+        <Search size={17} class="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+        <input
+          aria-label="Buscar"
+          placeholder="Buscar vehículo..."
+          class="h-9 w-[190px] rounded-xl border border-line bg-paper pl-10 pr-3.5 text-xs font-semibold text-navy outline-none transition focus:border-orangeGov focus:bg-white focus:ring-2 focus:ring-orangeGov/15 lg:w-[210px]"
+        />
+      </div>
+    )}
 
     <!-- Menú Desplegable de Alertas y Vencimientos -->
     <div class="relative" id="dropdown-alertas-container">
@@ -43,7 +58,7 @@ const alertsSummary = await getOperationalAlerts()
         type="button"
         class="relative rounded-xl border border-line bg-white p-2 text-muted hover:bg-orange-50 hover:text-orangeGov hover:border-orangeGov/30 transition cursor-pointer"
         aria-label="Notificaciones"
-        title="Centro de alertas y vencimientos operativos"
+        title={isChofer ? "Mis notificaciones y alertas personales" : "Centro de alertas y vencimientos operativos"}
       >
         <Bell size={19} />
         {alertsSummary.totalAlerts > 0 && (
@@ -60,19 +75,25 @@ const alertsSummary = await getOperationalAlerts()
       >
         <div class="flex items-center justify-between border-b border-line bg-paper px-4 py-3">
           <div class="flex items-center gap-2">
-            <span class="font-display text-xs font-bold text-navy">Alertas Operativas</span>
+            <span class="font-display text-xs font-bold text-navy">
+              {isChofer ? 'Mis Notificaciones' : 'Alertas Operativas'}
+            </span>
             <span class="rounded-full bg-orange-100 text-orange-800 text-[10px] font-bold px-2 py-0.5">
-              {alertsSummary.totalAlerts} pendientes
+              {alertsSummary.totalAlerts} {alertsSummary.totalAlerts === 1 ? 'pendiente' : 'pendientes'}
             </span>
           </div>
-          <span class="text-[10px] text-muted font-semibold">Dirección de Movilidades</span>
+          <span class="text-[10px] text-muted font-semibold">
+            {isChofer ? 'Portal Chofer' : 'Dirección de Movilidades'}
+          </span>
         </div>
 
         <div class="max-h-80 overflow-y-auto divide-y divide-line/60">
           {alertsSummary.alerts.length === 0 ? (
             <div class="p-6 text-center text-xs text-muted">
               <CheckCircle2 size={24} class="mx-auto text-emerald-500 mb-1.5" />
-              Todo al día. No hay vencimientos próximos ni alertas críticas.
+              {isChofer
+                ? 'Todo al día. No tenés alertas ni vencimientos pendientes en tu cuenta.'
+                : 'Todo al día. No hay vencimientos próximos ni alertas críticas.'}
             </div>
           ) : (
             alertsSummary.alerts.slice(0, 8).map((al) => (

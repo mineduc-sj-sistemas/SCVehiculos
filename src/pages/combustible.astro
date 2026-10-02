@@ -4,19 +4,38 @@ import DashboardLayout from '../frontend/layouts/DashboardLayout.astro'
 import FuelKpiCards from '../frontend/components/combustible/FuelKpiCards.astro'
 import FuelTable from '../frontend/components/combustible/FuelTable.astro'
 import FuelFormModal from '../frontend/components/combustible/FuelFormModal.astro'
-import { getFuelKpis, getFuelList, getVehiclesFullList, getChoferesFullList } from '../backend/index'
+import { getFuelKpis, getFuelList, getVehiclesFullList, getChoferesFullList, verifySessionToken, SESSION_COOKIE_NAME, query } from '../backend/index'
 
-// Carga en servidor
+// Identificación del usuario activo
+const sessionToken = Astro.cookies.get(SESSION_COOKIE_NAME)?.value
+const currentUser = Astro.locals.user || verifySessionToken(sessionToken)
+const isChofer = currentUser?.rolId === 4
+
+// Si es chofer, obtener su chofer_id para filtrar solo sus cargas
+let choferIdFiltro: number | undefined = undefined
+if (isChofer && currentUser) {
+  const choferRows = await query<any>(
+    `SELECT id FROM choferes WHERE usuario_id = ? LIMIT 1`,
+    [currentUser.id]
+  )
+  if (choferRows && choferRows.length > 0) {
+    choferIdFiltro = choferRows[0].id
+  }
+}
+
+// Carga en servidor — filtrada por chofer si corresponde
 const [kpis, cargas, vehiculos, choferes] = await Promise.all([
-  getFuelKpis(),
-  getFuelList(),
+  getFuelKpis(choferIdFiltro),
+  getFuelList(undefined, choferIdFiltro),
   getVehiclesFullList(),
-  getChoferesFullList(),
+  isChofer ? [] : getChoferesFullList(), // El chofer no necesita el selector de choferes
 ])
 ---
 
-<DashboardLayout activeNav="combustible" title="Control de Combustible · Movilidades · Ministerio de Educación">
-  <h1 slot="header-title" class="font-display text-xl font-bold text-navy sm:text-2xl">Control y Rendimiento de Combustible</h1>
+<DashboardLayout activeNav="combustible" title={isChofer ? "Mis Cargas de Combustible · Portal del Conductor" : "Control de Combustible · Movilidades · Ministerio de Educación"}>
+  <h1 slot="header-title" class="font-display text-xl font-bold text-navy sm:text-2xl">
+    {isChofer ? 'Mis Cargas de Combustible' : 'Control y Rendimiento de Combustible'}
+  </h1>
 
   <!-- Encabezado de Sección -->
   <div class="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -24,23 +43,29 @@ const [kpis, cargas, vehiculos, choferes] = await Promise.all([
       <div class="flex items-center gap-2 text-xs font-semibold text-blue mb-1">
         <span>Ministerio de Educación</span>
         <span>·</span>
-        <span>Dirección de Movilidades</span>
+        <span>{isChofer ? 'Portal del Conductor' : 'Dirección de Movilidades'}</span>
       </div>
-      <h2 class="font-display text-[26px] font-bold tracking-tight text-navy">Gestión de Cargas y Consumo</h2>
+      <h2 class="font-display text-[26px] font-bold tracking-tight text-navy">
+        {isChofer ? 'Historial de Cargas' : 'Gestión de Cargas y Consumo'}
+      </h2>
       <p class="mt-0.5 text-xs text-muted">
-        Control de tickets, tarjetas flota YPF en Ruta, odómetros y auditoría de rendimiento (Km/L) de los vehículos oficiales.
+        {isChofer
+          ? 'Registro de todas las cargas de combustible que realizaste en tus comisiones oficiales.'
+          : 'Control de tickets, tarjetas flota YPF en Ruta, odómetros y auditoría de rendimiento (Km/L) de los vehículos oficiales.'}
       </p>
     </div>
 
     <div class="flex items-center gap-2">
-      <a
-        href="/api/reportes/combustible"
-        class="flex items-center gap-2 rounded-xl border border-line bg-white hover:bg-paper px-3.5 py-2.5 text-xs font-bold text-navy shadow-xs transition"
-        title="Descargar registro de cargas y rendimiento en Excel (CSV UTF-8)"
-      >
-        <Download size={15} />
-        <span>Exportar Reporte</span>
-      </a>
+      {!isChofer && (
+        <a
+          href="/api/reportes/combustible"
+          class="flex items-center gap-2 rounded-xl border border-line bg-white hover:bg-paper px-3.5 py-2.5 text-xs font-bold text-navy shadow-xs transition"
+          title="Descargar registro de cargas y rendimiento en Excel (CSV UTF-8)"
+        >
+          <Download size={15} />
+          <span>Exportar Reporte</span>
+        </a>
+      )}
       <button
         id="btn-abrir-crear-combustible"
         type="button"
@@ -53,14 +78,19 @@ const [kpis, cargas, vehiculos, choferes] = await Promise.all([
   </div>
 
   <!-- Tarjetas KPI de Combustible -->
-  <FuelKpiCards kpis={kpis} />
+  <FuelKpiCards kpis={kpis} isChofer={isChofer} />
 
   <!-- Tabla Interactiva de Cargas -->
   <FuelTable cargas={cargas} />
 
   <!-- Modales fuera del flujo principal -->
   <Fragment slot="modals">
-    <FuelFormModal vehiculos={vehiculos} choferes={choferes} />
+    <FuelFormModal
+      vehiculos={vehiculos}
+      choferes={choferes}
+      isChofer={isChofer}
+      currentChoferId={choferIdFiltro}
+    />
   </Fragment>
 </DashboardLayout>
 

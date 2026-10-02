@@ -1,4 +1,4 @@
-﻿import { defineMiddleware } from 'astro:middleware'
+import { defineMiddleware } from 'astro:middleware'
 import { verifySessionToken, SESSION_COOKIE_NAME } from './backend/index'
 
 export const onRequest = defineMiddleware(async (context, next) => {
@@ -45,6 +45,18 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // Si es un usuario sin rol de administrador intentando acceder a /usuarios
   if (user && pathname.startsWith('/usuarios') && user.rolId !== 1) {
     return context.redirect('/')
+  }
+
+  // Restricción de rutas para el rol Chofer (rolId 4):
+  // Solo puede acceder a su portal, combustible propio, perfil y endpoints API
+  if (user && user.rolId === 4) {
+    const choferAllowedPages = ['/mi-viaje', '/mi-perfil', '/combustible']
+    const isAllowedPage = choferAllowedPages.some(r => pathname.startsWith(r))
+    const isApiRoute = pathname.startsWith('/api/')
+
+    if (!isAllowedPage && !isApiRoute) {
+      return context.redirect('/mi-viaje')
+    }
   }
 
   // Procesar solicitud

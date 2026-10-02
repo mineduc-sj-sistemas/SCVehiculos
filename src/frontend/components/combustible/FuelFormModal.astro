@@ -1,14 +1,16 @@
 ---
-import { AlertCircle, Calendar, Fuel, Receipt, Truck, User, X } from 'lucide-astro'
+import { AlertCircle, Calendar, Camera, CheckCircle2, Fuel, Receipt, Sparkles, Truck, User, X } from 'lucide-astro'
 import type { VehicleListItem } from '../../../backend/services/vehicleService'
 import type { ChoferFull } from '../../../backend/types/chofer.types'
 
 interface Props {
   vehiculos: VehicleListItem[]
   choferes: ChoferFull[]
+  isChofer?: boolean
+  currentChoferId?: number
 }
 
-const { vehiculos, choferes } = Astro.props
+const { vehiculos, choferes, isChofer = false, currentChoferId } = Astro.props
 
 const nowIso = new Date().toISOString()
 const todayLocal = `${nowIso.split('T')[0]}T${nowIso.split('T')[1].slice(0, 5)}`
@@ -16,26 +18,30 @@ const todayLocal = `${nowIso.split('T')[0]}T${nowIso.split('T')[1].slice(0, 5)}`
 
 <div
   id="modal-crear-combustible"
-  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/60 backdrop-blur-xs opacity-0 pointer-events-none transition-opacity duration-200"
+  class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-navy/60 backdrop-blur-xs opacity-0 pointer-events-none transition-opacity duration-200"
   role="dialog"
   aria-modal="true"
 >
-  <div class="relative w-full max-w-xl rounded-2xl bg-white shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95">
+  <div class="relative w-full max-w-xl rounded-3xl bg-white shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95">
     <!-- Cabecera -->
-    <div class="flex items-center justify-between border-b border-gray-100 bg-charcoalGov px-6 py-4 text-white">
+    <div class="flex items-center justify-between border-b border-gray-100 bg-charcoalGov px-5 py-3.5 sm:px-6 sm:py-4 text-white">
       <div class="flex items-center gap-3">
-        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-orangeGov text-white shadow-sm">
-          <Fuel size={18} strokeWidth={2.5} />
+        <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-orangeGov text-white shadow-sm shrink-0">
+          <Fuel size={20} strokeWidth={2.5} />
         </div>
         <div>
-          <h3 class="font-display text-base font-bold">Registrar Carga de Combustible</h3>
-          <p class="text-[11px] text-white/60">Control de ticket, litros y odómetro</p>
+          <h3 class="font-display text-base font-bold">
+            {isChofer ? 'Registrar Mi Carga de Combustible' : 'Registrar Carga de Combustible'}
+          </h3>
+          <p class="text-[11px] text-white/70">
+            {isChofer ? 'Comprobante Edenred, litros y odómetro' : 'Control de ticket, litros y odómetro'}
+          </p>
         </div>
       </div>
       <button
         id="btn-close-combustible-modal"
         type="button"
-        class="flex h-8 w-8 items-center justify-center rounded-lg text-white/70 hover:bg-white/10 hover:text-white transition cursor-pointer"
+        class="flex h-8 w-8 items-center justify-center rounded-xl text-white/70 hover:bg-white/10 hover:text-white transition cursor-pointer"
         aria-label="Cerrar modal"
       >
         <X size={18} />
@@ -43,14 +49,56 @@ const todayLocal = `${nowIso.split('T')[0]}T${nowIso.split('T')[1].slice(0, 5)}`
     </div>
 
     <!-- Formulario -->
-    <form id="form-crear-combustible" class="overflow-y-auto p-6 space-y-4 text-xs">
+    <form id="form-crear-combustible" class="overflow-y-auto p-4 sm:p-6 space-y-4 text-xs">
       <div id="combustible-error-msg" class="hidden rounded-xl bg-rose-50 border border-rose-200 p-3 text-rose-700 font-semibold flex items-center gap-2">
-        <AlertCircle size={16} />
+        <AlertCircle size={16} class="shrink-0" />
         <span id="combustible-error-text">Ocurrió un error</span>
       </div>
 
-      <!-- Selección de Vehículo y Chofer -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <!-- PASO 1: Escáner IA (Ticket Edenred o Odómetro de Tablero) al inicio -->
+      <div class="rounded-2xl border-2 border-dashed border-orangeGov/40 bg-gradient-to-br from-orange-50/80 via-white to-amber-50/50 p-3.5 sm:p-4 space-y-2.5 shadow-xs">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="flex h-5 w-5 items-center justify-center rounded-full bg-orangeGov text-white text-[10px] font-bold">1</span>
+            <span class="font-bold text-xs text-navy">Autocompletar con Foto (Recomendado)</span>
+          </div>
+          <span class="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-bold text-orangeGov">
+            <Sparkles size={11} />
+            Gemini IA
+          </span>
+        </div>
+        <p class="text-[11px] text-muted leading-tight">
+          Sacá foto al ticket de Edenred o al tablero. La IA completará litros, importe, estación, odómetro y seleccionará el vehículo automáticamente.
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+          <!-- Botón Principal: Ticket Edenred -->
+          <label class="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-orangeGov hover:bg-orange-700 text-white font-bold text-xs shadow-md shadow-orange-500/20 active:scale-98 transition cursor-pointer select-none">
+            <Receipt size={16} class="shrink-0" />
+            <span>🧾 Foto Ticket Edenred</span>
+            <input type="file" accept="image/*" capture="environment" id="scan-modal-fuel-ticket" class="hidden" />
+          </label>
+
+          <!-- Botón Secundario: Odómetro Tablero -->
+          <label class="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-white border border-gray-200 hover:bg-gray-50 text-navy font-bold text-xs shadow-2xs active:scale-98 transition cursor-pointer select-none">
+            <Camera size={16} class="shrink-0 text-muted" />
+            <span>📸 Foto Odómetro Tablero</span>
+            <input type="file" accept="image/*" capture="environment" id="scan-modal-fuel-odometro" class="hidden" />
+          </label>
+        </div>
+
+        <div id="status-modal-fuel-scanner" class="hidden text-xs font-medium p-2.5 rounded-xl transition-all"></div>
+      </div>
+
+      <!-- PASO 2: Separador visual de datos -->
+      <div class="flex items-center gap-2 pt-1 text-muted">
+        <span class="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-slate-700 text-[10px] font-bold">2</span>
+        <span class="text-[10px] font-bold uppercase tracking-wider text-muted">Datos de la Carga</span>
+        <div class="flex-1 h-px bg-slate-100"></div>
+      </div>
+
+      <!-- Selección de Vehículo (y Conductor solo para Administrador/Gestor) -->
+      <div class={`grid gap-3 ${isChofer ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
         <div>
           <label for="fuel-vehiculo" class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1">
             Vehículo Oficial <span class="text-rose-500">*</span>
@@ -70,23 +118,33 @@ const todayLocal = `${nowIso.split('T')[0]}T${nowIso.split('T')[1].slice(0, 5)}`
           </select>
         </div>
 
-        <div>
-          <label for="fuel-chofer" class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1">
-            Conductor Responsable
-          </label>
-          <select
-            id="fuel-chofer"
+        {/* Si es Chofer, su ID se envía de forma transparente sin mostrar el selector ni permitir elegir a otro */}
+        {isChofer ? (
+          <input
+            type="hidden"
+            id="fuel-chofer-hidden"
             name="choferId"
-            class="w-full rounded-xl border border-line bg-paper px-3 py-2.5 text-xs font-bold text-navy outline-none focus:border-orangeGov focus:bg-white transition"
-          >
-            <option value="">Seleccione conductor (opcional)...</option>
-            {choferes.map((c) => (
-              <option value={c.id}>
-                {c.apellido}, {c.nombre} (DNI: {c.dni})
-              </option>
-            ))}
-          </select>
-        </div>
+            value={currentChoferId || ''}
+          />
+        ) : (
+          <div>
+            <label for="fuel-chofer" class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1">
+              Conductor Responsable
+            </label>
+            <select
+              id="fuel-chofer"
+              name="choferId"
+              class="w-full rounded-xl border border-line bg-paper px-3 py-2.5 text-xs font-bold text-navy outline-none focus:border-orangeGov focus:bg-white transition"
+            >
+              <option value="">Seleccione conductor (opcional)...</option>
+              {choferes.map((c) => (
+                <option value={c.id}>
+                  {c.apellido}, {c.nombre} (DNI: {c.dni})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       <!-- Fecha, Estación y Combustible -->
@@ -138,7 +196,7 @@ const todayLocal = `${nowIso.split('T')[0]}T${nowIso.split('T')[1].slice(0, 5)}`
       </div>
 
       <!-- Litros, Precio y Total Calculado -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-gray-50 p-3.5 rounded-xl border border-gray-200">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-gray-50/80 p-3.5 rounded-2xl border border-gray-200">
         <div>
           <label for="fuel-litros" class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1">
             Litros Cargados <span class="text-rose-500">*</span>
@@ -149,6 +207,7 @@ const todayLocal = `${nowIso.split('T')[0]}T${nowIso.split('T')[1].slice(0, 5)}`
             type="number"
             step="0.01"
             min="0.1"
+            inputmode="decimal"
             required
             placeholder="0.00"
             class="w-full rounded-xl border border-line bg-white px-3 py-2 text-xs font-mono font-bold text-navy outline-none focus:border-orangeGov transition"
@@ -165,6 +224,7 @@ const todayLocal = `${nowIso.split('T')[0]}T${nowIso.split('T')[1].slice(0, 5)}`
             type="number"
             step="0.01"
             min="1"
+            inputmode="decimal"
             required
             placeholder="0.00"
             class="w-full rounded-xl border border-line bg-white px-3 py-2 text-xs font-mono font-bold text-navy outline-none focus:border-orangeGov transition"
@@ -180,6 +240,7 @@ const todayLocal = `${nowIso.split('T')[0]}T${nowIso.split('T')[1].slice(0, 5)}`
             name="importeTotal"
             type="number"
             step="0.01"
+            inputmode="decimal"
             placeholder="0.00"
             class="w-full rounded-xl border border-emerald-300 bg-white px-3 py-2 text-xs font-mono font-bold text-emerald-700 outline-none focus:border-emerald-500 transition"
           />
@@ -197,6 +258,7 @@ const todayLocal = `${nowIso.split('T')[0]}T${nowIso.split('T')[1].slice(0, 5)}`
             name="odometroCarga"
             type="number"
             min="0"
+            inputmode="numeric"
             required
             placeholder="0"
             class="w-full rounded-xl border border-line bg-paper px-3 py-2 text-xs font-mono font-bold text-navy outline-none focus:border-orangeGov focus:bg-white transition"

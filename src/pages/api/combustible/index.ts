@@ -4,6 +4,7 @@ import {
   getFuelKpis,
   getFuelList,
   requireAuth,
+  query,
 } from '../../../backend/index'
 
 export const prerender = false
@@ -58,9 +59,19 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       )
     }
 
+    let choferIdToUse = body.choferId ? Number(body.choferId) : undefined
+
+    // Regla de Negocio: Si el usuario es Chofer (rolId 4), se garantiza que solo registre cargas a su propio nombre
+    if (auth.session?.rolId === 4) {
+      const choferRows = await query<any>(`SELECT id FROM choferes WHERE usuario_id = ? LIMIT 1`, [auth.session.id])
+      if (choferRows && choferRows.length > 0) {
+        choferIdToUse = choferRows[0].id
+      }
+    }
+
     const payload = {
       vehiculoId: Number(body.vehiculoId),
-      choferId: body.choferId ? Number(body.choferId) : undefined,
+      choferId: choferIdToUse,
       comisionId: body.comisionId ? Number(body.comisionId) : undefined,
       fechaCarga: String(body.fechaCarga),
       estacionServicio: body.estacionServicio ? String(body.estacionServicio).trim() : undefined,

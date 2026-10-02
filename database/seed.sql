@@ -42,15 +42,20 @@ INSERT INTO `dependencias` (`id`, `nombre`, `sigla`, `responsable`, `telefono`, 
 INSERT INTO `usuarios` (`id`, `rol_id`, `dependencia_id`, `nombre`, `apellido`, `email`, `password_hash`, `dni`, `telefono`, `activo`) VALUES
 (1, 1, NULL, 'María', 'Gutiérrez', 'maria.gutierrez@sanjuan.edu.ar', '$2b$10$476RAYizCI0NW.M6lBaX6OxR9vtFjtA3de9wSx/WkeTBTDZcYGHda', '27456789', '264-5012345', 1),
 (2, 2, NULL, 'Gonzalo', 'Pérez', 'gonzalo.perez@sanjuan.edu.ar', '$2b$10$476RAYizCI0NW.M6lBaX6OxR9vtFjtA3de9wSx/WkeTBTDZcYGHda', '32145678', '264-5023456', 1),
-(3, 5, NULL, 'Roberto', 'Méndez', 'auditor@sanjuan.edu.ar', '$2b$10$476RAYizCI0NW.M6lBaX6OxR9vtFjtA3de9wSx/WkeTBTDZcYGHda', '24112334', '264-4209988', 1);
+(3, 5, NULL, 'Roberto', 'Méndez', 'auditor@sanjuan.edu.ar', '$2b$10$476RAYizCI0NW.M6lBaX6OxR9vtFjtA3de9wSx/WkeTBTDZcYGHda', '24112334', '264-4209988', 1),
+(4, 4, NULL, 'Martín', 'Rojas', 'martin.rojas@sanjuan.edu.ar', '$2b$10$476RAYizCI0NW.M6lBaX6OxR9vtFjtA3de9wSx/WkeTBTDZcYGHda', '28456123', '264-4112233', 1),
+(5, 4, NULL, 'Lucía', 'Gómez', 'lucia.gomez@sanjuan.edu.ar', '$2b$10$476RAYizCI0NW.M6lBaX6OxR9vtFjtA3de9wSx/WkeTBTDZcYGHda', '31789456', '264-4223344', 1),
+(6, 4, NULL, 'Carlos', 'Molina', 'carlos.molina@sanjuan.edu.ar', '$2b$10$476RAYizCI0NW.M6lBaX6OxR9vtFjtA3de9wSx/WkeTBTDZcYGHda', '25987654', '264-4334455', 1),
+(7, 4, NULL, 'Esteban', 'Paredes', 'esteban.paredes@sanjuan.edu.ar', '$2b$10$476RAYizCI0NW.M6lBaX6OxR9vtFjtA3de9wSx/WkeTBTDZcYGHda', '29345678', '264-4445566', 1),
+(8, 4, NULL, 'Javier', 'Salinas', 'javier.salinas@sanjuan.edu.ar', '$2b$10$476RAYizCI0NW.M6lBaX6OxR9vtFjtA3de9wSx/WkeTBTDZcYGHda', '33456789', '264-4556677', 1);
 
 -- 4. Choferes con vencimientos relativos
 INSERT INTO `choferes` (`id`, `usuario_id`, `nombre`, `apellido`, `dni`, `cuil`, `telefono`, `email`, `direccion`, `numero_licencia`, `categoria_licencia`, `fecha_vencimiento_licencia`, `estado`, `observaciones`) VALUES
-(1, NULL, 'Martín', 'Rojas', '28456123', '20-28456123-7', '264-4112233', 'martin.rojas@gmail.com', 'Capital, San Juan', 'SJ-28456123', 'B2', DATE_ADD(CURDATE(), INTERVAL 320 DAY), 'en_comision', 'Chofer asignado a viajes interdepartamentales'),
-(2, NULL, 'Lucía', 'Gómez', '31789456', '27-31789456-4', '264-4223344', 'lucia.gomez@gmail.com', 'Rivadavia, San Juan', 'SJ-31789456', 'D1', DATE_ADD(CURDATE(), INTERVAL 240 DAY), 'en_comision', 'Licencia profesional para transporte de pasajeros'),
-(3, NULL, 'Carlos', 'Molina', '25987654', '20-25987654-2', '264-4334455', 'carlos.molina@gmail.com', 'Santa Lucía, San Juan', 'SJ-25987654', 'B1', DATE_ADD(CURDATE(), INTERVAL 14 DAY), 'disponible', 'Carnet próximo a vencer (aviso automático emitido)'),
-(4, NULL, 'Esteban', 'Paredes', '29345678', '20-29345678-9', '264-4445566', 'esteban.paredes@gmail.com', 'Rawson, San Juan', 'SJ-29345678', 'B2', DATE_ADD(CURDATE(), INTERVAL 450 DAY), 'disponible', NULL),
-(5, NULL, 'Javier', 'Salinas', '33456789', '20-33456789-1', '264-4556677', 'javier.salinas@gmail.com', 'Chimbas, San Juan', 'SJ-33456789', 'B1', DATE_ADD(CURDATE(), INTERVAL 22 DAY), 'disponible', 'Turno renovación asignado');
+(1, 4, 'Martín', 'Rojas', '28456123', '20-28456123-7', '264-4112233', 'martin.rojas@sanjuan.edu.ar', 'Capital, San Juan', 'SJ-28456123', 'B2', DATE_ADD(CURDATE(), INTERVAL 320 DAY), 'en_comision', 'Chofer asignado a viajes interdepartamentales'),
+(2, 5, 'Lucía', 'Gómez', '31789456', '27-31789456-4', '264-4223344', 'lucia.gomez@sanjuan.edu.ar', 'Rivadavia, San Juan', 'SJ-31789456', 'D1', DATE_ADD(CURDATE(), INTERVAL 240 DAY), 'en_comision', 'Licencia profesional para transporte de pasajeros'),
+(3, 6, 'Carlos', 'Molina', '25987654', '20-25987654-2', '264-4334455', 'carlos.molina@sanjuan.edu.ar', 'Santa Lucía, San Juan', 'SJ-25987654', 'B1', DATE_ADD(CURDATE(), INTERVAL 14 DAY), 'disponible', 'Carnet próximo a vencer (aviso automático emitido)'),
+(4, 7, 'Esteban', 'Paredes', '29345678', '20-29345678-9', '264-4445566', 'esteban.paredes@sanjuan.edu.ar', 'Rawson, San Juan', 'SJ-29345678', 'B2', DATE_ADD(CURDATE(), INTERVAL 450 DAY), 'disponible', NULL),
+(5, 8, 'Javier', 'Salinas', '33456789', '20-33456789-1', '264-4556677', 'javier.salinas@sanjuan.edu.ar', 'Chimbas, San Juan', 'SJ-33456789', 'B1', DATE_ADD(CURDATE(), INTERVAL 22 DAY), 'disponible', 'Turno renovación asignado');
 
 -- 5. Tipos de Vehículo
 INSERT INTO `tipos_vehiculo` (`id`, `nombre`, `descripcion`) VALUES

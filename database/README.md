@@ -1,4 +1,4 @@
-﻿# Base de Datos Oficial: SCVehiculos
+# Base de Datos Oficial: SCVehiculos
 ### Ministerio de Educación · Gobierno de San Juan
 
 Motor: **MySQL 8.0+ / MariaDB 10.4+**  
@@ -54,3 +54,10 @@ mysql -u root < database/sc_vehiculos_completa.sql
 | :--- | :--- | :--- | :--- |
 | **Administrador** | María Gutiérrez | `maria.gutierrez@sanjuan.edu.ar` | `admin123` |
 | **Operador / Despacho** | Gonzalo Pérez | `gonzalo.perez@sanjuan.edu.ar` | `admin123` |
+| **Auditor** | Roberto Méndez | `auditor@sanjuan.edu.ar` | `admin123` |
+| **Chofer** | Martín Rojas | `martin.rojas@sanjuan.edu.ar` | `admin123` |
+| **Chofer** | Lucía Gómez | `lucia.gomez@sanjuan.edu.ar` | `admin123` |
+| **Chofer** | Carlos Molina | `carlos.molina@sanjuan.edu.ar` | `admin123` |
+| **Chofer** | Esteban Paredes | `esteban.paredes@sanjuan.edu.ar` | `admin123` |
+| **Chofer** | Javier Salinas | `javier.salinas@sanjuan.edu.ar` | `admin123` |
+| **Chofer** | Ramiro Talquenca | `ramiro.talquenca@sanjuan.edu.ar` | `admin123` |

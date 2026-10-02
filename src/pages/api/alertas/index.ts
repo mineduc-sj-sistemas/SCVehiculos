@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro'
-import { getOperationalAlerts, requireAuth } from '../../../backend/index'
+import { getOperationalAlerts, requireAuth, query } from '../../../backend/index'
 
 export const prerender = false
 
@@ -7,8 +7,18 @@ export const GET: APIRoute = async ({ cookies }) => {
   const auth = requireAuth(cookies)
   if (!auth.authorized) return auth.response!
 
+  const isChofer = auth.session?.rolId === 4
+  let choferId: number | undefined = undefined
+
+  if (isChofer && auth.session) {
+    const choferRows = await query<any[]>(`SELECT id FROM choferes WHERE usuario_id = ? LIMIT 1`, [auth.session.id])
+    if (choferRows && choferRows.length > 0) {
+      choferId = choferRows[0].id
+    }
+  }
+
   try {
-    const summary = await getOperationalAlerts()
+    const summary = await getOperationalAlerts(isChofer ? { rolId: 4, choferId, usuarioId: auth.session?.id } : undefined)
 
     return new Response(JSON.stringify({ success: true, ...summary }), {
       status: 200,
