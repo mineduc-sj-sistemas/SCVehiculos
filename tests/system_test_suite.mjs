@@ -938,20 +938,62 @@ async function runTestSuite() {
   assert(
     resViajesChoferesApi.status === 200 &&
     dataViajesChoferesApi.success &&
-    Array.isArray(dataViajesChoferesApi.choferes) &&
-    dataViajesChoferesApi.choferes.length > 0 &&
+    dataViajesChoferesApi.chofer &&
+    Array.isArray(dataViajesChoferesApi.dias) &&
+    dataViajesChoferesApi.dias.length === 42 &&
     resViajesChoferesHtml.status === 200 &&
-    htmlViajesChoferes.includes('Viajes Asignados por Chofer') &&
-    htmlViajesChoferes.includes('card-chofer-asignado'),
+    htmlViajesChoferes.includes('Mi Calendario y Registro de Viajes') &&
+    htmlViajesChoferes.includes('celda-dia-calendario'),
     'TC-39',
-    'Portal del Chofer: acceso y consulta exitosa de viajes asignados por chofer (/viajes-choferes)',
-    `Datos obtenidos: ${dataViajesChoferesApi.choferes.length} choferes con asignaciones y vista HTML 200 OK`
+    'Portal del Chofer: calendario exclusivo de viajes programados (/viajes-choferes)',
+    `Calendario generado para ${dataViajesChoferesApi.chofer.nombreCompleto}: ${dataViajesChoferesApi.dias.length} días (grilla mensual) y HTML 200 OK`
+  )
+
+  // TC-40: Cancelación automática de viaje tras 24 horas y reflejo como "Viaje no realizado"
+  let tempComExpiradaId = null
+  const [insComExpirada] = await db.execute(`
+    INSERT INTO comisiones (
+      codigo_comision, vehiculo_id, chofer_id, dependencia_solicitante_id,
+      origen, destino, motivo, cantidad_pasajeros,
+      fecha_salida_programada, fecha_regreso_estimada, estado, observaciones
+    ) VALUES (
+      'COM-EXPIRADA-TEST', 1, 1, 1,
+      'Centro Cívico', 'Caucete - Escuela Rural', 'Viaje de prueba vencimiento', 2,
+      DATE_SUB(NOW(), INTERVAL 36 HOUR), DATE_SUB(NOW(), INTERVAL 30 HOUR), 'programada', 'Test 24hs'
+    )
+  `)
+  tempComExpiradaId = insComExpirada.insertId
+
+  // Al consultar el endpoint del chofer, se dispara cancelarViajesExpirados24Horas()
+  const resExpiracionCheck = await fetch(`${BASE_URL}/api/chofer/viajes-asignados?choferId=1`, {
+    headers: { Cookie: `sc_session=${TOKENS.admin}` },
+  })
+  const dataExpiracionCheck = await resExpiracionCheck.json()
+
+  const [dbComCancelada] = await db.execute('SELECT estado, observaciones FROM comisiones WHERE id = ?', [tempComExpiradaId])
+
+  const viajeEnHistorial = dataExpiracionCheck.viajesHistorial?.find((v) => Number(v.id) === Number(tempComExpiradaId))
+
+  assert(
+    dbComCancelada.length > 0 &&
+    dbComCancelada[0].estado === 'cancelada' &&
+    dbComCancelada[0].observaciones.includes('Viaje no realizado') &&
+    viajeEnHistorial &&
+    viajeEnHistorial.esViajeNoRealizado === true &&
+    viajeEnHistorial.estadoLabel === 'Viaje no realizado',
+    'TC-40',
+    'Expiración y cancelación automática tras 24 horas: reflejo en historial como "Viaje no realizado"',
+    `Comisión #${tempComExpiradaId} cancelada automáticamente y catalogada como "Viaje no realizado"`
   )
 
   // -------------------------------------------------------------------------
   // LIMPIEZA DE DATOS TEMPORALES (TEARDOWN)
   // -------------------------------------------------------------------------
   console.log('\n--- LIMPIEZA DE DATOS TEMPORALES (TEARDOWN) ---')
+  if (tempComExpiradaId) {
+    await db.execute('DELETE FROM comisiones WHERE id = ?', [tempComExpiradaId])
+    console.log(`  ✓ Comisión expirada temporal #${tempComExpiradaId} eliminada.`)
+  }
   if (createdCheckinId) {
     await db.execute('DELETE FROM checkins_comision WHERE id = ?', [createdCheckinId])
     console.log(`  ✓ Check-in temporal #${createdCheckinId} eliminado.`)

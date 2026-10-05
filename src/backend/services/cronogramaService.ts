@@ -1101,3 +1101,91 @@ export async function editarComision(
   }
 }
 
+/**
+ * Cancela automáticamente los viajes no realizados o abandonados tras haber
+ * transcurrido más de 24 horas de la fecha y hora programada sin inicio/cierre.
+ * Libera las unidades vehiculares y legajos de chofer a 'disponible' y registra auditoría.
+ */
+export async function cancelarViajesExpirados24Horas(): Promise<{
+  success: boolean
+  cancelados: number
+  comisionesCanceladas: number[]
+}> {
+  try {
+    return await withTransaction(async (conn) => {
+      // 1. Buscar comisiones 'programada' que tengan más de 24 horas pasadas de la fecha_salida_programada
+      // Y comisiones 'en_curso' que tengan más de 24 horas pasadas de la fecha_regreso_estimada sin fecha_regreso_real
+      const [expiradas] = await conn.execute<any[]>(`
+        SELECT c.id, c.codigo_comision, c.vehiculo_id, c.chofer_id, c.estado,
+               c.fecha_salida_programada, c.fecha_regreso_estimada, c.observaciones,
+               v.estado AS vehiculo_estado, ch.estado AS chofer_estado
+        FROM comisiones c
+        LEFT JOIN vehiculos v ON c.vehiculo_id = v.id
+        LEFT JOIN choferes ch ON c.chofer_id = ch.id
+        WHERE 
+          (c.estado = 'programada' AND NOW() > DATE_ADD(c.fecha_salida_programada, INTERVAL 24 HOUR))
+          OR
+          (c.estado = 'en_curso' AND NOW() > DATE_ADD(c.fecha_regreso_estimada, INTERVAL 24 HOUR))
+      `)
+
+      if (!expiradas || expiradas.length === 0) {
+        return { success: true, cancelados: 0, comisionesCanceladas: [] }
+      }
+
+      const idsCancelados: number[] = []
+
+      for (const com of expiradas) {
+        const id = Number(com.id)
+        idsCancelados.push(id)
+
+        const motivoCancelacion = '[SISTEMA] Viaje no realizado: cancelado automáticamente tras superar las 24 horas del horario programado sin registro de salida/retorno.'
+        const obsActualizadas = com.observaciones 
+          ? `${com.observaciones}\n${motivoCancelacion}`
+          : motivoCancelacion
+
+        // Marcar la comisión como cancelada
+        await conn.execute(
+          `UPDATE comisiones SET 
+            estado = 'cancelada',
+            observaciones = ?
+           WHERE id = ?`,
+          [obsActualizadas, id]
+        )
+
+        // Liberar vehículo si estaba afectado a esta comisión
+        if (com.vehiculo_id) {
+          await conn.execute(
+            `UPDATE vehiculos SET estado = 'disponible' WHERE id = ? AND estado = 'en_comision'`,
+            [com.vehiculo_id]
+          )
+
+          // Registrar auditoría si el vehículo cambió de estado
+          await conn.execute(
+            `INSERT INTO auditoria_estados_vehiculo (
+              vehiculo_id, estado_anterior, estado_nuevo, motivo, comision_id, usuario_id, created_at
+            ) VALUES (?, 'en_comision', 'disponible', 'Cancelación automática: viaje no realizado tras 24 hs', ?, NULL, NOW())`,
+            [com.vehiculo_id, id]
+          )
+        }
+
+        // Liberar chofer si estaba en comisión
+        if (com.chofer_id) {
+          await conn.execute(
+            `UPDATE choferes SET estado = 'disponible' WHERE id = ? AND estado = 'en_comision'`,
+            [com.chofer_id]
+          )
+        }
+      }
+
+      return {
+        success: true,
+        cancelados: idsCancelados.length,
+        comisionesCanceladas: idsCancelados,
+      }
+    })
+  } catch (error: any) {
+    console.error('Error al cancelar comisiones expiradas tras 24 hs:', error)
+    return { success: false, cancelados: 0, comisionesCanceladas: [] }
+  }
+}
+

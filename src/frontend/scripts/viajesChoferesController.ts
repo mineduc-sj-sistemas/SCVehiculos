@@ -1,140 +1,243 @@
 /**
- * Controlador de Cliente para la Interfaz de Viajes Asignados por Chofer
+ * Controlador de Cliente para el Calendario y Mi Historial de Viajes del Chofer
  * SCVehiculos · Ministerio de Educación · Gobierno de San Juan
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  initFiltrosYVistas()
+  initNavegacionVistas()
+  initCalendarioInteractivo()
+  initFiltrosHistorial()
   initDetailModal()
 })
 
 let currentComisionId: number | null = null
 
-function initFiltrosYVistas() {
-  const inputBuscar = document.getElementById('input-buscar-viaje-chofer') as HTMLInputElement | null
-  const selectChofer = document.getElementById('select-filtro-chofer') as HTMLSelectElement | null
-  const selectEstado = document.getElementById('select-filtro-estado') as HTMLSelectElement | null
-  const contadorCards = document.getElementById('contador-choferes-visibles')
-  const contadorTable = document.getElementById('contador-tabla-visibles')
+function initNavegacionVistas() {
+  const tabCalendario = document.getElementById('btn-tab-calendario')
+  const tabHistorial = document.getElementById('btn-tab-historial')
+  const tabAgenda = document.getElementById('btn-tab-agenda')
 
-  const btnViewCards = document.getElementById('btn-view-cards')
-  const btnViewTable = document.getElementById('btn-view-table')
-  const vistaCards = document.getElementById('vista-tarjetas-choferes')
-  const vistaTable = document.getElementById('vista-tabla-viajes')
+  const vistaCalendario = document.getElementById('vista-calendario-container')
+  const vistaHistorial = document.getElementById('vista-historial-container')
+  const vistaAgenda = document.getElementById('vista-agenda-container')
 
-  // Alternar vista entre Tarjetas y Tabla
-  btnViewCards?.addEventListener('click', () => {
-    vistaCards?.classList.remove('hidden')
-    vistaTable?.classList.add('hidden')
-    btnViewCards.classList.add('bg-white', 'text-navy', 'shadow-xs')
-    btnViewCards.classList.remove('text-muted')
-    btnViewTable?.classList.remove('bg-white', 'text-navy', 'shadow-xs')
-    btnViewTable?.classList.add('text-muted')
-  })
-
-  btnViewTable?.addEventListener('click', () => {
-    vistaCards?.classList.add('hidden')
-    vistaTable?.classList.remove('hidden')
-    btnViewTable.classList.add('bg-white', 'text-navy', 'shadow-xs')
-    btnViewTable.classList.remove('text-muted')
-    btnViewCards?.classList.remove('bg-white', 'text-navy', 'shadow-xs')
-    btnViewCards?.classList.add('text-muted')
-  })
-
-  // Aplicar filtros en tiempo real
-  const choferCards = document.querySelectorAll<HTMLElement>('.card-chofer-asignado')
-  const tableRows = document.querySelectorAll<HTMLTableRowElement>('.row-viaje-asignado')
-
-  const aplicarFiltros = () => {
-    const texto = inputBuscar?.value.trim().toLowerCase() || ''
-    const choferVal = selectChofer?.value || 'all'
-    const estadoVal = selectEstado?.value || 'all'
-
-    // 1. Filtrar Tarjetas de Choferes
-    let choferesVisibles = 0
-    choferCards.forEach((card) => {
-      const cardChoferId = card.dataset.choferId || ''
-      const cardEsMiViaje = card.dataset.esMiViaje === 'true'
-      const cardSearch = (card.dataset.search || '').toLowerCase()
-
-      // Filtro de chofer
-      let matchesChofer = true
-      if (choferVal === 'mis-viajes') {
-        matchesChofer = cardEsMiViaje
-      } else if (choferVal !== 'all') {
-        matchesChofer = cardChoferId === choferVal
-      }
-
-      // Filtro de búsqueda en tarjeta
-      const matchesSearch = !texto || cardSearch.includes(texto)
-
-      // Filtro de estado dentro de la tarjeta
-      let matchesEstado = true
-      if (estadoVal !== 'all') {
-        const tieneEstado = card.querySelector(`[data-estado-item="${estadoVal}"]`)
-        matchesEstado = !!tieneEstado
-      }
-
-      if (matchesChofer && matchesSearch && matchesEstado) {
-        card.style.display = ''
-        choferesVisibles++
-      } else {
-        card.style.display = 'none'
-      }
+  const activarTab = (
+    btnActivo: HTMLElement | null,
+    vistaActiva: HTMLElement | null
+  ) => {
+    // Resetear botones
+    [tabCalendario, tabHistorial, tabAgenda].forEach((btn) => {
+      btn?.classList.remove('bg-white', 'text-navy', 'shadow-xs')
+      btn?.classList.add('text-muted')
     })
+    // Activar botón seleccionado
+    btnActivo?.classList.add('bg-white', 'text-navy', 'shadow-xs')
+    btnActivo?.classList.remove('text-muted')
 
-    if (contadorCards) {
-      contadorCards.innerText = `Mostrando ${choferesVisibles} de ${choferCards.length} conductores`
-    }
+    // Ocultar todas las vistas
+    vistaCalendario?.classList.add('hidden')
+    vistaHistorial?.classList.add('hidden')
+    vistaAgenda?.classList.add('hidden')
 
-    // 2. Filtrar Filas de la Tabla Unificada
-    let filasVisibles = 0
-    tableRows.forEach((row) => {
-      const rowChoferId = row.dataset.choferId || ''
-      const rowEsMiViaje = row.dataset.esMiViaje === 'true'
-      const rowEstado = row.dataset.estado || ''
-      const rowSearch = (row.dataset.search || '').toLowerCase()
-
-      let matchesChofer = true
-      if (choferVal === 'mis-viajes') {
-        matchesChofer = rowEsMiViaje
-      } else if (choferVal !== 'all') {
-        matchesChofer = rowChoferId === choferVal
-      }
-
-      const matchesEstado = estadoVal === 'all' || rowEstado === estadoVal
-      const matchesSearch = !texto || rowSearch.includes(texto)
-
-      if (matchesChofer && matchesEstado && matchesSearch) {
-        row.style.display = ''
-        filasVisibles++
-      } else {
-        row.style.display = 'none'
-      }
-    })
-
-    if (contadorTable) {
-      contadorTable.innerText = `Mostrando ${filasVisibles} de ${tableRows.length} comisiones`
-    }
+    // Mostrar vista seleccionada
+    vistaActiva?.classList.remove('hidden')
   }
 
-  inputBuscar?.addEventListener('input', aplicarFiltros)
-  selectChofer?.addEventListener('change', aplicarFiltros)
-  selectEstado?.addEventListener('change', aplicarFiltros)
+  tabCalendario?.addEventListener('click', () => activarTab(tabCalendario, vistaCalendario))
+  tabHistorial?.addEventListener('click', () => activarTab(tabHistorial, vistaHistorial))
+  tabAgenda?.addEventListener('click', () => activarTab(tabAgenda, vistaAgenda))
+}
 
-  // Botón directo "Mis Viajes" si existe en la interfaz
-  document.querySelectorAll<HTMLElement>('.btn-filtrar-mis-viajes').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      if (selectChofer) {
-        selectChofer.value = 'mis-viajes'
-        aplicarFiltros()
+function initCalendarioInteractivo() {
+  const dayCells = document.querySelectorAll<HTMLElement>('.celda-dia-calendario')
+  const tituloAgenda = document.getElementById('agenda-dia-titulo')
+  const listaViajesDia = document.getElementById('agenda-dia-lista-viajes')
+  const emptyStateDia = document.getElementById('agenda-dia-empty-state')
+
+  dayCells.forEach((cell) => {
+    cell.addEventListener('click', () => {
+      dayCells.forEach((c) => c.classList.remove('ring-2', 'ring-orangeGov', 'bg-orange-50/40'))
+      cell.classList.add('ring-2', 'ring-orangeGov', 'bg-orange-50/40')
+
+      const fecha = cell.dataset.fecha || ''
+      const fechaFormateada = cell.dataset.fechaLabel || fecha
+      const viajesJson = cell.dataset.viajesJson
+
+      if (tituloAgenda) {
+        tituloAgenda.innerText = `Agenda del ${fechaFormateada}`
+      }
+
+      let viajes: any[] = []
+      try {
+        if (viajesJson) viajes = JSON.parse(viajesJson)
+      } catch (e) {
+        console.error('Error parseando viajes del día:', e)
+      }
+
+      if (viajes.length === 0) {
+        if (listaViajesDia) listaViajesDia.innerHTML = ''
+        if (emptyStateDia) emptyStateDia.classList.remove('hidden')
+      } else {
+        if (emptyStateDia) emptyStateDia.classList.add('hidden')
+        if (listaViajesDia) {
+          listaViajesDia.innerHTML = viajes
+            .map((v) => {
+              const esNoRealizado = v.estado === 'cancelada' || v.esViajeNoRealizado
+
+              return `
+              <div class="rounded-2xl border ${
+                v.estado === 'en_curso'
+                  ? 'border-blue-200 bg-blue-50/40'
+                  : esNoRealizado
+                  ? 'border-rose-200 bg-rose-50/30'
+                  : 'border-line bg-white'
+              } p-4 shadow-xs space-y-3">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span class="font-mono text-xs font-bold text-navy">${v.codigo}</span>
+                    <span class="rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                      v.estado === 'en_curso'
+                        ? 'bg-blue-100 text-blue-800'
+                        : esNoRealizado
+                        ? 'bg-rose-100 text-rose-800'
+                        : v.estado === 'programada'
+                        ? 'bg-amber-100 text-amber-800'
+                        : 'bg-emerald-100 text-emerald-800'
+                    }">
+                      ${esNoRealizado ? 'Viaje no realizado' : v.estadoLabel}
+                    </span>
+                  </div>
+                  <span class="rounded-md border border-gray-200 bg-paper px-2 py-0.5 font-mono text-[11px] font-bold text-navy">
+                    ${v.vehiculoPatente}
+                  </span>
+                </div>
+
+                <div class="space-y-1.5 text-xs">
+                  <div class="flex items-center gap-1.5 font-semibold text-navy">
+                    <span>🚗</span>
+                    <span>${v.vehiculoMarca} ${v.vehiculoModelo}</span>
+                  </div>
+                  <div class="flex items-start gap-1.5 text-navy">
+                    <span class="text-orangeGov font-bold">📍</span>
+                    <span class="font-medium">${v.destino}</span>
+                  </div>
+                  ${esNoRealizado ? `
+                    <div class="rounded-xl bg-rose-100/70 p-2.5 text-[11px] text-rose-900 border border-rose-200">
+                      <strong>⚠️ Motivo:</strong> ${v.motivoCancelacion || 'Viaje no realizado.'}
+                    </div>
+                  ` : `
+                    <div class="grid grid-cols-2 gap-2 text-[11px] pt-1">
+                      <div class="rounded-xl bg-paper/80 p-2 border border-line/60">
+                        <span class="text-[10px] font-bold uppercase text-muted block">Salida</span>
+                        <span class="font-semibold text-navy">${v.horaSalida} hs</span>
+                      </div>
+                      <div class="rounded-xl bg-paper/80 p-2 border border-line/60">
+                        <span class="text-[10px] font-bold uppercase text-muted block">Regreso Est.</span>
+                        <span class="font-semibold text-navy">${v.horaRegreso} hs</span>
+                      </div>
+                    </div>
+                  `}
+                  <p class="text-[11px] text-muted pt-1">
+                    ${v.solicitanteNombre ? `Solicita: ${v.solicitanteNombre} · ` : ''}${v.cantidadPasajeros} pasajeros
+                  </p>
+                </div>
+
+                <div class="flex items-center justify-between pt-2 border-t border-line/60">
+                  <button
+                    type="button"
+                    class="btn-ver-detalle-comision text-xs font-bold text-blue hover:underline cursor-pointer"
+                    data-id="${v.id}"
+                  >
+                    Ver Detalle Completo
+                  </button>
+                  <div class="flex items-center gap-2">
+                    ${!esNoRealizado ? `
+                      <a
+                        href="/cronograma/imprimir/${v.id}"
+                        target="_blank"
+                        class="rounded-xl border border-line bg-white hover:bg-paper px-2.5 py-1.5 text-[11px] font-bold text-navy shadow-xs transition"
+                      >
+                        Hoja de Ruta
+                      </a>
+                    ` : ''}
+                    ${v.estado === 'en_curso' ? `
+                      <a
+                        href="/mi-viaje"
+                        class="rounded-xl bg-orangeGov hover:bg-orange-700 px-3 py-1.5 text-[11px] font-bold text-white shadow-xs transition"
+                      >
+                        Operar Mi Viaje
+                      </a>
+                    ` : ''}
+                  </div>
+                </div>
+              </div>
+            `})
+            .join('')
+
+          listaViajesDia.querySelectorAll<HTMLElement>('.btn-ver-detalle-comision').forEach((b) => {
+            b.addEventListener('click', () => {
+              const id = b.dataset.id
+              if (id) openDetailModalForId(parseInt(id, 10))
+            })
+          })
+        }
       }
     })
+  })
+
+  // Selector supervisor (si existe)
+  const selectSupervisor = document.getElementById('select-chofer-supervisor') as HTMLSelectElement | null
+  selectSupervisor?.addEventListener('change', () => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('choferId', selectSupervisor.value)
+    window.location.href = url.toString()
   })
 }
 
+function initFiltrosHistorial() {
+  const inputBuscar = document.getElementById('input-buscar-historial') as HTMLInputElement | null
+  const selectEstado = document.getElementById('select-filtro-estado-historial') as HTMLSelectElement | null
+  const itemsHistorial = document.querySelectorAll<HTMLElement>('.card-historial-viaje')
+  const contadorHistorial = document.getElementById('contador-historial-visibles')
+
+  const aplicarFiltrosHistorial = () => {
+    const texto = inputBuscar?.value.trim().toLowerCase() || ''
+    const estado = selectEstado?.value || 'all'
+
+    let visibles = 0
+    itemsHistorial.forEach((item) => {
+      const search = (item.dataset.search || '').toLowerCase()
+      const itemEstado = item.dataset.estado || ''
+      const itemEsNoRealizado = item.dataset.esNoRealizado === 'true'
+
+      const matchTexto = !texto || search.includes(texto)
+
+      let matchEstado = true
+      if (estado === 'realizados') {
+        matchEstado = itemEstado === 'finalizada'
+      } else if (estado === 'no_realizados') {
+        matchEstado = itemEstado === 'cancelada' || itemEsNoRealizado
+      }
+
+      if (matchTexto && matchEstado) {
+        item.style.display = ''
+        visibles++
+      } else {
+        item.style.display = 'none'
+      }
+    })
+
+    if (contadorHistorial) {
+      contadorHistorial.innerText = `Mostrando ${visibles} de ${itemsHistorial.length} comisiones históricas`
+    }
+  }
+
+  inputBuscar?.addEventListener('input', aplicarFiltrosHistorial)
+  selectEstado?.addEventListener('change', aplicarFiltrosHistorial)
+}
+
 /**
- * Modal de Detalle de Comisión Oficial
+ * Modal de Detalle de Comisión
  */
 function initDetailModal() {
   const modal = document.getElementById('modal-detail')
@@ -154,21 +257,17 @@ function initDetailModal() {
     if (e.target === modal) closeModal()
   })
 
-  // Imprimir Hoja de Ruta oficial A4
   btnImprimirHoja?.addEventListener('click', () => {
     if (currentComisionId) {
       window.open(`/cronograma/imprimir/${currentComisionId}`, '_blank')
     }
   })
 
-  // Clicks en botones "Ver Detalle"
   document.querySelectorAll<HTMLElement>('.btn-ver-detalle-comision').forEach((btn) => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation()
       const id = btn.dataset.id
-      if (id) {
-        openDetailModalForId(parseInt(id, 10))
-      }
+      if (id) openDetailModalForId(parseInt(id, 10))
     })
   })
 }
@@ -261,7 +360,6 @@ async function openDetailModalForId(id: number) {
       elObservaciones.innerText = c.observaciones || 'Sin observaciones registradas.'
     }
 
-    // Badge de estado
     if (elBadgeEstado) {
       elBadgeEstado.className = 'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold'
       if (c.estado === 'en_curso') {
@@ -272,14 +370,16 @@ async function openDetailModalForId(id: number) {
         elBadgeEstado.innerText = 'Programada'
       } else if (c.estado === 'finalizada') {
         elBadgeEstado.classList.add('bg-emerald-100', 'text-emerald-800')
-        elBadgeEstado.innerText = 'Finalizada'
+        elBadgeEstado.innerText = 'Realizado / Finalizado'
+      } else if (c.estado === 'cancelada') {
+        elBadgeEstado.classList.add('bg-rose-100', 'text-rose-800')
+        elBadgeEstado.innerText = 'Viaje no realizado'
       } else {
         elBadgeEstado.classList.add('bg-gray-100', 'text-gray-800')
         elBadgeEstado.innerText = c.estado || 'Desconocido'
       }
     }
 
-    // Renderizar Check-ins GPS si existen
     if (checkinsContainer) {
       const checkins = c.checkins || []
       if (checkins.length === 0) {
@@ -306,7 +406,6 @@ async function openDetailModalForId(id: number) {
       }
     }
 
-    // Abrir modal
     modal.classList.remove('opacity-0', 'pointer-events-none')
   } catch (error) {
     console.error('Error al abrir detalle:', error)

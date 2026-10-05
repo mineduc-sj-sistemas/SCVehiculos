@@ -3,13 +3,15 @@ import {
   Calendar,
   CalendarDays,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   Compass,
-  ExternalLink,
   FileText,
   Filter,
   Fuel,
   Gauge,
+  History,
   LayoutGrid,
   List,
   MapPin,
@@ -19,17 +21,19 @@ import {
   Route,
   Search,
   Sparkles,
+  StopCircle,
   Truck,
   User,
   Users,
   UsersRound,
+  XCircle,
 } from 'lucide-astro'
 import DashboardLayout from '../frontend/layouts/DashboardLayout.astro'
 import PlateBadge from '../frontend/components/ui/PlateBadge.astro'
 import StatusBadge from '../frontend/components/ui/StatusBadge.astro'
 import CronogramaDetailModal from '../frontend/components/cronograma/CronogramaDetailModal.astro'
 import {
-  getViajesAsignadosPorChofer,
+  getCalendarioViajesChofer,
   verifySessionToken,
   SESSION_COOKIE_NAME,
 } from '../backend/index'
@@ -45,11 +49,27 @@ const currentUser = Astro.locals.user || verifySessionToken(sessionToken) || {
 }
 
 const isChofer = currentUser.rolId === 4
+const isStaff = currentUser.rolId === 1 || currentUser.rolId === 2
 
-// Carga de datos de viajes asignados por chofer
-const data = await getViajesAsignadosPorChofer(currentUser.id)
+// Parámetros de navegación del calendario
+const ahora = new Date()
+const mesParam = Astro.url.searchParams.get('mes') ? parseInt(Astro.url.searchParams.get('mes')!, 10) : ahora.getMonth() + 1
+const anioParam = Astro.url.searchParams.get('anio') ? parseInt(Astro.url.searchParams.get('anio')!, 10) : ahora.getFullYear()
+const choferIdOverride = Astro.url.searchParams.get('choferId') ? parseInt(Astro.url.searchParams.get('choferId')!, 10) : undefined
 
-// Helpers de formateo de fecha y hora
+// Carga exclusiva del calendario y del historial del chofer
+const data = await getCalendarioViajesChofer(currentUser.id, mesParam, anioParam, choferIdOverride)
+
+// Cálculos de mes anterior y siguiente para navegación
+const prevMes = data.mes === 1 ? 12 : data.mes - 1
+const prevAnio = data.mes === 1 ? data.anio - 1 : data.anio
+
+const nextMes = data.mes === 12 ? 1 : data.mes + 1
+const nextAnio = data.mes === 12 ? data.anio + 1 : data.anio
+
+const querySupervisor = isStaff && choferIdOverride ? `&choferId=${choferIdOverride}` : ''
+
+// Helpers de formateo
 const formatHora = (dStr: string | null) => {
   if (!dStr) return '--:--'
   const d = new Date(dStr)
@@ -62,621 +82,626 @@ const formatFechaCorta = (dStr: string | null) => {
   return d.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' })
 }
 
-const formatFechaHora = (dStr: string | null) => {
-  if (!dStr) return '--'
-  const d = new Date(dStr)
-  return `${d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' })} ${d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs`
-}
+const diasSemana = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 ---
 
-<DashboardLayout activeNav="viajes-choferes" title="Viajes Asignados por Chofer · Movilidades · Ministerio de Educación">
+<DashboardLayout activeNav="viajes-choferes" title="Mi Calendario e Historial de Viajes · SCVehiculos · Ministerio de Educación">
   <div slot="header-title">
     <h1 class="font-display text-xl font-bold text-navy sm:text-2xl">
-      Viajes Asignados por Chofer
+      Mi Calendario y Registro de Viajes
     </h1>
   </div>
 
   <div class="space-y-6">
-    <!-- Encabezado de Sección y Misión Institucional -->
+    <!-- Encabezado de Sección y Ficha del Chofer -->
     <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
       <div>
         <div class="flex items-center gap-2 text-xs font-semibold text-blue mb-1">
           <span>Ministerio de Educación</span>
           <span>·</span>
-          <span>Coordinación de Movilidades y Conducción</span>
+          <span>Conducción y Movilidades Oficiales</span>
         </div>
-        <h2 class="font-display text-[26px] font-bold tracking-tight text-navy">
-          Itinerario y Asignaciones por Chofer
+        <h2 class="font-display text-[26px] font-bold tracking-tight text-navy flex items-center gap-2">
+          <span>Mi Cronograma e Historial de Conducción</span>
+          {data.chofer && (
+            <span class="rounded-full bg-orange-100 text-orangeGov px-2.5 py-0.5 text-xs font-bold font-sans">
+              {data.chofer.nombreCompleto}
+            </span>
+          )}
         </h2>
         <p class="mt-0.5 text-xs text-muted max-w-2xl">
-          Consulta el cronograma de viajes, móviles asignados y destinos departamentales de cada conductor ministerial.
+          Visualiza únicamente tus comisiones oficiales programadas y tu historial personal. Los viajes no realizados tras 24 hs se cancelan automáticamente por el sistema.
         </p>
       </div>
 
       <div class="flex items-center gap-2">
-        {isChofer && (
+        {data.viajeActivo && (
           <a
             href="/mi-viaje"
             class="flex items-center gap-2 rounded-xl bg-orangeGov hover:bg-orange-700 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-orange-500/20 active:scale-98 transition"
-            title="Ir a mi panel interactivo de viaje activo"
+            title="Ir a mi panel interactivo de viaje en curso"
           >
             <Navigation size={15} />
-            <span>Ir a Mi Viaje Activo</span>
+            <span>Operar Mi Viaje Activo</span>
           </a>
         )}
-        <a
-          href="/cronograma"
-          class="flex items-center gap-2 rounded-xl border border-line bg-white hover:bg-paper px-3.5 py-2.5 text-xs font-bold text-navy shadow-xs transition"
-          title="Ver grilla semanal por móvil"
-        >
-          <CalendarDays size={15} class="text-muted" />
-          <span>Cronograma Semanal</span>
-        </a>
       </div>
     </div>
 
-    <!-- KPIs de Asignaciones y Flota de Choferes -->
+    <!-- Barra de Supervisión (Solo si es Administrador u Operador) -->
+    {isStaff && (
+      <div class="rounded-2xl border border-orange-200 bg-orange-50/60 p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+        <div class="flex items-center gap-2 text-orangeGov font-bold">
+          <Compass size={16} />
+          <span>Modo Supervisor:</span>
+          <span class="text-ink font-normal">
+            Estás auditando el calendario e historial personal del conductor seleccionado.
+          </span>
+        </div>
+        <div class="w-full sm:w-auto flex items-center gap-2">
+          <label for="select-chofer-supervisor" class="font-bold text-navy whitespace-nowrap">Conductor:</label>
+          <select
+            id="select-chofer-supervisor"
+            class="rounded-xl border border-orange-300 bg-white px-3 py-1.5 text-xs font-semibold text-navy focus:outline-none focus:ring-2 focus:ring-orangeGov/20 cursor-pointer"
+          >
+            {data.listaChoferesSelector.map((ch) => (
+              <option value={ch.id} selected={ch.id === data.chofer?.id}>
+                {ch.nombreCompleto} (DNI {ch.dni})
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+    )}
+
+    <!-- Tarjetas KPI del Conductor (Historial y Mes Actual) -->
     <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:gap-4">
-      <!-- Choferes Asignados -->
+      <!-- Viajes Realizados (Histórico) -->
       <div class="rounded-2xl border border-line bg-white p-4 shadow-xs">
         <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-muted uppercase">Choferes con Viaje</span>
-          <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-blue/10 text-blue">
-            <UsersRound size={16} />
-          </span>
-        </div>
-        <div class="mt-2 flex items-baseline gap-2">
-          <span class="font-mono text-2xl font-bold text-navy">{data.stats.choferesConViaje}</span>
-          <span class="text-xs text-muted">de {data.stats.totalChoferes} activos</span>
-        </div>
-        <div class="mt-1 h-1.5 w-full rounded-full bg-paper overflow-hidden">
-          <div
-            class="h-full bg-blue rounded-full transition-all"
-            style={`width: ${data.stats.totalChoferes > 0 ? (data.stats.choferesConViaje / data.stats.totalChoferes) * 100 : 0}%`}
-          ></div>
-        </div>
-      </div>
-
-      <!-- Viajes en Curso -->
-      <div class="rounded-2xl border border-line bg-white p-4 shadow-xs">
-        <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-muted uppercase">En Curso Hoy</span>
+          <span class="text-xs font-bold text-muted uppercase">Viajes Realizados</span>
           <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
-            <Navigation size={16} />
+            <CheckCircle2 size={16} />
           </span>
         </div>
         <div class="mt-2 flex items-baseline gap-2">
-          <span class="font-mono text-2xl font-bold text-emerald-700">{data.stats.viajesEnCurso}</span>
-          <span class="text-xs text-emerald-800 font-semibold">En ruta activa</span>
+          <span class="font-mono text-2xl font-bold text-navy">{data.stats.viajesRealizadosHistorico}</span>
+          <span class="text-xs text-emerald-700 font-semibold">completados</span>
         </div>
-        <p class="mt-1 text-[11px] text-muted">Comisiones actualmente en tránsito</p>
+        <p class="mt-1 text-[11px] text-muted">Comisiones oficiales finalizadas</p>
       </div>
 
-      <!-- Viajes Programados -->
+      <!-- Km Totales Recorridos -->
       <div class="rounded-2xl border border-line bg-white p-4 shadow-xs">
         <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-muted uppercase">Programados</span>
+          <span class="text-xs font-bold text-muted uppercase">Km Recorridos</span>
+          <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-blue/10 text-blue">
+            <Gauge size={16} />
+          </span>
+        </div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span class="font-mono text-2xl font-bold text-blue">{data.stats.kmTotalesHistorico.toLocaleString('es-AR')}</span>
+          <span class="text-xs text-muted">km acumulados</span>
+        </div>
+        <p class="mt-1 text-[11px] text-muted">Kilometraje auditado en ruta</p>
+      </div>
+
+      <!-- Viajes Programados Pendientes -->
+      <div class="rounded-2xl border border-line bg-white p-4 shadow-xs">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-muted uppercase">Próximas Salidas</span>
           <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
             <Clock size={16} />
           </span>
         </div>
         <div class="mt-2 flex items-baseline gap-2">
-          <span class="font-mono text-2xl font-bold text-amber-700">{data.stats.viajesProgramados}</span>
-          <span class="text-xs text-amber-800 font-semibold">Próximas salidas</span>
+          <span class="font-mono text-2xl font-bold text-amber-700">{data.stats.programadosMes}</span>
+          <span class="text-xs text-amber-800 font-semibold">programados</span>
         </div>
-        <p class="mt-1 text-[11px] text-muted">Con horario y móvil ya asignados</p>
+        <p class="mt-1 text-[11px] text-muted">En agenda para {data.mesNombre}</p>
       </div>
 
-      <!-- Choferes Disponibles -->
+      <!-- Viajes No Realizados (Expirados / Cancelados) -->
       <div class="rounded-2xl border border-line bg-white p-4 shadow-xs">
         <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-muted uppercase">Disponibles</span>
-          <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-orangeGov/10 text-orangeGov">
-            <CheckCircle2 size={16} />
+          <span class="text-xs font-bold text-muted uppercase">No Realizados</span>
+          <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-500/10 text-rose-600">
+            <XCircle size={16} />
           </span>
         </div>
         <div class="mt-2 flex items-baseline gap-2">
-          <span class="font-mono text-2xl font-bold text-navy">{data.stats.choferesDisponibles}</span>
-          <span class="text-xs text-emerald-700 font-semibold">Sin viaje activo</span>
+          <span class="font-mono text-2xl font-bold text-rose-700">{data.stats.viajesNoRealizadosHistorico}</span>
+          <span class="text-xs text-rose-800 font-semibold">cancelados</span>
         </div>
-        <p class="mt-1 text-[11px] text-muted">Listos para nuevo despacho oficial</p>
+        <p class="mt-1 text-[11px] text-muted">Expirados tras 24 hs o cancelados</p>
       </div>
     </div>
 
-    <!-- Barra de Filtros, Búsqueda y Alternador de Vistas -->
-    <div class="rounded-2xl border border-line bg-white p-3.5 shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-      <!-- Búsqueda reactiva -->
-      <div class="relative flex-1">
-        <Search size={16} class="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
-        <input
-          type="text"
-          id="input-buscar-viaje-chofer"
-          placeholder="Buscar por conductor, código COM, destino o patente..."
-          class="w-full rounded-xl border border-line bg-paper pl-10 pr-4 py-2 text-xs font-medium text-navy placeholder:text-muted focus:border-orangeGov focus:outline-none transition"
-        />
+    <!-- Navegación de Pestañas Principales (Calendario, Historial, Agenda) -->
+    <div class="flex items-center rounded-2xl border border-line bg-paper p-1.5 gap-1 shadow-2xs">
+      <button
+        type="button"
+        id="btn-tab-calendario"
+        class="flex-1 flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-navy shadow-xs transition cursor-pointer"
+      >
+        <Calendar size={15} />
+        <span>Mi Calendario Mensual</span>
+      </button>
+
+      <button
+        type="button"
+        id="btn-tab-historial"
+        class="flex-1 flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-muted hover:text-navy transition cursor-pointer"
+      >
+        <History size={15} />
+        <span>Mi Historial de Viajes ({data.viajesHistorial.length})</span>
+      </button>
+
+      <button
+        type="button"
+        id="btn-tab-agenda"
+        class="flex-1 flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-muted hover:text-navy transition cursor-pointer"
+      >
+        <List size={15} />
+        <span>Próximas Salidas ({data.viajesProgramados.length})</span>
+      </button>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- VISTA 1: CALENDARIO MENSUAL INTERACTIVO                                   -->
+    <!-- ========================================================================= -->
+    <div id="vista-calendario-container" class="space-y-4">
+      <!-- Navegación de Mes del Calendario -->
+      <div class="rounded-2xl border border-line bg-white p-3.5 shadow-xs flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <a
+            href={`/viajes-choferes?mes=${prevMes}&anio=${prevAnio}${querySupervisor}`}
+            class="flex h-9 w-9 items-center justify-center rounded-xl border border-line bg-white hover:bg-paper text-navy shadow-xs transition"
+            title="Mes Anterior"
+          >
+            <ChevronLeft size={18} />
+          </a>
+          <a
+            href={`/viajes-choferes?mes=${nextMes}&anio=${nextAnio}${querySupervisor}`}
+            class="flex h-9 w-9 items-center justify-center rounded-xl border border-line bg-white hover:bg-paper text-navy shadow-xs transition"
+            title="Mes Siguiente"
+          >
+            <ChevronRight size={18} />
+          </a>
+          <span class="font-display text-lg font-bold text-navy ml-2">
+            {data.mesNombre} {data.anio}
+          </span>
+        </div>
+
+        <a
+          href={`/viajes-choferes?mes=${ahora.getMonth() + 1}&anio=${ahora.getFullYear()}${querySupervisor}`}
+          class="rounded-xl bg-paper hover:bg-orange-100 hover:text-orangeGov px-3 py-1.5 text-xs font-bold text-navy border border-line transition"
+        >
+          Hoy
+        </a>
       </div>
 
-      <!-- Filtros desplegables -->
-      <div class="flex flex-wrap items-center gap-2">
-        <!-- Selector Chofer -->
-        <select
-          id="select-filtro-chofer"
-          class="rounded-xl border border-line bg-paper px-3 py-2 text-xs font-semibold text-navy focus:border-orangeGov focus:outline-none transition cursor-pointer"
-        >
-          <option value="all">Todos los Conductores</option>
-          {data.choferLogueadoId && (
-            <option value="mis-viajes">⭐ Mis Viajes Asignados</option>
-          )}
-          {data.choferes.map((ch) => (
-            <option value={ch.id}>
-              {ch.nombreCompleto} ({ch.totalViajesAsignados} viajes)
-            </option>
+      <div class="card overflow-hidden rounded-3xl border border-line bg-white shadow-sm">
+        <!-- Cabecera de Días de la Semana -->
+        <div class="grid grid-cols-7 border-b border-line bg-paper text-center text-xs font-bold uppercase tracking-wider text-muted">
+          {diasSemana.map((dia, idx) => (
+            <div class={`py-3 ${idx >= 5 ? 'text-amber-800/80 bg-amber-50/30' : ''}`}>
+              <span class="hidden sm:inline">{dia === 'Lun' ? 'Lunes' : dia === 'Mar' ? 'Martes' : dia === 'Mié' ? 'Miércoles' : dia === 'Jue' ? 'Jueves' : dia === 'Vie' ? 'Viernes' : dia === 'Sáb' ? 'Sábado' : 'Domingo'}</span>
+              <span class="sm:hidden">{dia}</span>
+            </div>
           ))}
-        </select>
+        </div>
 
-        <!-- Selector Estado del Viaje -->
-        <select
-          id="select-filtro-estado"
-          class="rounded-xl border border-line bg-paper px-3 py-2 text-xs font-semibold text-navy focus:border-orangeGov focus:outline-none transition cursor-pointer"
-        >
-          <option value="all">Todos los Estados</option>
-          <option value="en_curso">En Viaje (En Curso)</option>
-          <option value="programada">Programados</option>
-          <option value="finalizada">Finalizados</option>
-        </select>
+        <!-- Grilla de 42 Celdas del Mes -->
+        <div class="grid grid-cols-7 divide-x divide-y divide-line/70">
+          {data.dias.map((dia) => {
+            const fechaLabel = `${dia.diaNumero} de ${data.mesNombre}`
+            const tieneViajes = dia.viajes.length > 0
 
-        <!-- Conmutador de Vistas (Tarjetas vs Tabla) -->
-        <div class="flex items-center rounded-xl border border-line bg-paper p-1">
-          <button
-            type="button"
-            id="btn-view-cards"
-            class="flex items-center gap-1.5 rounded-lg bg-white px-2.5 py-1 text-xs font-bold text-navy shadow-xs transition cursor-pointer"
-            title="Vista agrupada por conductor"
-          >
-            <LayoutGrid size={14} />
-            <span class="hidden sm:inline">Por Chofer</span>
-          </button>
-          <button
-            type="button"
-            id="btn-view-table"
-            class="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold text-muted hover:text-navy transition cursor-pointer"
-            title="Vista de cronograma unificado en tabla"
-          >
-            <List size={14} />
-            <span class="hidden sm:inline">Tabla / Cronograma</span>
-          </button>
+            return (
+              <div
+                class={`celda-dia-calendario min-h-[95px] sm:min-h-[125px] p-1.5 sm:p-2.5 transition flex flex-col justify-between cursor-pointer hover:bg-orange-50/30 group ${
+                  !dia.esMesActual
+                    ? 'bg-gray-50/50 opacity-40'
+                    : dia.esHoy
+                    ? 'bg-blue-50/30 border-blue-200'
+                    : dia.esFinDeSemana
+                    ? 'bg-gray-50/25'
+                    : 'bg-white'
+                } ${tieneViajes ? 'hover:shadow-xs' : ''}`}
+                data-fecha={dia.fecha}
+                data-fecha-label={fechaLabel}
+                data-tiene-viajes={tieneViajes ? 'true' : 'false'}
+                data-viajes-json={JSON.stringify(dia.viajes)}
+              >
+                <!-- Número del Día y Badge de Hoy -->
+                <div class="flex items-center justify-between">
+                  <span
+                    class={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
+                      dia.esHoy
+                        ? 'bg-blue text-white shadow-xs'
+                        : dia.esMesActual
+                        ? 'text-navy group-hover:text-orangeGov'
+                        : 'text-muted'
+                    }`}
+                  >
+                    {dia.diaNumero}
+                  </span>
+
+                  {dia.esHoy && (
+                    <span class="hidden sm:inline rounded-full bg-blue-100 text-blue-900 px-1.5 py-0.2 text-[9px] font-bold">
+                      HOY
+                    </span>
+                  )}
+
+                  {tieneViajes && (
+                    <span class="sm:hidden inline-block h-2 w-2 rounded-full bg-orangeGov animate-pulse"></span>
+                  )}
+                </div>
+
+                <!-- Eventos de Viajes en este Día -->
+                <div class="mt-1 space-y-1 flex-1">
+                  {dia.viajes.map((viaje) => {
+                    const esNoRealizado = viaje.estado === 'cancelada' || viaje.esViajeNoRealizado
+
+                    return (
+                      <div
+                        class={`rounded-xl p-1.5 text-[10px] leading-tight border transition hidden sm:block ${
+                          viaje.estado === 'en_curso'
+                            ? 'border-blue-300 bg-blue-50 text-blue-950 font-bold'
+                            : esNoRealizado
+                            ? 'border-rose-300 bg-rose-50 text-rose-950 font-medium'
+                            : viaje.estado === 'programada'
+                            ? 'border-amber-300 bg-amber-50 text-amber-950 font-semibold'
+                            : 'border-emerald-300 bg-emerald-50 text-emerald-950'
+                        }`}
+                        title={`${viaje.codigo}: ${viaje.destino} (${viaje.horaSalida} hs)`}
+                      >
+                        <div class="flex items-center justify-between gap-1">
+                          <span class="font-mono font-bold text-[9px]">{viaje.horaSalida} hs</span>
+                          <span class="font-mono text-[9px] truncate">{viaje.vehiculoPatente}</span>
+                        </div>
+                        <p class="truncate font-medium mt-0.5">
+                          {esNoRealizado ? '🔴 No realizado' : viaje.destino}
+                        </p>
+                      </div>
+                    )
+                  })}
+
+                  <!-- Versión compacta para móviles -->
+                  {tieneViajes && (
+                    <div class="sm:hidden text-center mt-1">
+                      <span class="inline-block rounded-md bg-orange-100 px-1.5 py-0.5 text-[9px] font-bold text-orangeGov">
+                        {dia.viajes.length} {dia.viajes.length === 1 ? 'viaje' : 'viajes'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
-    </div>
 
-    <!-- ========================================================================= -->
-    <!-- VISTA 1: FICHAS / TARJETAS POR CHOFER (AGRUPADA)                           -->
-    <!-- ========================================================================= -->
-    <div id="vista-tarjetas-choferes" class="space-y-4">
-      <div class="flex items-center justify-between text-xs text-muted px-1">
-        <span id="contador-choferes-visibles">
-          Mostrando {data.choferes.length} conductores oficiales
-        </span>
-        <span class="text-[11px]">
-          Organizado por conductor y comisiones asociadas
-        </span>
-      </div>
+      <!-- Panel de Agenda del Día Seleccionado (Mobile-First y Detalle Táctil) -->
+      <div id="panel-agenda-dia" class="rounded-3xl border border-line bg-white p-5 sm:p-6 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-line pb-3">
+          <div class="flex items-center gap-2">
+            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-orangeGov/10 text-orangeGov">
+              <Calendar size={18} />
+            </span>
+            <h3 id="agenda-dia-titulo" class="font-display text-base font-bold text-navy">
+              Agenda del Día (Haz clic en una fecha del calendario)
+            </h3>
+          </div>
+          <span class="text-xs text-muted">
+            Detalle de salidas y Hoja de Ruta
+          </span>
+        </div>
 
-      <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        {data.choferes.map((ch) => {
-          const searchKeywords = `${ch.nombreCompleto} ${ch.dni} ${ch.numeroLicencia} ${ch.viajeActivo ? `${ch.viajeActivo.codigo} ${ch.viajeActivo.destino} ${ch.viajeActivo.vehiculoPatente}` : ''} ${ch.viajesProgramados.map((v) => `${v.codigo} ${v.destino} ${v.vehiculoPatente}`).join(' ')}`.toLowerCase()
+        <div id="agenda-dia-lista-viajes" class="space-y-3">
+          {data.viajeActivo ? (
+            <div class="rounded-2xl border border-blue-200 bg-blue-50/50 p-4 shadow-xs space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="font-mono text-xs font-bold text-navy">{data.viajeActivo.codigo}</span>
+                  <span class="rounded-full bg-blue-100 text-blue-800 px-2 py-0.5 text-[10px] font-bold">
+                    En Curso / En Ruta Hoy
+                  </span>
+                </div>
+                <PlateBadge plate={data.viajeActivo.vehiculoPatente} size="sm" />
+              </div>
 
-          return (
-            <div
-              class={`card-chofer-asignado rounded-3xl border bg-white shadow-sm transition hover:shadow-md flex flex-col overflow-hidden ${
-                ch.esUsuarioActual
-                  ? 'border-orangeGov/40 ring-2 ring-orangeGov/15'
-                  : 'border-line'
-              }`}
-              data-chofer-id={ch.id}
-              data-es-mi-viaje={ch.esUsuarioActual ? 'true' : 'false'}
-              data-search={searchKeywords}
-            >
-              {/* Encabezado del Chofer */}
-              <div class="p-4 sm:p-5 border-b border-line/60 bg-gradient-to-r from-paper to-white">
-                <div class="flex items-start justify-between gap-3">
-                  <div class="flex items-center gap-3">
-                    <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-navy text-white font-bold text-base shadow-sm">
-                      {ch.iniciales}
-                    </div>
-                    <div>
-                      <div class="flex items-center gap-2 flex-wrap">
-                        <h3 class="font-display text-base font-bold text-navy">
-                          {ch.nombreCompleto}
-                        </h3>
-                        {ch.esUsuarioActual && (
-                          <span class="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-bold text-orangeGov">
-                            ⭐ Mi Legajo
-                          </span>
-                        )}
-                      </div>
-                      <div class="flex items-center gap-2 mt-0.5 text-xs text-muted">
-                        <span>DNI: {ch.dni}</span>
-                        <span>·</span>
-                        <span class="flex items-center gap-1">
-                          <Phone size={12} />
-                          {ch.telefono}
-                        </span>
-                      </div>
-                    </div>
+              <div class="space-y-1.5 text-xs">
+                <div class="flex items-center gap-1.5 font-semibold text-navy">
+                  <Truck size={14} class="text-blue-700 shrink-0" />
+                  <span>{data.viajeActivo.vehiculoMarca} {data.viajeActivo.vehiculoModelo}</span>
+                </div>
+                <div class="flex items-start gap-1.5 text-navy">
+                  <MapPin size={14} class="text-orangeGov shrink-0 mt-0.5" />
+                  <span class="font-medium">{data.viajeActivo.destino}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-[11px] pt-1">
+                  <div class="rounded-xl bg-white p-2 border border-blue-100">
+                    <span class="text-[10px] font-bold uppercase text-muted block">Salida</span>
+                    <span class="font-semibold text-navy">{formatFechaCorta(data.viajeActivo.fechaSalidaProgramada)} {data.viajeActivo.horaSalida} hs</span>
                   </div>
-
-                  <!-- Badge de Estado Laboral del Chofer -->
-                  <div class="text-right">
-                    <span
-                      class={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${
-                        ch.estado === 'disponible'
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : ch.estado === 'en_comision'
-                          ? 'bg-blue-100 text-blue-800'
-                          : ch.estado === 'licencia'
-                          ? 'bg-amber-100 text-amber-800'
-                          : 'bg-gray-100 text-gray-700'
-                      }`}
-                    >
-                      <span class={`h-1.5 w-1.5 rounded-full ${
-                        ch.estado === 'disponible' ? 'bg-emerald-600' : ch.estado === 'en_comision' ? 'bg-blue-600' : 'bg-amber-600'
-                      }`}></span>
-                      <span>{ch.estadoLabel}</span>
-                    </span>
-                    <p class="text-[10px] text-muted mt-1">
-                      Lic. {ch.categoriaLicencia} · {ch.licenciaStatus === 'vigente' ? 'Vigente' : ch.licenciaStatus === 'proxima' ? 'Por vencer' : 'Vencida'}
-                    </p>
+                  <div class="rounded-xl bg-white p-2 border border-blue-100">
+                    <span class="text-[10px] font-bold uppercase text-muted block">Regreso Est.</span>
+                    <span class="font-semibold text-navy">{formatFechaCorta(data.viajeActivo.fechaRegresoEstimada)} {data.viajeActivo.horaRegreso} hs</span>
                   </div>
                 </div>
               </div>
 
-              {/* Contenido de Viajes Asignados al Chofer */}
-              <div class="p-4 sm:p-5 flex-1 flex flex-col space-y-4">
-                {/* 1. VIAJE ACTIVO (EN CURSO) */}
-                {ch.viajeActivo ? (
-                  <div
-                    class="rounded-2xl border border-blue-200 bg-blue-50/50 p-4 space-y-3"
-                    data-estado-item="en_curso"
+              <div class="flex items-center justify-between pt-2 border-t border-blue-100">
+                <button
+                  type="button"
+                  class="btn-ver-detalle-comision text-xs font-bold text-blue hover:underline cursor-pointer"
+                  data-id={data.viajeActivo.id}
+                >
+                  Ver Detalle Completo
+                </button>
+                <div class="flex items-center gap-2">
+                  <a
+                    href={`/cronograma/imprimir/${data.viajeActivo.id}`}
+                    target="_blank"
+                    class="rounded-xl border border-line bg-white hover:bg-paper px-2.5 py-1.5 text-[11px] font-bold text-navy shadow-xs transition"
                   >
-                    <div class="flex items-center justify-between">
-                      <div class="flex items-center gap-2">
-                        <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-600 text-white font-bold text-[11px] animate-pulse">
-                          ●
-                        </span>
-                        <div>
-                          <span class="font-mono text-xs font-bold text-blue-950">
-                            {ch.viajeActivo.codigo}
-                          </span>
-                          <span class="ml-2 rounded-full bg-blue-200 text-blue-900 px-2 py-0.5 text-[10px] font-bold">
-                            En Curso / En Ruta
-                          </span>
-                        </div>
-                      </div>
-                      <PlateBadge plate={ch.viajeActivo.vehiculoPatente} size="sm" />
-                    </div>
-
-                    <!-- Datos del Vehículo y Destino -->
-                    <div class="space-y-1.5 text-xs">
-                      <div class="flex items-center gap-2 text-navy font-semibold">
-                        <Truck size={14} class="text-blue-700 shrink-0" />
-                        <span>{ch.viajeActivo.vehiculoMarca} {ch.viajeActivo.vehiculoModelo}</span>
-                      </div>
-
-                      <div class="flex items-start gap-2">
-                        <MapPin size={14} class="text-orangeGov shrink-0 mt-0.5" />
-                        <div class="space-y-0.5">
-                          <span class="text-muted text-[11px]">Itinerario oficial:</span>
-                          <div class="flex flex-wrap gap-1.5 pt-0.5">
-                            {ch.viajeActivo.paradas.map((parada, idx) => (
-                              <span class="inline-flex items-center gap-1 rounded-lg bg-white border border-blue-200 px-2 py-0.5 text-[11px] font-bold text-navy shadow-2xs">
-                                <span class="text-[9px] text-blue-700 font-mono">#{idx + 1}</span>
-                                <span>{parada}</span>
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div class="grid grid-cols-2 gap-2 pt-1.5 text-[11px]">
-                        <div class="rounded-xl bg-white/80 p-2 border border-blue-100">
-                          <span class="text-muted block text-[10px] uppercase font-bold">Salida Oficial</span>
-                          <span class="font-semibold text-navy">
-                            {formatFechaHora(ch.viajeActivo.fechaSalidaReal || ch.viajeActivo.fechaSalidaProgramada)}
-                          </span>
-                        </div>
-                        <div class="rounded-xl bg-white/80 p-2 border border-blue-100">
-                          <span class="text-muted block text-[10px] uppercase font-bold">Regreso Estimado</span>
-                          <span class="font-semibold text-navy">
-                            {formatFechaHora(ch.viajeActivo.fechaRegresoEstimada)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Acciones del Viaje Activo -->
-                    <div class="flex items-center justify-between pt-2 border-t border-blue-100 gap-2">
-                      <button
-                        type="button"
-                        class="btn-ver-detalle-comision text-xs font-bold text-blue hover:underline cursor-pointer"
-                        data-id={ch.viajeActivo.id}
-                      >
-                        Ver Detalle Completo
-                      </button>
-
-                      <div class="flex items-center gap-2">
-                        <a
-                          href={`/cronograma/imprimir/${ch.viajeActivo.id}`}
-                          target="_blank"
-                          class="inline-flex items-center gap-1 rounded-xl border border-line bg-white hover:bg-paper px-2.5 py-1.5 text-[11px] font-bold text-navy shadow-xs transition"
-                          title="Imprimir Hoja de Ruta Oficial A4"
-                        >
-                          <FileText size={13} />
-                          <span>Hoja de Ruta</span>
-                        </a>
-
-                        {ch.esUsuarioActual && (
-                          <a
-                            href="/mi-viaje"
-                            class="inline-flex items-center gap-1.5 rounded-xl bg-orangeGov hover:bg-orange-700 px-3 py-1.5 text-[11px] font-bold text-white shadow-xs transition"
-                          >
-                            <Navigation size={13} />
-                            <span>Operar Mi Viaje</span>
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
-
-                {/* 2. VIAJES PROGRAMADOS */}
-                {ch.viajesProgramados.length > 0 && (
-                  <div class="space-y-2" data-estado-item="programada">
-                    <span class="text-xs font-bold text-muted uppercase tracking-wider block">
-                      Próximas Salidas Programadas ({ch.viajesProgramados.length})
-                    </span>
-                    <div class="space-y-2">
-                      {ch.viajesProgramados.map((vp) => (
-                        <div class="rounded-2xl border border-line bg-paper/60 p-3 text-xs space-y-2 hover:bg-paper transition">
-                          <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                              <span class="font-mono font-bold text-navy text-[11px]">{vp.codigo}</span>
-                              <span class="rounded-md bg-amber-100 text-amber-900 px-1.5 py-0.5 text-[10px] font-bold">
-                                {formatFechaCorta(vp.fechaSalidaProgramada)} {formatHora(vp.fechaSalidaProgramada)} hs
-                              </span>
-                            </div>
-                            <PlateBadge plate={vp.vehiculoPatente} size="sm" />
-                          </div>
-
-                          <div class="flex items-start gap-1.5 text-[11px] text-navy">
-                            <MapPin size={13} class="text-orangeGov shrink-0 mt-0.5" />
-                            <span class="font-medium line-clamp-1">{vp.destino}</span>
-                          </div>
-
-                          <div class="flex items-center justify-between pt-1 border-t border-line/60 text-[10px]">
-                            <span class="text-muted">
-                              {vp.vehiculoMarca} {vp.vehiculoModelo} · {vp.cantidadPasajeros} pasajeros
-                            </span>
-                            <div class="flex items-center gap-1.5">
-                              <button
-                                type="button"
-                                class="btn-ver-detalle-comision font-bold text-blue hover:underline cursor-pointer"
-                                data-id={vp.id}
-                              >
-                                Detalle
-                              </button>
-                              <span>·</span>
-                              <a
-                                href={`/cronograma/imprimir/${vp.id}`}
-                                target="_blank"
-                                class="font-bold text-navy hover:text-orangeGov transition"
-                              >
-                                Hoja de Ruta
-                              </a>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* 3. HISTORIAL RECIENTE O SIN VIAJES */}
-                {!ch.viajeActivo && ch.viajesProgramados.length === 0 ? (
-                  <div class="rounded-2xl border border-dashed border-gray-200 bg-gray-50/50 p-6 text-center space-y-2 my-auto">
-                    <span class="text-2xl block">🟢</span>
-                    <p class="text-xs font-bold text-navy">Sin comisiones asignadas</p>
-                    <p class="text-[11px] text-muted max-w-xs mx-auto">
-                      El chofer se encuentra disponible en base operativa para nuevas asignaciones ministeriales.
-                    </p>
-                  </div>
-                ) : ch.viajesHistorial.length > 0 ? (
-                  <div class="pt-2 border-t border-line/60" data-estado-item="finalizada">
-                    <details class="group">
-                      <summary class="flex items-center justify-between text-[11px] font-bold text-muted hover:text-navy cursor-pointer list-none py-1">
-                        <span>Últimos viajes completados ({ch.viajesHistorial.length})</span>
-                        <span class="transition-transform group-open:rotate-180">▾</span>
-                      </summary>
-                      <div class="mt-2 space-y-1.5">
-                        {ch.viajesHistorial.map((vh) => (
-                          <div class="flex items-center justify-between rounded-xl bg-paper px-2.5 py-1.5 text-[11px]">
-                            <div class="flex items-center gap-2">
-                              <span class="font-mono text-[10px] text-muted">{vh.codigo}</span>
-                              <span class="font-medium text-navy line-clamp-1">{vh.destino}</span>
-                            </div>
-                            <span class="text-muted text-[10px] shrink-0 font-mono">
-                              {vh.kmRecorridos ? `${vh.kmRecorridos} km` : formatFechaCorta(vh.fechaSalidaProgramada)}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </details>
-                  </div>
-                ) : null}
+                    Hoja de Ruta
+                  </a>
+                  <a
+                    href="/mi-viaje"
+                    class="rounded-xl bg-orangeGov hover:bg-orange-700 px-3 py-1.5 text-[11px] font-bold text-white shadow-xs transition"
+                  >
+                    Operar Mi Viaje
+                  </a>
+                </div>
               </div>
             </div>
-          )
-        })}
+          ) : null}
+        </div>
+
+        <div id="agenda-dia-empty-state" class={`${data.viajeActivo ? 'hidden' : ''} text-center py-6 text-muted space-y-1`}>
+          <span class="text-3xl block">📅</span>
+          <p class="text-xs font-semibold text-navy">No hay comisiones asignadas para la fecha seleccionada</p>
+          <p class="text-[11px]">Toca cualquier día con un viaje para consultar el itinerario oficial y los horarios.</p>
+        </div>
       </div>
     </div>
 
     <!-- ========================================================================= -->
-    <!-- VISTA 2: TABLA UNIFICADA DE TODAS LAS COMISIONES                           -->
+    <!-- VISTA 2: MI HISTORIAL COMPLETO DE VIAJES (REALIZADOS Y NO REALIZADOS)       -->
     <!-- ========================================================================= -->
-    <div id="vista-tabla-viajes" class="hidden space-y-4">
-      <div class="flex items-center justify-between text-xs text-muted px-1">
-        <span id="contador-tabla-visibles">
-          Mostrando {data.todosLosViajes.length} de {data.todosLosViajes.length} comisiones
-        </span>
-        <span class="text-[11px]">
-          Listado cronológico completo con conductor asignado
-        </span>
-      </div>
+    <div id="vista-historial-container" class="hidden space-y-4">
+      <!-- Filtros de Historial -->
+      <div class="rounded-2xl border border-line bg-white p-3.5 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="relative w-full sm:w-80">
+          <Search size={15} class="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
+          <input
+            type="text"
+            id="input-buscar-historial"
+            placeholder="Buscar en mi historial por código, destino o patente..."
+            class="w-full rounded-xl border border-line bg-paper pl-10 pr-3 py-2 text-xs font-medium text-navy focus:border-orangeGov focus:outline-none transition"
+          />
+        </div>
 
-      <div class="card overflow-hidden rounded-3xl border border-line bg-white shadow-sm">
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs">
-            <thead class="border-b border-line bg-paper text-[10px] font-bold uppercase tracking-wider text-muted">
-              <tr>
-                <th class="py-3 px-4">Chofer Asignado</th>
-                <th class="py-3 px-3">Código</th>
-                <th class="py-3 px-3">Estado</th>
-                <th class="py-3 px-3">Móvil Oficial</th>
-                <th class="py-3 px-4">Destino / Itinerario</th>
-                <th class="py-3 px-3">Salida Prog.</th>
-                <th class="py-3 px-3">Regreso Estim.</th>
-                <th class="py-3 px-3">Pasajeros</th>
-                <th class="py-3 px-4 text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-line/60">
-              {data.todosLosViajes.map((viaje) => {
-                const searchRow = `${viaje.choferNombreCompleto} ${viaje.codigo} ${viaje.destino} ${viaje.vehiculoPatente} ${viaje.vehiculoModelo} ${viaje.motivo}`.toLowerCase()
-
-                return (
-                  <tr
-                    class={`row-viaje-asignado hover:bg-paper/70 transition ${
-                      viaje.esMiViaje ? 'bg-orange-50/30' : ''
-                    }`}
-                    data-chofer-id={viaje.choferId}
-                    data-es-mi-viaje={viaje.esMiViaje ? 'true' : 'false'}
-                    data-estado={viaje.estado}
-                    data-search={searchRow}
-                  >
-                    <!-- Chofer -->
-                    <td class="py-3 px-4">
-                      <div class="flex items-center gap-2.5">
-                        <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-navy text-white font-bold text-[10px]">
-                          {viaje.choferNombre.charAt(0)}{viaje.choferApellido.charAt(0)}
-                        </div>
-                        <div>
-                          <p class="font-bold text-navy flex items-center gap-1">
-                            <span>{viaje.choferNombreCompleto}</span>
-                            {viaje.esMiViaje && (
-                              <span class="text-[9px] rounded-full bg-orange-100 text-orangeGov px-1.5 font-bold">
-                                Tú
-                              </span>
-                            )}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-
-                    <!-- Código -->
-                    <td class="py-3 px-3">
-                      <span class="font-mono font-bold text-navy">{viaje.codigo}</span>
-                    </td>
-
-                    <!-- Estado -->
-                    <td class="py-3 px-3">
-                      <span
-                        class={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                          viaje.estado === 'en_curso'
-                            ? 'bg-blue-100 text-blue-800'
-                            : viaje.estado === 'programada'
-                            ? 'bg-amber-100 text-amber-800'
-                            : 'bg-emerald-100 text-emerald-800'
-                        }`}
-                      >
-                        <span class={`h-1.5 w-1.5 rounded-full ${
-                          viaje.estado === 'en_curso' ? 'bg-blue-600' : viaje.estado === 'programada' ? 'bg-amber-600' : 'bg-emerald-600'
-                        }`}></span>
-                        <span>{viaje.estadoLabel}</span>
-                      </span>
-                    </td>
-
-                    <!-- Móvil -->
-                    <td class="py-3 px-3">
-                      <div class="flex flex-col gap-0.5">
-                        <PlateBadge plate={viaje.vehiculoPatente} size="sm" />
-                        <span class="text-[10px] text-muted truncate max-w-[110px]">
-                          {viaje.vehiculoMarca} {viaje.vehiculoModelo}
-                        </span>
-                      </div>
-                    </td>
-
-                    <!-- Destino -->
-                    <td class="py-3 px-4 max-w-xs">
-                      <p class="font-semibold text-navy truncate" title={viaje.destino}>
-                        {viaje.destino}
-                      </p>
-                      <p class="text-[10px] text-muted truncate" title={viaje.motivo}>
-                        {viaje.motivo}
-                      </p>
-                    </td>
-
-                    <!-- Fechas -->
-                    <td class="py-3 px-3 whitespace-nowrap text-[11px]">
-                      <span class="font-semibold text-navy">
-                        {formatFechaCorta(viaje.fechaSalidaProgramada)}
-                      </span>
-                      <span class="text-muted block text-[10px]">
-                        {formatHora(viaje.fechaSalidaProgramada)} hs
-                      </span>
-                    </td>
-
-                    <td class="py-3 px-3 whitespace-nowrap text-[11px]">
-                      <span class="font-semibold text-navy">
-                        {formatFechaCorta(viaje.fechaRegresoEstimada)}
-                      </span>
-                      <span class="text-muted block text-[10px]">
-                        {formatHora(viaje.fechaRegresoEstimada)} hs
-                      </span>
-                    </td>
-
-                    <!-- Pasajeros -->
-                    <td class="py-3 px-3 text-[11px] text-muted">
-                      {viaje.cantidadPasajeros} pas.
-                    </td>
-
-                    <!-- Acciones -->
-                    <td class="py-3 px-4 text-right">
-                      <div class="flex items-center justify-end gap-1.5">
-                        <button
-                          type="button"
-                          class="btn-ver-detalle-comision rounded-lg border border-line bg-white hover:bg-paper px-2 py-1 text-[11px] font-bold text-navy shadow-xs transition cursor-pointer"
-                          data-id={viaje.id}
-                          title="Ver detalle del viaje"
-                        >
-                          Detalle
-                        </button>
-                        <a
-                          href={`/cronograma/imprimir/${viaje.id}`}
-                          target="_blank"
-                          class="rounded-lg bg-paper hover:bg-orange-50 hover:text-orangeGov px-2 py-1 text-[11px] font-bold text-navy transition"
-                          title="Imprimir Hoja de Ruta Oficial A4"
-                        >
-                          <FileText size={13} />
-                        </a>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+        <div class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+          <label for="select-filtro-estado-historial" class="text-xs font-bold text-navy whitespace-nowrap">Estado:</label>
+          <select
+            id="select-filtro-estado-historial"
+            class="rounded-xl border border-line bg-paper px-3 py-2 text-xs font-semibold text-navy focus:outline-none cursor-pointer"
+          >
+            <option value="all">Todos los Viajes ({data.viajesHistorial.length})</option>
+            <option value="realizados">🟢 Solo Viajes Realizados ({data.stats.viajesRealizadosHistorico})</option>
+            <option value="no_realizados">🔴 Solo Viajes No Realizados ({data.stats.viajesNoRealizadosHistorico})</option>
+          </select>
         </div>
       </div>
+
+      <div class="flex items-center justify-between text-xs text-muted px-1">
+        <span id="contador-historial-visibles">
+          Mostrando {data.viajesHistorial.length} comisiones históricas
+        </span>
+        <span class="text-[11px]">
+          Kilometraje total acumulado: {data.stats.kmTotalesHistorico.toLocaleString('es-AR')} km
+        </span>
+      </div>
+
+      <!-- Listado de Tarjetas de Historial -->
+      {data.viajesHistorial.length === 0 ? (
+        <div class="rounded-3xl border border-dashed border-line bg-white p-12 text-center text-muted space-y-2">
+          <span class="text-4xl block">🕒</span>
+          <h3 class="text-sm font-bold text-navy">Sin historial registrado</h3>
+          <p class="text-xs max-w-sm mx-auto">
+            Aún no posees comisiones finalizadas o canceladas registradas en el sistema.
+          </p>
+        </div>
+      ) : (
+        <div class="space-y-3" id="lista-tarjetas-historial">
+          {data.viajesHistorial.map((viaje) => {
+            const esNoRealizado = viaje.estado === 'cancelada' || viaje.esViajeNoRealizado
+            const searchKeywords = `${viaje.codigo} ${viaje.destino} ${viaje.vehiculoPatente} ${viaje.vehiculoModelo} ${viaje.motivo}`.toLowerCase()
+
+            return (
+              <div
+                class={`card-historial-viaje rounded-2xl border p-4 shadow-xs transition hover:shadow-md space-y-3 ${
+                  esNoRealizado
+                    ? 'border-rose-200 bg-rose-50/20'
+                    : 'border-line bg-white'
+                }`}
+                data-estado={viaje.estado}
+                data-es-no-realizado={esNoRealizado ? 'true' : 'false'}
+                data-search={searchKeywords}
+              >
+                <!-- Cabecera de la Comisión Histórica -->
+                <div class="flex items-center justify-between flex-wrap gap-2">
+                  <div class="flex items-center gap-2">
+                    <span class="font-mono text-xs font-bold text-navy">{viaje.codigo}</span>
+                    <span
+                      class={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold border ${
+                        esNoRealizado
+                          ? 'bg-rose-100 text-rose-800 border-rose-200'
+                          : 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                      }`}
+                    >
+                      <span class={`h-1.5 w-1.5 rounded-full ${esNoRealizado ? 'bg-rose-600' : 'bg-emerald-600'}`}></span>
+                      <span>{esNoRealizado ? 'Viaje no realizado' : 'Viaje Realizado / Finalizado'}</span>
+                    </span>
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <PlateBadge plate={viaje.vehiculoPatente} size="sm" />
+                  </div>
+                </div>
+
+                <!-- Detalles de la Comisión -->
+                <div class="space-y-1.5 text-xs">
+                  <div class="flex items-center gap-1.5 text-navy font-semibold">
+                    <Truck size={14} class="text-muted" />
+                    <span>{viaje.vehiculoMarca} {viaje.vehiculoModelo}</span>
+                  </div>
+
+                  <div class="flex items-start gap-1.5 text-navy">
+                    <MapPin size={14} class="text-orangeGov shrink-0 mt-0.5" />
+                    <span class="font-medium">{viaje.destino}</span>
+                  </div>
+
+                  <!-- Bloque condicional: Datos de kilometraje o Alerta de No Realizado -->
+                  {esNoRealizado ? (
+                    <div class="rounded-xl border border-rose-200 bg-rose-50/80 p-3 text-[11px] text-rose-950 space-y-1">
+                      <div class="flex items-center gap-1.5 font-bold text-rose-900">
+                        <XCircle size={14} class="text-rose-600" />
+                        <span>Motivo de Viaje No Realizado:</span>
+                      </div>
+                      <p class="text-[11px] pl-5 leading-relaxed">
+                        {viaje.motivoCancelacion || 'Cancelado automáticamente por haber transcurrido más de 24 horas del horario oficial sin despacho.'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div class="grid grid-cols-3 gap-2 text-[11px] rounded-xl bg-paper/60 p-2.5 border border-line/60">
+                      <div>
+                        <span class="text-[10px] font-bold uppercase text-muted block">Odómetro Salida</span>
+                        <span class="font-mono font-semibold text-navy">
+                          {viaje.odometroSalida ? `${viaje.odometroSalida.toLocaleString('es-AR')} km` : '--'}
+                        </span>
+                      </div>
+                      <div>
+                        <span class="text-[10px] font-bold uppercase text-muted block">Odómetro Llegada</span>
+                        <span class="font-mono font-semibold text-navy">
+                          {viaje.odometroRegreso ? `${viaje.odometroRegreso.toLocaleString('es-AR')} km` : '--'}
+                        </span>
+                      </div>
+                      <div>
+                        <span class="text-[10px] font-bold uppercase text-muted block">Recorrido Total</span>
+                        <span class="font-mono font-bold text-emerald-700">
+                          {viaje.kmRecorridos ? `${viaje.kmRecorridos.toLocaleString('es-AR')} km` : '--'}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div class="flex items-center justify-between text-[11px] text-muted pt-1">
+                    <span>
+                      Fecha oficial: {formatFechaCorta(viaje.fechaSalidaProgramada)} ({viaje.horaSalida} hs)
+                    </span>
+                    <span>
+                      {viaje.cantidadPasajeros} pasajeros transportados
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Acciones del Historial -->
+                <div class="flex items-center justify-between pt-2 border-t border-line/60">
+                  <button
+                    type="button"
+                    class="btn-ver-detalle-comision text-xs font-bold text-blue hover:underline cursor-pointer"
+                    data-id={viaje.id}
+                  >
+                    Ver Detalle Oficial
+                  </button>
+
+                  {!esNoRealizado && (
+                    <a
+                      href={`/cronograma/imprimir/${viaje.id}`}
+                      target="_blank"
+                      class="inline-flex items-center gap-1.5 rounded-xl border border-line bg-white hover:bg-paper px-3 py-1.5 text-xs font-bold text-navy shadow-xs transition"
+                    >
+                      <FileText size={13} />
+                      <span>Hoja de Ruta A4</span>
+                    </a>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- VISTA 3: PRÓXIMAS SALIDAS PROGRAMADAS                                     -->
+    <!-- ========================================================================= -->
+    <div id="vista-agenda-container" class="hidden space-y-4">
+      <div class="flex items-center justify-between text-xs text-muted px-1">
+        <span>Próximas comisiones asignadas a tu legajo ({data.viajesProgramados.length} pendientes)</span>
+        <span class="text-[11px]">Listado ordenado por fecha de salida</span>
+      </div>
+
+      {data.viajesProgramados.length === 0 ? (
+        <div class="rounded-3xl border border-dashed border-line bg-white p-12 text-center text-muted space-y-2">
+          <span class="text-4xl block">📋</span>
+          <h3 class="text-sm font-bold text-navy">Sin salidas programadas</h3>
+          <p class="text-xs max-w-sm mx-auto">
+            No tienes comisiones futuras planificadas en este momento. Te encuentras disponible en base operativa.
+          </p>
+        </div>
+      ) : (
+        <div class="space-y-3">
+          {data.viajesProgramados.map((vp) => (
+            <div class="rounded-2xl border border-line bg-white p-4 shadow-xs space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="font-mono text-xs font-bold text-navy">{vp.codigo}</span>
+                  <span class="rounded-full bg-amber-100 text-amber-800 px-2 py-0.5 text-[10px] font-bold">
+                    {formatFechaCorta(vp.fechaSalidaProgramada)} a las {vp.horaSalida} hs
+                  </span>
+                </div>
+                <PlateBadge plate={vp.vehiculoPatente} size="sm" />
+              </div>
+
+              <div class="space-y-1 text-xs">
+                <div class="flex items-center gap-1.5 text-navy font-semibold">
+                  <Truck size={14} class="text-muted" />
+                  <span>{vp.vehiculoMarca} {vp.vehiculoModelo}</span>
+                </div>
+                <div class="flex items-start gap-1.5 text-navy">
+                  <MapPin size={14} class="text-orangeGov shrink-0 mt-0.5" />
+                  <span class="font-medium">{vp.destino}</span>
+                </div>
+                <p class="text-[11px] text-muted">{vp.motivo}</p>
+              </div>
+
+              <div class="flex items-center justify-between pt-2 border-t border-line/60">
+                <button
+                  type="button"
+                  class="btn-ver-detalle-comision text-xs font-bold text-blue hover:underline cursor-pointer"
+                  data-id={vp.id}
+                >
+                  Ver Detalle
+                </button>
+                <a
+                  href={`/cronograma/imprimir/${vp.id}`}
+                  target="_blank"
+                  class="inline-flex items-center gap-1.5 rounded-xl border border-line bg-white hover:bg-paper px-3 py-1.5 text-xs font-bold text-navy shadow-xs transition"
+                >
+                  <FileText size={13} />
+                  <span>Hoja de Ruta</span>
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   </div>
 
