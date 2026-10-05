@@ -987,6 +987,119 @@ async function runTestSuite() {
   )
 
   // -------------------------------------------------------------------------
+  // MÓDULO 14: PROGRESSIVE WEB APP (PWA) & RESILIENCIA OFFLINE
+  // -------------------------------------------------------------------------
+  console.log('\n--- MÓDULO 14: PROGRESSIVE WEB APP (PWA) & RESILIENCIA OFFLINE ---')
+
+  // TC-41: Manifiesto PWA W3C y Accesos Directos (Shortcuts)
+  const resManifest = await fetch(`${BASE_URL}/manifest.webmanifest`)
+  const manifestData = await resManifest.json()
+  const resManifestJson = await fetch(`${BASE_URL}/manifest.json`)
+  const manifestJsonData = await resManifestJson.json()
+
+  assert(
+    resManifest.status === 200 &&
+    resManifestJson.status === 200 &&
+    manifestData.id === '/' &&
+    manifestData.scope === '/' &&
+    manifestData.display === 'standalone' &&
+    manifestData.theme_color === '#0b2240' &&
+    Array.isArray(manifestData.shortcuts) &&
+    manifestData.shortcuts.length === 4 &&
+    manifestData.name === manifestJsonData.name,
+    'TC-41',
+    'Manifiesto PWA W3C: especificación completa, sincronía JSON y 4 shortcuts operativos',
+    `Manifiesto validado: ${manifestData.name} (${manifestData.display}, ${manifestData.shortcuts.length} shortcuts)`
+  )
+
+  // TC-42: Iconografía Multi-Resolución (PNG 192/512, Maskable, SVG y Apple)
+  const iconUrls = [
+    '/icons/icon-192.png',
+    '/icons/icon-maskable-192.png',
+    '/icons/icon-512.png',
+    '/icons/icon-maskable-512.png',
+    '/icons/icon.svg',
+    '/icons/apple-touch-icon.png'
+  ]
+  let iconsOk = true
+  for (const ic of iconUrls) {
+    const resIc = await fetch(`${BASE_URL}${ic}`)
+    if (resIc.status !== 200) {
+      iconsOk = false
+      break
+    }
+  }
+
+  assert(
+    iconsOk,
+    'TC-42',
+    'Iconografía Multi-Resolución: assets 192px, 512px, Maskable, SVG y Apple Touch Icon accesibles',
+    '6/6 iconos de la PWA disponibles y con respuesta HTTP 200'
+  )
+
+  // TC-43: Service Worker (/sw.js) y Verificación de Precache sin 404s
+  const resSw = await fetch(`${BASE_URL}/sw.js`)
+  const swScript = await resSw.text()
+  const precacheMatch = swScript.match(/const\s+PRECACHE_ASSETS\s*=\s*\[([\s\S]*?)\];/)
+  let precacheAllOk = false
+
+  if (precacheMatch) {
+    const assets = precacheMatch[1]
+      .split('\n')
+      .map((l) => l.trim().replace(/[',]/g, ''))
+      .filter((l) => l.startsWith('/'))
+
+    precacheAllOk = true
+    for (const asset of assets) {
+      const resAsset = await fetch(`${BASE_URL}${encodeURI(asset)}`)
+      if (resAsset.status !== 200) {
+        precacheAllOk = false
+        break
+      }
+    }
+  }
+
+  assert(
+    resSw.status === 200 &&
+    swScript.includes("addEventListener('install'") &&
+    swScript.includes("addEventListener('fetch'") &&
+    swScript.includes("url.pathname.startsWith('/api/')") &&
+    precacheAllOk,
+    'TC-43',
+    'Service Worker (/sw.js): ciclo de vida activo, control /api/ y precache 100% verificado sin errores 404',
+    'Service Worker configurado y todos los recursos de precache accesibles'
+  )
+
+  // TC-44: Pantalla de Contingencia Offline (/offline.html)
+  const resOffline = await fetch(`${BASE_URL}/offline.html`)
+  const htmlOffline = await resOffline.text()
+
+  assert(
+    resOffline.status === 200 &&
+    htmlOffline.includes('Sin Conexión a Internet') &&
+    htmlOffline.includes('Reintentar Conexión') &&
+    htmlOffline.includes("window.addEventListener('online'"),
+    'TC-44',
+    'Pantalla Offline de Contingencia (/offline.html): renderizado y auto-recarga reactiva online',
+    'Pantalla de contingencia offline 100% funcional y autónoma'
+  )
+
+  // TC-45: Componente PwaManager e Integración en Frontend
+  const resLoginPwa = await fetch(`${BASE_URL}/login`)
+  const htmlLoginPwa = await resLoginPwa.text()
+
+  assert(
+    htmlLoginPwa.includes('rel="manifest"') &&
+    htmlLoginPwa.includes('id="pwa-network-badge"') &&
+    htmlLoginPwa.includes('id="pwa-install-banner"') &&
+    htmlLoginPwa.includes('id="pwa-ios-modal"') &&
+    /navigator\.serviceWorker[\s\n\r]*\.register\(['"]\/sw\.js['"]\)/.test(htmlLoginPwa),
+    'TC-45',
+    'Frontend PwaManager: manifest enlazado, banners de instalación, badges de conectividad y modal iOS',
+    'PwaManager activo en vistas públicas y administrativas'
+  )
+
+  // -------------------------------------------------------------------------
   // LIMPIEZA DE DATOS TEMPORALES (TEARDOWN)
   // -------------------------------------------------------------------------
   console.log('\n--- LIMPIEZA DE DATOS TEMPORALES (TEARDOWN) ---')
