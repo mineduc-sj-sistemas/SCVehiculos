@@ -1,0 +1,692 @@
+---
+import {
+  Calendar,
+  CalendarDays,
+  CheckCircle2,
+  Clock,
+  Compass,
+  ExternalLink,
+  FileText,
+  Filter,
+  Fuel,
+  Gauge,
+  LayoutGrid,
+  List,
+  MapPin,
+  Navigation,
+  Phone,
+  Printer,
+  Route,
+  Search,
+  Sparkles,
+  Truck,
+  User,
+  Users,
+  UsersRound,
+} from 'lucide-astro'
+import DashboardLayout from '../frontend/layouts/DashboardLayout.astro'
+import PlateBadge from '../frontend/components/ui/PlateBadge.astro'
+import StatusBadge from '../frontend/components/ui/StatusBadge.astro'
+import CronogramaDetailModal from '../frontend/components/cronograma/CronogramaDetailModal.astro'
+import {
+  getViajesAsignadosPorChofer,
+  verifySessionToken,
+  SESSION_COOKIE_NAME,
+} from '../backend/index'
+
+// Identificación del usuario activo
+const sessionToken = Astro.cookies.get(SESSION_COOKIE_NAME)?.value
+const currentUser = Astro.locals.user || verifySessionToken(sessionToken) || {
+  id: 1,
+  nombre: 'María',
+  apellido: 'Gutiérrez',
+  rolNombre: 'Administrador',
+  rolId: 1,
+}
+
+const isChofer = currentUser.rolId === 4
+
+// Carga de datos de viajes asignados por chofer
+const data = await getViajesAsignadosPorChofer(currentUser.id)
+
+// Helpers de formateo de fecha y hora
+const formatHora = (dStr: string | null) => {
+  if (!dStr) return '--:--'
+  const d = new Date(dStr)
+  return d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+}
+
+const formatFechaCorta = (dStr: string | null) => {
+  if (!dStr) return '--'
+  const d = new Date(dStr)
+  return d.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' })
+}
+
+const formatFechaHora = (dStr: string | null) => {
+  if (!dStr) return '--'
+  const d = new Date(dStr)
+  return `${d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' })} ${d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs`
+}
+---
+
+<DashboardLayout activeNav="viajes-choferes" title="Viajes Asignados por Chofer · Movilidades · Ministerio de Educación">
+  <div slot="header-title">
+    <h1 class="font-display text-xl font-bold text-navy sm:text-2xl">
+      Viajes Asignados por Chofer
+    </h1>
+  </div>
+
+  <div class="space-y-6">
+    <!-- Encabezado de Sección y Misión Institucional -->
+    <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+      <div>
+        <div class="flex items-center gap-2 text-xs font-semibold text-blue mb-1">
+          <span>Ministerio de Educación</span>
+          <span>·</span>
+          <span>Coordinación de Movilidades y Conducción</span>
+        </div>
+        <h2 class="font-display text-[26px] font-bold tracking-tight text-navy">
+          Itinerario y Asignaciones por Chofer
+        </h2>
+        <p class="mt-0.5 text-xs text-muted max-w-2xl">
+          Consulta el cronograma de viajes, móviles asignados y destinos departamentales de cada conductor ministerial.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        {isChofer && (
+          <a
+            href="/mi-viaje"
+            class="flex items-center gap-2 rounded-xl bg-orangeGov hover:bg-orange-700 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-orange-500/20 active:scale-98 transition"
+            title="Ir a mi panel interactivo de viaje activo"
+          >
+            <Navigation size={15} />
+            <span>Ir a Mi Viaje Activo</span>
+          </a>
+        )}
+        <a
+          href="/cronograma"
+          class="flex items-center gap-2 rounded-xl border border-line bg-white hover:bg-paper px-3.5 py-2.5 text-xs font-bold text-navy shadow-xs transition"
+          title="Ver grilla semanal por móvil"
+        >
+          <CalendarDays size={15} class="text-muted" />
+          <span>Cronograma Semanal</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- KPIs de Asignaciones y Flota de Choferes -->
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:gap-4">
+      <!-- Choferes Asignados -->
+      <div class="rounded-2xl border border-line bg-white p-4 shadow-xs">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-muted uppercase">Choferes con Viaje</span>
+          <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-blue/10 text-blue">
+            <UsersRound size={16} />
+          </span>
+        </div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span class="font-mono text-2xl font-bold text-navy">{data.stats.choferesConViaje}</span>
+          <span class="text-xs text-muted">de {data.stats.totalChoferes} activos</span>
+        </div>
+        <div class="mt-1 h-1.5 w-full rounded-full bg-paper overflow-hidden">
+          <div
+            class="h-full bg-blue rounded-full transition-all"
+            style={`width: ${data.stats.totalChoferes > 0 ? (data.stats.choferesConViaje / data.stats.totalChoferes) * 100 : 0}%`}
+          ></div>
+        </div>
+      </div>
+
+      <!-- Viajes en Curso -->
+      <div class="rounded-2xl border border-line bg-white p-4 shadow-xs">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-muted uppercase">En Curso Hoy</span>
+          <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+            <Navigation size={16} />
+          </span>
+        </div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span class="font-mono text-2xl font-bold text-emerald-700">{data.stats.viajesEnCurso}</span>
+          <span class="text-xs text-emerald-800 font-semibold">En ruta activa</span>
+        </div>
+        <p class="mt-1 text-[11px] text-muted">Comisiones actualmente en tránsito</p>
+      </div>
+
+      <!-- Viajes Programados -->
+      <div class="rounded-2xl border border-line bg-white p-4 shadow-xs">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-muted uppercase">Programados</span>
+          <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+            <Clock size={16} />
+          </span>
+        </div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span class="font-mono text-2xl font-bold text-amber-700">{data.stats.viajesProgramados}</span>
+          <span class="text-xs text-amber-800 font-semibold">Próximas salidas</span>
+        </div>
+        <p class="mt-1 text-[11px] text-muted">Con horario y móvil ya asignados</p>
+      </div>
+
+      <!-- Choferes Disponibles -->
+      <div class="rounded-2xl border border-line bg-white p-4 shadow-xs">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-muted uppercase">Disponibles</span>
+          <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-orangeGov/10 text-orangeGov">
+            <CheckCircle2 size={16} />
+          </span>
+        </div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span class="font-mono text-2xl font-bold text-navy">{data.stats.choferesDisponibles}</span>
+          <span class="text-xs text-emerald-700 font-semibold">Sin viaje activo</span>
+        </div>
+        <p class="mt-1 text-[11px] text-muted">Listos para nuevo despacho oficial</p>
+      </div>
+    </div>
+
+    <!-- Barra de Filtros, Búsqueda y Alternador de Vistas -->
+    <div class="rounded-2xl border border-line bg-white p-3.5 shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+      <!-- Búsqueda reactiva -->
+      <div class="relative flex-1">
+        <Search size={16} class="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
+        <input
+          type="text"
+          id="input-buscar-viaje-chofer"
+          placeholder="Buscar por conductor, código COM, destino o patente..."
+          class="w-full rounded-xl border border-line bg-paper pl-10 pr-4 py-2 text-xs font-medium text-navy placeholder:text-muted focus:border-orangeGov focus:outline-none transition"
+        />
+      </div>
+
+      <!-- Filtros desplegables -->
+      <div class="flex flex-wrap items-center gap-2">
+        <!-- Selector Chofer -->
+        <select
+          id="select-filtro-chofer"
+          class="rounded-xl border border-line bg-paper px-3 py-2 text-xs font-semibold text-navy focus:border-orangeGov focus:outline-none transition cursor-pointer"
+        >
+          <option value="all">Todos los Conductores</option>
+          {data.choferLogueadoId && (
+            <option value="mis-viajes">⭐ Mis Viajes Asignados</option>
+          )}
+          {data.choferes.map((ch) => (
+            <option value={ch.id}>
+              {ch.nombreCompleto} ({ch.totalViajesAsignados} viajes)
+            </option>
+          ))}
+        </select>
+
+        <!-- Selector Estado del Viaje -->
+        <select
+          id="select-filtro-estado"
+          class="rounded-xl border border-line bg-paper px-3 py-2 text-xs font-semibold text-navy focus:border-orangeGov focus:outline-none transition cursor-pointer"
+        >
+          <option value="all">Todos los Estados</option>
+          <option value="en_curso">En Viaje (En Curso)</option>
+          <option value="programada">Programados</option>
+          <option value="finalizada">Finalizados</option>
+        </select>
+
+        <!-- Conmutador de Vistas (Tarjetas vs Tabla) -->
+        <div class="flex items-center rounded-xl border border-line bg-paper p-1">
+          <button
+            type="button"
+            id="btn-view-cards"
+            class="flex items-center gap-1.5 rounded-lg bg-white px-2.5 py-1 text-xs font-bold text-navy shadow-xs transition cursor-pointer"
+            title="Vista agrupada por conductor"
+          >
+            <LayoutGrid size={14} />
+            <span class="hidden sm:inline">Por Chofer</span>
+          </button>
+          <button
+            type="button"
+            id="btn-view-table"
+            class="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold text-muted hover:text-navy transition cursor-pointer"
+            title="Vista de cronograma unificado en tabla"
+          >
+            <List size={14} />
+            <span class="hidden sm:inline">Tabla / Cronograma</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- VISTA 1: FICHAS / TARJETAS POR CHOFER (AGRUPADA)                           -->
+    <!-- ========================================================================= -->
+    <div id="vista-tarjetas-choferes" class="space-y-4">
+      <div class="flex items-center justify-between text-xs text-muted px-1">
+        <span id="contador-choferes-visibles">
+          Mostrando {data.choferes.length} conductores oficiales
+        </span>
+        <span class="text-[11px]">
+          Organizado por conductor y comisiones asociadas
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        {data.choferes.map((ch) => {
+          const searchKeywords = `${ch.nombreCompleto} ${ch.dni} ${ch.numeroLicencia} ${ch.viajeActivo ? `${ch.viajeActivo.codigo} ${ch.viajeActivo.destino} ${ch.viajeActivo.vehiculoPatente}` : ''} ${ch.viajesProgramados.map((v) => `${v.codigo} ${v.destino} ${v.vehiculoPatente}`).join(' ')}`.toLowerCase()
+
+          return (
+            <div
+              class={`card-chofer-asignado rounded-3xl border bg-white shadow-sm transition hover:shadow-md flex flex-col overflow-hidden ${
+                ch.esUsuarioActual
+                  ? 'border-orangeGov/40 ring-2 ring-orangeGov/15'
+                  : 'border-line'
+              }`}
+              data-chofer-id={ch.id}
+              data-es-mi-viaje={ch.esUsuarioActual ? 'true' : 'false'}
+              data-search={searchKeywords}
+            >
+              {/* Encabezado del Chofer */}
+              <div class="p-4 sm:p-5 border-b border-line/60 bg-gradient-to-r from-paper to-white">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="flex items-center gap-3">
+                    <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-navy text-white font-bold text-base shadow-sm">
+                      {ch.iniciales}
+                    </div>
+                    <div>
+                      <div class="flex items-center gap-2 flex-wrap">
+                        <h3 class="font-display text-base font-bold text-navy">
+                          {ch.nombreCompleto}
+                        </h3>
+                        {ch.esUsuarioActual && (
+                          <span class="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-bold text-orangeGov">
+                            ⭐ Mi Legajo
+                          </span>
+                        )}
+                      </div>
+                      <div class="flex items-center gap-2 mt-0.5 text-xs text-muted">
+                        <span>DNI: {ch.dni}</span>
+                        <span>·</span>
+                        <span class="flex items-center gap-1">
+                          <Phone size={12} />
+                          {ch.telefono}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Badge de Estado Laboral del Chofer -->
+                  <div class="text-right">
+                    <span
+                      class={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${
+                        ch.estado === 'disponible'
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : ch.estado === 'en_comision'
+                          ? 'bg-blue-100 text-blue-800'
+                          : ch.estado === 'licencia'
+                          ? 'bg-amber-100 text-amber-800'
+                          : 'bg-gray-100 text-gray-700'
+                      }`}
+                    >
+                      <span class={`h-1.5 w-1.5 rounded-full ${
+                        ch.estado === 'disponible' ? 'bg-emerald-600' : ch.estado === 'en_comision' ? 'bg-blue-600' : 'bg-amber-600'
+                      }`}></span>
+                      <span>{ch.estadoLabel}</span>
+                    </span>
+                    <p class="text-[10px] text-muted mt-1">
+                      Lic. {ch.categoriaLicencia} · {ch.licenciaStatus === 'vigente' ? 'Vigente' : ch.licenciaStatus === 'proxima' ? 'Por vencer' : 'Vencida'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Contenido de Viajes Asignados al Chofer */}
+              <div class="p-4 sm:p-5 flex-1 flex flex-col space-y-4">
+                {/* 1. VIAJE ACTIVO (EN CURSO) */}
+                {ch.viajeActivo ? (
+                  <div
+                    class="rounded-2xl border border-blue-200 bg-blue-50/50 p-4 space-y-3"
+                    data-estado-item="en_curso"
+                  >
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-2">
+                        <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-600 text-white font-bold text-[11px] animate-pulse">
+                          ●
+                        </span>
+                        <div>
+                          <span class="font-mono text-xs font-bold text-blue-950">
+                            {ch.viajeActivo.codigo}
+                          </span>
+                          <span class="ml-2 rounded-full bg-blue-200 text-blue-900 px-2 py-0.5 text-[10px] font-bold">
+                            En Curso / En Ruta
+                          </span>
+                        </div>
+                      </div>
+                      <PlateBadge plate={ch.viajeActivo.vehiculoPatente} size="sm" />
+                    </div>
+
+                    <!-- Datos del Vehículo y Destino -->
+                    <div class="space-y-1.5 text-xs">
+                      <div class="flex items-center gap-2 text-navy font-semibold">
+                        <Truck size={14} class="text-blue-700 shrink-0" />
+                        <span>{ch.viajeActivo.vehiculoMarca} {ch.viajeActivo.vehiculoModelo}</span>
+                      </div>
+
+                      <div class="flex items-start gap-2">
+                        <MapPin size={14} class="text-orangeGov shrink-0 mt-0.5" />
+                        <div class="space-y-0.5">
+                          <span class="text-muted text-[11px]">Itinerario oficial:</span>
+                          <div class="flex flex-wrap gap-1.5 pt-0.5">
+                            {ch.viajeActivo.paradas.map((parada, idx) => (
+                              <span class="inline-flex items-center gap-1 rounded-lg bg-white border border-blue-200 px-2 py-0.5 text-[11px] font-bold text-navy shadow-2xs">
+                                <span class="text-[9px] text-blue-700 font-mono">#{idx + 1}</span>
+                                <span>{parada}</span>
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="grid grid-cols-2 gap-2 pt-1.5 text-[11px]">
+                        <div class="rounded-xl bg-white/80 p-2 border border-blue-100">
+                          <span class="text-muted block text-[10px] uppercase font-bold">Salida Oficial</span>
+                          <span class="font-semibold text-navy">
+                            {formatFechaHora(ch.viajeActivo.fechaSalidaReal || ch.viajeActivo.fechaSalidaProgramada)}
+                          </span>
+                        </div>
+                        <div class="rounded-xl bg-white/80 p-2 border border-blue-100">
+                          <span class="text-muted block text-[10px] uppercase font-bold">Regreso Estimado</span>
+                          <span class="font-semibold text-navy">
+                            {formatFechaHora(ch.viajeActivo.fechaRegresoEstimada)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Acciones del Viaje Activo -->
+                    <div class="flex items-center justify-between pt-2 border-t border-blue-100 gap-2">
+                      <button
+                        type="button"
+                        class="btn-ver-detalle-comision text-xs font-bold text-blue hover:underline cursor-pointer"
+                        data-id={ch.viajeActivo.id}
+                      >
+                        Ver Detalle Completo
+                      </button>
+
+                      <div class="flex items-center gap-2">
+                        <a
+                          href={`/cronograma/imprimir/${ch.viajeActivo.id}`}
+                          target="_blank"
+                          class="inline-flex items-center gap-1 rounded-xl border border-line bg-white hover:bg-paper px-2.5 py-1.5 text-[11px] font-bold text-navy shadow-xs transition"
+                          title="Imprimir Hoja de Ruta Oficial A4"
+                        >
+                          <FileText size={13} />
+                          <span>Hoja de Ruta</span>
+                        </a>
+
+                        {ch.esUsuarioActual && (
+                          <a
+                            href="/mi-viaje"
+                            class="inline-flex items-center gap-1.5 rounded-xl bg-orangeGov hover:bg-orange-700 px-3 py-1.5 text-[11px] font-bold text-white shadow-xs transition"
+                          >
+                            <Navigation size={13} />
+                            <span>Operar Mi Viaje</span>
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
+                {/* 2. VIAJES PROGRAMADOS */}
+                {ch.viajesProgramados.length > 0 && (
+                  <div class="space-y-2" data-estado-item="programada">
+                    <span class="text-xs font-bold text-muted uppercase tracking-wider block">
+                      Próximas Salidas Programadas ({ch.viajesProgramados.length})
+                    </span>
+                    <div class="space-y-2">
+                      {ch.viajesProgramados.map((vp) => (
+                        <div class="rounded-2xl border border-line bg-paper/60 p-3 text-xs space-y-2 hover:bg-paper transition">
+                          <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                              <span class="font-mono font-bold text-navy text-[11px]">{vp.codigo}</span>
+                              <span class="rounded-md bg-amber-100 text-amber-900 px-1.5 py-0.5 text-[10px] font-bold">
+                                {formatFechaCorta(vp.fechaSalidaProgramada)} {formatHora(vp.fechaSalidaProgramada)} hs
+                              </span>
+                            </div>
+                            <PlateBadge plate={vp.vehiculoPatente} size="sm" />
+                          </div>
+
+                          <div class="flex items-start gap-1.5 text-[11px] text-navy">
+                            <MapPin size={13} class="text-orangeGov shrink-0 mt-0.5" />
+                            <span class="font-medium line-clamp-1">{vp.destino}</span>
+                          </div>
+
+                          <div class="flex items-center justify-between pt-1 border-t border-line/60 text-[10px]">
+                            <span class="text-muted">
+                              {vp.vehiculoMarca} {vp.vehiculoModelo} · {vp.cantidadPasajeros} pasajeros
+                            </span>
+                            <div class="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                class="btn-ver-detalle-comision font-bold text-blue hover:underline cursor-pointer"
+                                data-id={vp.id}
+                              >
+                                Detalle
+                              </button>
+                              <span>·</span>
+                              <a
+                                href={`/cronograma/imprimir/${vp.id}`}
+                                target="_blank"
+                                class="font-bold text-navy hover:text-orangeGov transition"
+                              >
+                                Hoja de Ruta
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 3. HISTORIAL RECIENTE O SIN VIAJES */}
+                {!ch.viajeActivo && ch.viajesProgramados.length === 0 ? (
+                  <div class="rounded-2xl border border-dashed border-gray-200 bg-gray-50/50 p-6 text-center space-y-2 my-auto">
+                    <span class="text-2xl block">🟢</span>
+                    <p class="text-xs font-bold text-navy">Sin comisiones asignadas</p>
+                    <p class="text-[11px] text-muted max-w-xs mx-auto">
+                      El chofer se encuentra disponible en base operativa para nuevas asignaciones ministeriales.
+                    </p>
+                  </div>
+                ) : ch.viajesHistorial.length > 0 ? (
+                  <div class="pt-2 border-t border-line/60" data-estado-item="finalizada">
+                    <details class="group">
+                      <summary class="flex items-center justify-between text-[11px] font-bold text-muted hover:text-navy cursor-pointer list-none py-1">
+                        <span>Últimos viajes completados ({ch.viajesHistorial.length})</span>
+                        <span class="transition-transform group-open:rotate-180">▾</span>
+                      </summary>
+                      <div class="mt-2 space-y-1.5">
+                        {ch.viajesHistorial.map((vh) => (
+                          <div class="flex items-center justify-between rounded-xl bg-paper px-2.5 py-1.5 text-[11px]">
+                            <div class="flex items-center gap-2">
+                              <span class="font-mono text-[10px] text-muted">{vh.codigo}</span>
+                              <span class="font-medium text-navy line-clamp-1">{vh.destino}</span>
+                            </div>
+                            <span class="text-muted text-[10px] shrink-0 font-mono">
+                              {vh.kmRecorridos ? `${vh.kmRecorridos} km` : formatFechaCorta(vh.fechaSalidaProgramada)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- VISTA 2: TABLA UNIFICADA DE TODAS LAS COMISIONES                           -->
+    <!-- ========================================================================= -->
+    <div id="vista-tabla-viajes" class="hidden space-y-4">
+      <div class="flex items-center justify-between text-xs text-muted px-1">
+        <span id="contador-tabla-visibles">
+          Mostrando {data.todosLosViajes.length} de {data.todosLosViajes.length} comisiones
+        </span>
+        <span class="text-[11px]">
+          Listado cronológico completo con conductor asignado
+        </span>
+      </div>
+
+      <div class="card overflow-hidden rounded-3xl border border-line bg-white shadow-sm">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="border-b border-line bg-paper text-[10px] font-bold uppercase tracking-wider text-muted">
+              <tr>
+                <th class="py-3 px-4">Chofer Asignado</th>
+                <th class="py-3 px-3">Código</th>
+                <th class="py-3 px-3">Estado</th>
+                <th class="py-3 px-3">Móvil Oficial</th>
+                <th class="py-3 px-4">Destino / Itinerario</th>
+                <th class="py-3 px-3">Salida Prog.</th>
+                <th class="py-3 px-3">Regreso Estim.</th>
+                <th class="py-3 px-3">Pasajeros</th>
+                <th class="py-3 px-4 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-line/60">
+              {data.todosLosViajes.map((viaje) => {
+                const searchRow = `${viaje.choferNombreCompleto} ${viaje.codigo} ${viaje.destino} ${viaje.vehiculoPatente} ${viaje.vehiculoModelo} ${viaje.motivo}`.toLowerCase()
+
+                return (
+                  <tr
+                    class={`row-viaje-asignado hover:bg-paper/70 transition ${
+                      viaje.esMiViaje ? 'bg-orange-50/30' : ''
+                    }`}
+                    data-chofer-id={viaje.choferId}
+                    data-es-mi-viaje={viaje.esMiViaje ? 'true' : 'false'}
+                    data-estado={viaje.estado}
+                    data-search={searchRow}
+                  >
+                    <!-- Chofer -->
+                    <td class="py-3 px-4">
+                      <div class="flex items-center gap-2.5">
+                        <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-navy text-white font-bold text-[10px]">
+                          {viaje.choferNombre.charAt(0)}{viaje.choferApellido.charAt(0)}
+                        </div>
+                        <div>
+                          <p class="font-bold text-navy flex items-center gap-1">
+                            <span>{viaje.choferNombreCompleto}</span>
+                            {viaje.esMiViaje && (
+                              <span class="text-[9px] rounded-full bg-orange-100 text-orangeGov px-1.5 font-bold">
+                                Tú
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+
+                    <!-- Código -->
+                    <td class="py-3 px-3">
+                      <span class="font-mono font-bold text-navy">{viaje.codigo}</span>
+                    </td>
+
+                    <!-- Estado -->
+                    <td class="py-3 px-3">
+                      <span
+                        class={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                          viaje.estado === 'en_curso'
+                            ? 'bg-blue-100 text-blue-800'
+                            : viaje.estado === 'programada'
+                            ? 'bg-amber-100 text-amber-800'
+                            : 'bg-emerald-100 text-emerald-800'
+                        }`}
+                      >
+                        <span class={`h-1.5 w-1.5 rounded-full ${
+                          viaje.estado === 'en_curso' ? 'bg-blue-600' : viaje.estado === 'programada' ? 'bg-amber-600' : 'bg-emerald-600'
+                        }`}></span>
+                        <span>{viaje.estadoLabel}</span>
+                      </span>
+                    </td>
+
+                    <!-- Móvil -->
+                    <td class="py-3 px-3">
+                      <div class="flex flex-col gap-0.5">
+                        <PlateBadge plate={viaje.vehiculoPatente} size="sm" />
+                        <span class="text-[10px] text-muted truncate max-w-[110px]">
+                          {viaje.vehiculoMarca} {viaje.vehiculoModelo}
+                        </span>
+                      </div>
+                    </td>
+
+                    <!-- Destino -->
+                    <td class="py-3 px-4 max-w-xs">
+                      <p class="font-semibold text-navy truncate" title={viaje.destino}>
+                        {viaje.destino}
+                      </p>
+                      <p class="text-[10px] text-muted truncate" title={viaje.motivo}>
+                        {viaje.motivo}
+                      </p>
+                    </td>
+
+                    <!-- Fechas -->
+                    <td class="py-3 px-3 whitespace-nowrap text-[11px]">
+                      <span class="font-semibold text-navy">
+                        {formatFechaCorta(viaje.fechaSalidaProgramada)}
+                      </span>
+                      <span class="text-muted block text-[10px]">
+                        {formatHora(viaje.fechaSalidaProgramada)} hs
+                      </span>
+                    </td>
+
+                    <td class="py-3 px-3 whitespace-nowrap text-[11px]">
+                      <span class="font-semibold text-navy">
+                        {formatFechaCorta(viaje.fechaRegresoEstimada)}
+                      </span>
+                      <span class="text-muted block text-[10px]">
+                        {formatHora(viaje.fechaRegresoEstimada)} hs
+                      </span>
+                    </td>
+
+                    <!-- Pasajeros -->
+                    <td class="py-3 px-3 text-[11px] text-muted">
+                      {viaje.cantidadPasajeros} pas.
+                    </td>
+
+                    <!-- Acciones -->
+                    <td class="py-3 px-4 text-right">
+                      <div class="flex items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          class="btn-ver-detalle-comision rounded-lg border border-line bg-white hover:bg-paper px-2 py-1 text-[11px] font-bold text-navy shadow-xs transition cursor-pointer"
+                          data-id={viaje.id}
+                          title="Ver detalle del viaje"
+                        >
+                          Detalle
+                        </button>
+                        <a
+                          href={`/cronograma/imprimir/${viaje.id}`}
+                          target="_blank"
+                          class="rounded-lg bg-paper hover:bg-orange-50 hover:text-orangeGov px-2 py-1 text-[11px] font-bold text-navy transition"
+                          title="Imprimir Hoja de Ruta Oficial A4"
+                        >
+                          <FileText size={13} />
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modales fuera del flujo principal -->
+  <Fragment slot="modals">
+    <CronogramaDetailModal />
+  </Fragment>
+</DashboardLayout>
+
+<!-- Controlador cliente -->
+<script>
+  import '../frontend/scripts/viajesChoferesController'
+</script>

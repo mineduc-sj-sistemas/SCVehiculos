@@ -19,4 +19,5 @@ export * from './services/alertService'
 export * from './services/choferPortalService'
 export * from './services/visionService'
 export * from './services/choferPerfilService'
+export * from './services/choferViajesService'
 

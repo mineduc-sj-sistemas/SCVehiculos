@@ -48,9 +48,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   // Restricción de rutas para el rol Chofer (rolId 4):
-  // Solo puede acceder a su portal, combustible propio, perfil y endpoints API
+  // Solo puede acceder a su portal, viajes asignados, combustible propio, perfil y endpoints API
   if (user && user.rolId === 4) {
-    const choferAllowedPages = ['/mi-viaje', '/mi-perfil', '/combustible']
+    const choferAllowedPages = ['/mi-viaje', '/viajes-choferes', '/mi-perfil', '/combustible']
     const isAllowedPage = choferAllowedPages.some(r => pathname.startsWith(r))
     const isApiRoute = pathname.startsWith('/api/')
 

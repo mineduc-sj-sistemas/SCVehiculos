@@ -922,6 +922,32 @@ async function runTestSuite() {
     `Rechazo validado: "${dataCheckinInvalido.error}"`
   )
 
+  // TC-39: Consulta de Viajes Asignados por Chofer (/api/chofer/viajes-asignados y /viajes-choferes)
+  const resViajesChoferesApi = await fetch(`${BASE_URL}/api/chofer/viajes-asignados`, {
+    method: 'GET',
+    headers: { Cookie: `sc_session=${TOKENS.chofer}` },
+  })
+  const dataViajesChoferesApi = await resViajesChoferesApi.json()
+
+  const resViajesChoferesHtml = await fetch(`${BASE_URL}/viajes-choferes`, {
+    method: 'GET',
+    headers: { Cookie: `sc_session=${TOKENS.chofer}` },
+  })
+  const htmlViajesChoferes = await resViajesChoferesHtml.text()
+
+  assert(
+    resViajesChoferesApi.status === 200 &&
+    dataViajesChoferesApi.success &&
+    Array.isArray(dataViajesChoferesApi.choferes) &&
+    dataViajesChoferesApi.choferes.length > 0 &&
+    resViajesChoferesHtml.status === 200 &&
+    htmlViajesChoferes.includes('Viajes Asignados por Chofer') &&
+    htmlViajesChoferes.includes('card-chofer-asignado'),
+    'TC-39',
+    'Portal del Chofer: acceso y consulta exitosa de viajes asignados por chofer (/viajes-choferes)',
+    `Datos obtenidos: ${dataViajesChoferesApi.choferes.length} choferes con asignaciones y vista HTML 200 OK`
+  )
+
   // -------------------------------------------------------------------------
   // LIMPIEZA DE DATOS TEMPORALES (TEARDOWN)
   // -------------------------------------------------------------------------

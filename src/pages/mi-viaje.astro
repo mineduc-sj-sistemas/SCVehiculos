@@ -99,8 +99,16 @@ const esHorarioVencido = Boolean(fechaRegreso && ahora > fechaRegreso)
         </div>
       </div>
 
-      <!-- Badge de Estado GPS del Smartphone -->
+      <!-- Acciones de Cabecera: Viajes Asignados & GPS -->
       <div class="flex items-center gap-2">
+        <a
+          href="/viajes-choferes"
+          class="inline-flex items-center gap-1.5 rounded-xl border border-line bg-white hover:bg-paper px-3 py-1.5 text-xs font-bold text-navy shadow-xs transition"
+          title="Ver todos los viajes asignados por chofer"
+        >
+          <Calendar size={14} class="text-orangeGov" />
+          <span>Viajes Asignados</span>
+        </a>
         <span
           id="gps-status-badge"
           class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-[11px] font-bold text-gray-600 transition"
