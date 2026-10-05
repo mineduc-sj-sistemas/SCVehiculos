@@ -7,7 +7,11 @@
     "dev": "astro dev",
     "build": "astro build",
     "start": "astro preview",
-    "test": "node tests/system_test_suite.mjs"
+    "test": "node tests/system_test_suite.mjs",
+    "docker:dev": "docker compose -f docker-compose.yml -f docker-compose.dev.yml up",
+    "docker:build": "docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build",
+    "docker:db": "docker compose up -d db",
+    "docker:down": "docker compose down"
   },
   "dependencies": {
     "@astrojs/node": "^11.1.6",

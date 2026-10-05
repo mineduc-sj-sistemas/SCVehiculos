@@ -64,10 +64,23 @@ docker compose up --build -d
 
 ---
 
-## 💻 Modo Desarrollo con Hot-Reload (Opcional)
+## 💻 Modo Desarrollo con Hot-Reload
 
-Si deseas modificar código en tiempo real dentro del contenedor:
+Si deseas modificar código en tiempo real dentro del contenedor, usa los atajos rápidos de `pnpm`:
 
 ```powershell
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+# Iniciar en modo desarrollo con recarga en caliente:
+pnpm docker:dev
+
+# Si se agregaron librerías nuevas o se cambió Dockerfile:
+pnpm docker:build
+
+# Iniciar solo la base de datos (para correr pnpm dev en local):
+pnpm docker:db
+
+# Detener los contenedores:
+pnpm docker:down
 ```
+
+*(O ejecutando directamente: `docker compose -f docker-compose.yml -f docker-compose.dev.yml up`)*
+
