@@ -1,0 +1,78 @@
+{
+  "id": "/",
+  "name": "SCVehículos · Movilidades San Juan",
+  "short_name": "SCVehículos",
+  "description": "Sistema de Control de Parque Automotor y Movilidades del Ministerio de Educación de San Juan",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#0b2240",
+  "theme_color": "#0b2240",
+  "lang": "es-AR",
+  "dir": "ltr",
+  "categories": ["productivity", "utilities", "business"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Portal Choferes - Mi Viaje",
+      "short_name": "Mi Viaje",
+      "description": "Acceso directo a la hoja de ruta y controles del viaje activo",
+      "url": "/mi-viaje",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Gestión de Viajes",
+      "short_name": "Viajes",
+      "description": "Lista y administración de comisiones y viajes",
+      "url": "/viajes",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Parque Automotor - Flota",
+      "short_name": "Flota",
+      "description": "Consulta de unidades, estados y kilometrajes",
+      "url": "/flota",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Registro de Combustible",
+      "short_name": "Combustible",
+      "description": "Carga de combustible y consumos",
+      "url": "/combustible",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

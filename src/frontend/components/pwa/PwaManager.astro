@@ -1,0 +1,428 @@
+---
+// PwaManager.astro - Gestor de Progressive Web App (PWA)
+// 1. Alerta flotante superior de conectividad (Online / Offline)
+// 2. Banner flotante inferior de instalación (con comprobación de si ya está instalada)
+// 3. Botón de instalación en Sidebar
+// 4. Modal con guía para iOS (Safari)
+// 5. Notificación de actualización de versión
+---
+
+<!-- 1. Alerta flotante de Estado de Red (Online / Offline) -->
+<div
+  id="pwa-network-badge"
+  class="fixed top-3 left-1/2 -translate-x-1/2 z-50 hidden transition-all duration-300 transform -translate-y-4 opacity-0 pointer-events-none"
+  role="status"
+  aria-live="polite"
+>
+  <div id="pwa-offline-pill" class="hidden items-center gap-2 rounded-full bg-amber-600/95 text-white px-4 py-2 text-xs font-bold shadow-lg backdrop-blur-md border border-amber-400/40">
+    <svg class="h-4 w-4 animate-pulse" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+      <line x1="1" y1="1" x2="23" y2="23"></line>
+      <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
+      <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
+      <path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path>
+      <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
+      <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+      <line x1="12" y1="20" x2="12.01" y2="20"></line>
+    </svg>
+    <span>Modo sin conexión · Navegando con datos guardados</span>
+  </div>
+  <div id="pwa-online-pill" class="hidden items-center gap-2 rounded-full bg-emerald-600/95 text-white px-4 py-2 text-xs font-bold shadow-lg backdrop-blur-md border border-emerald-400/40">
+    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+      <path d="M20 6L9 17l-5-5"></path>
+    </svg>
+    <span>Conexión restablecida</span>
+  </div>
+</div>
+
+<!-- 2. Banner Flotante Inferior para Instalar la Aplicación -->
+<div
+  id="pwa-install-banner"
+  class="fixed bottom-5 left-4 right-4 sm:left-auto sm:right-6 sm:w-[380px] z-40 hidden rounded-2xl bg-white border border-line p-4 shadow-2xl transition-all duration-300 animate-in slide-in-from-bottom duration-300"
+>
+  <div class="flex items-start gap-3.5">
+    <img
+      src="/icons/icon-192.png"
+      alt="SCVehículos"
+      class="h-12 w-12 rounded-xl object-contain shadow-md shrink-0 bg-[#0b2240] p-1 border border-line"
+    />
+    <div class="flex-1 min-w-0">
+      <div class="flex items-center justify-between">
+        <h4 class="text-sm font-bold text-navy font-display">Instalar SCVehículos</h4>
+        <button
+          id="pwa-banner-close"
+          type="button"
+          class="text-muted hover:text-navy p-1 rounded-md transition cursor-pointer"
+          aria-label="Cerrar aviso de instalación"
+        >
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <p class="text-xs text-muted mt-1 leading-snug">
+        Accedé más rápido a tus viajes y movilidades como una app nativa en tu dispositivo.
+      </p>
+      <div class="mt-3 flex items-center gap-2">
+        <button
+          id="pwa-banner-install-btn"
+          type="button"
+          class="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-orangeGov px-3 py-2 text-xs font-bold text-white hover:bg-orange-600 transition shadow-sm cursor-pointer"
+        >
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span>Instalar App</span>
+        </button>
+        <button
+          id="pwa-banner-dismiss-btn"
+          type="button"
+          class="rounded-xl border border-line px-3 py-2 text-xs font-semibold text-muted hover:text-navy hover:bg-paper transition cursor-pointer"
+        >
+          Ahora no
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 3. Alerta de Nueva Versión Disponible -->
+<div
+  id="pwa-update-banner"
+  class="fixed bottom-5 left-4 right-4 sm:left-auto sm:right-6 sm:w-96 z-50 hidden rounded-2xl bg-navy border border-white/10 p-4 shadow-2xl backdrop-blur-xl text-white animate-in slide-in-from-bottom duration-300"
+>
+  <div class="flex items-start gap-3">
+    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orangeGov/20 text-orange-400">
+      <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+      </svg>
+    </div>
+    <div class="flex-1 min-w-0">
+      <h4 class="text-xs font-bold text-white uppercase tracking-wider">Actualización disponible</h4>
+      <p class="text-xs text-slate-300 mt-0.5">Hay una nueva versión de SCVehículos lista para usar.</p>
+      <div class="mt-3 flex items-center gap-2">
+        <button
+          id="pwa-btn-reload"
+          type="button"
+          class="rounded-lg bg-orangeGov px-3 py-1.5 text-xs font-bold text-white hover:bg-orange-600 transition shadow-sm cursor-pointer"
+        >
+          Actualizar ahora
+        </button>
+        <button
+          id="pwa-btn-dismiss-update"
+          type="button"
+          class="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-white/20 transition cursor-pointer"
+        >
+          Más tarde
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4. Modal con Guía de Instalación para iOS (iPhone / iPad) -->
+<div
+  id="pwa-ios-modal"
+  class="fixed inset-0 z-50 hidden bg-navy/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-4 transition-opacity duration-300"
+>
+  <div class="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl border border-line animate-in zoom-in-95 duration-200">
+    <div class="text-center">
+      <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-50 border border-orange-200/60 text-orangeGov mb-3">
+        <img src="/icons/icon-192.png" alt="" class="h-10 w-10 rounded-xl" />
+      </div>
+      <h3 class="text-base font-bold text-navy font-display">Instalar en tu iPhone / iPad</h3>
+      <p class="text-xs text-muted mt-1">
+        Apple requiere agregar la app desde el menú de navegación de Safari:
+      </p>
+    </div>
+
+    <div class="mt-4 space-y-3 rounded-2xl bg-paper p-3.5 text-xs border border-line">
+      <div class="flex items-start gap-2.5">
+        <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orangeGov text-white text-[11px] font-bold">1</span>
+        <p class="text-navy">
+          Tocá el botón de <strong class="font-bold">Compartir</strong> en la barra inferior de Safari:
+          <span class="inline-flex items-center align-middle mx-1 p-0.5 rounded bg-white border border-line">
+            <svg class="h-4 w-4 text-blue-600 inline" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+              <polyline points="16 6 12 2 8 6"></polyline>
+              <line x1="12" y1="2" x2="12" y2="15"></line>
+            </svg>
+          </span>
+        </p>
+      </div>
+      <div class="flex items-start gap-2.5">
+        <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orangeGov text-white text-[11px] font-bold">2</span>
+        <p class="text-navy">
+          Deslizá las opciones y seleccioná <strong class="font-bold">"Agregar al inicio"</strong>.
+        </p>
+      </div>
+      <div class="flex items-start gap-2.5">
+        <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orangeGov text-white text-[11px] font-bold">3</span>
+        <p class="text-navy">
+          Tocá <strong class="font-bold">"Agregar"</strong> arriba a la derecha. ¡Listo!
+        </p>
+      </div>
+    </div>
+
+    <div class="mt-5">
+      <button
+        id="pwa-ios-modal-close"
+        type="button"
+        class="w-full rounded-xl bg-orangeGov py-2.5 text-xs font-bold text-white hover:bg-orange-600 transition shadow-sm cursor-pointer"
+      >
+        Entendido
+      </button>
+    </div>
+  </div>
+</div>
+
+<script is:inline>
+  (function () {
+    let deferredInstallPrompt = null;
+    let newWorkerWaiting = null;
+
+    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const STORAGE_KEY_INSTALLED = 'sc_pwa_installed';
+    const STORAGE_KEY_DISMISSED = 'sc_pwa_install_dismissed';
+
+    // Comprobación exhaustiva de si ya está instalada
+    async function checkIsAppInstalled() {
+      // 1. ¿Está abierta en modo standalone (PWA ya en ejecución como app nativa)?
+      const isStandalone =
+        window.matchMedia('(display-mode: standalone)').matches ||
+        window.matchMedia('(display-mode: window-controls-overlay)').matches ||
+        window.navigator.standalone === true ||
+        document.referrer.includes('android-app://');
+
+      if (isStandalone) {
+        localStorage.setItem(STORAGE_KEY_INSTALLED, 'true');
+        return true;
+      }
+
+      // 2. ¿Se registró la instalación exitosa anteriormente en este dispositivo/navegador?
+      if (localStorage.getItem(STORAGE_KEY_INSTALLED) === 'true') {
+        return true;
+      }
+
+      // 3. API moderna W3C getInstalledRelatedApps (Chrome 80+, Edge en Android, Windows, Mac)
+      if ('getInstalledRelatedApps' in navigator) {
+        try {
+          const relatedApps = await navigator.getInstalledRelatedApps();
+          if (relatedApps && relatedApps.length > 0) {
+            localStorage.setItem(STORAGE_KEY_INSTALLED, 'true');
+            return true;
+          }
+        } catch (e) {
+          // Ignorar si el navegador bloquea la consulta
+        }
+      }
+
+      return false;
+    }
+
+    // Elementos UI
+    const banner = document.getElementById('pwa-install-banner');
+    const bannerInstallBtn = document.getElementById('pwa-banner-install-btn');
+    const bannerDismissBtn = document.getElementById('pwa-banner-dismiss-btn');
+    const bannerCloseBtn = document.getElementById('pwa-banner-close');
+    const iosModal = document.getElementById('pwa-ios-modal');
+    const iosModalClose = document.getElementById('pwa-ios-modal-close');
+    const updateBanner = document.getElementById('pwa-update-banner');
+    const updateReloadBtn = document.getElementById('pwa-btn-reload');
+    const updateDismissBtn = document.getElementById('pwa-btn-dismiss-update');
+    const networkBadge = document.getElementById('pwa-network-badge');
+    const offlinePill = document.getElementById('pwa-offline-pill');
+    const onlinePill = document.getElementById('pwa-online-pill');
+
+    function isBannerDismissedRecently() {
+      const dismissed = localStorage.getItem(STORAGE_KEY_DISMISSED);
+      if (!dismissed) return false;
+      // No volver a mostrar el banner flotante por 3 días tras desestimar
+      return Date.now() - parseInt(dismissed, 10) < 3 * 24 * 60 * 60 * 1000;
+    }
+
+    function showBanner() {
+      if (banner && !isBannerDismissedRecently()) {
+        banner.classList.remove('hidden');
+      }
+    }
+
+    function hideBanner() {
+      if (banner) {
+        banner.classList.add('hidden');
+      }
+    }
+
+    function dismissBanner() {
+      hideBanner();
+      localStorage.setItem(STORAGE_KEY_DISMISSED, Date.now().toString());
+    }
+
+    function hideSidebarInstallButtons() {
+      document.querySelectorAll('.pwa-install-trigger').forEach((el) => {
+        el.classList.add('hidden');
+      });
+    }
+
+    function showSidebarInstallButtons() {
+      document.querySelectorAll('.pwa-install-trigger').forEach((el) => {
+        el.classList.remove('hidden');
+      });
+    }
+
+    function showIosModal() {
+      if (iosModal) iosModal.classList.remove('hidden');
+    }
+
+    function hideIosModal() {
+      if (iosModal) iosModal.classList.add('hidden');
+    }
+
+    if (bannerInstallBtn) bannerInstallBtn.addEventListener('click', () => window.installPwa());
+    if (bannerDismissBtn) bannerDismissBtn.addEventListener('click', dismissBanner);
+    if (bannerCloseBtn) bannerCloseBtn.addEventListener('click', dismissBanner);
+    if (iosModalClose) iosModalClose.addEventListener('click', hideIosModal);
+
+    // Función global ejecutada al hacer clic en Instalar (desde banner o sidebar)
+    window.installPwa = async function () {
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        const choice = await deferredInstallPrompt.userChoice;
+        if (choice.outcome === 'accepted') {
+          console.log('[PWA] Usuario aceptó la instalación');
+          localStorage.setItem(STORAGE_KEY_INSTALLED, 'true');
+          hideBanner();
+          hideSidebarInstallButtons();
+        }
+        deferredInstallPrompt = null;
+      } else if (isIos) {
+        showIosModal();
+      } else {
+        alert('Podés instalar la app desde el menú ⋮ de tu navegador seleccionando "Instalar SCVehículos" o "Agregar a la pantalla principal".');
+      }
+    };
+
+    // Inicializar comprobación de estado de instalación
+    checkIsAppInstalled().then((alreadyInstalled) => {
+      if (alreadyInstalled) {
+        // Si ya está instalada, asegurarse de ocultar banner y botón
+        hideBanner();
+        hideSidebarInstallButtons();
+      } else {
+        // En iOS mostramos los controles si no está instalada
+        if (isIos) {
+          showSidebarInstallButtons();
+          setTimeout(showBanner, 2500);
+        }
+      }
+    });
+
+    // Evento nativo cuando el navegador detecta que la PWA es instalable
+    window.addEventListener('beforeinstallprompt', async (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+
+      // Verificar si ya fue instalada antes de mostrar controles
+      const isAlreadyInstalled = await checkIsAppInstalled();
+      if (!isAlreadyInstalled) {
+        showSidebarInstallButtons();
+        setTimeout(showBanner, 2000);
+      } else {
+        hideBanner();
+        hideSidebarInstallButtons();
+      }
+    });
+
+    // Evento nativo cuando la app termina de instalarse con éxito
+    window.addEventListener('appinstalled', () => {
+      console.log('[PWA] Aplicación instalada exitosamente');
+      localStorage.setItem(STORAGE_KEY_INSTALLED, 'true');
+      deferredInstallPrompt = null;
+      hideBanner();
+      hideSidebarInstallButtons();
+    });
+
+    // Registro del Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker
+          .register('/sw.js')
+          .then((reg) => {
+            reg.addEventListener('updatefound', () => {
+              const newWorker = reg.installing;
+              if (!newWorker) return;
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  newWorkerWaiting = newWorker;
+                  if (updateBanner) updateBanner.classList.remove('hidden');
+                }
+              });
+            });
+          })
+          .catch((err) => {
+            console.warn('[PWA] Fallo al registrar Service Worker:', err);
+          });
+
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!refreshing) {
+            refreshing = true;
+            window.location.reload();
+          }
+        });
+      });
+    }
+
+    if (updateReloadBtn) {
+      updateReloadBtn.addEventListener('click', () => {
+        if (newWorkerWaiting) {
+          newWorkerWaiting.postMessage({ action: 'skipWaiting' });
+        } else {
+          window.location.reload();
+        }
+      });
+    }
+
+    if (updateDismissBtn) {
+      updateDismissBtn.addEventListener('click', () => {
+        if (updateBanner) updateBanner.classList.add('hidden');
+      });
+    }
+
+    // Alerta de Conectividad (Online / Offline)
+    function updateNetworkStatus() {
+      const isOnline = navigator.onLine;
+      if (!networkBadge) return;
+
+      if (!isOnline) {
+        networkBadge.classList.remove('hidden');
+        if (offlinePill) offlinePill.classList.remove('hidden');
+        if (onlinePill) onlinePill.classList.add('hidden');
+        networkBadge.classList.remove('-translate-y-4', 'opacity-0');
+        networkBadge.classList.add('translate-y-0', 'opacity-100');
+      } else {
+        if (networkBadge.classList.contains('opacity-100')) {
+          if (offlinePill) offlinePill.classList.add('hidden');
+          if (onlinePill) onlinePill.classList.remove('hidden');
+          setTimeout(() => {
+            networkBadge.classList.remove('translate-y-0', 'opacity-100');
+            networkBadge.classList.add('-translate-y-4', 'opacity-0');
+            setTimeout(() => {
+              networkBadge.classList.add('hidden');
+              if (onlinePill) onlinePill.classList.add('hidden');
+            }, 300);
+          }, 2500);
+        }
+      }
+    }
+
+    window.addEventListener('online', updateNetworkStatus);
+    window.addEventListener('offline', updateNetworkStatus);
+
+    if (!navigator.onLine) {
+      updateNetworkStatus();
+    }
+  })();
+</script>

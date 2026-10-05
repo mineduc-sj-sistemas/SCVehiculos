@@ -3,6 +3,7 @@ import Sidebar from '../components/layout/Sidebar.astro'
 import Header from '../components/layout/Header.astro'
 import Footer from '../components/layout/Footer.astro'
 import ToastNotification from '../components/ui/ToastNotification.astro'
+import PwaManager from '../components/pwa/PwaManager.astro'
 import '../styles/global.css'
 
 interface Props {
@@ -21,8 +22,20 @@ const {
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
     <title>{title}</title>
+
+    <!-- Metadatos y Manifiesto PWA -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#0b2240" />
+    <meta name="application-name" content="SCVehículos" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="SCVehículos" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png" />
   </head>
   <body class="bg-paper text-ink antialiased">
     <div class="min-h-screen bg-paper">
@@ -54,6 +67,9 @@ const {
 
     <!-- Notificaciones flotantes globales -->
     <ToastNotification />
+
+    <!-- Gestor de PWA (Service Worker, estado de red y prompts de instalación) -->
+    <PwaManager />
 
     <script>
       const menuButton = document.querySelector('#menu-button')

@@ -1,6 +1,7 @@
 ---
 import { Bus, ClipboardCheck, Eye, EyeOff, KeyRound, Lock, Mail, Navigation, ShieldCheck } from 'lucide-astro'
 import SanJuanLogo from '../frontend/components/ui/SanJuanLogo.astro'
+import PwaManager from '../frontend/components/pwa/PwaManager.astro'
 import { verifySessionToken, SESSION_COOKIE_NAME } from '../backend/index'
 import '../frontend/styles/global.css'
 
@@ -19,8 +20,20 @@ if (existingSession) {
 <html lang="es" class="h-full bg-paper">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
     <title>Iniciar Sesión · SCVehículos · Ministerio de Educación</title>
+
+    <!-- Metadatos y Manifiesto PWA -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#0b2240" />
+    <meta name="application-name" content="SCVehículos" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="SCVehículos" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png" />
   </head>
   <body class="h-full flex flex-col justify-center items-center p-4 bg-[#f4f7fb] text-ink antialiased">
     <!-- Contenedor Principal Centrado -->
@@ -252,5 +265,8 @@ if (existingSession) {
         }
       })
     </script>
+
+    <!-- Gestor PWA -->
+    <PwaManager />
   </body>
 </html>

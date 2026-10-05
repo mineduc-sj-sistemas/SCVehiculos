@@ -109,7 +109,26 @@ if (isAuditor) {
   
   <!-- Configuración y usuario -->
   <div class="mt-auto border-t border-line px-3 pb-4 pt-3">
-    
+    <!-- Botón Instalar App PWA -->
+    <div class="pwa-install-trigger hidden mb-2 px-1">
+      <button
+        type="button"
+        onclick="window.installPwa && window.installPwa()"
+        class="w-full flex items-center justify-between gap-2 rounded-xl bg-orangeGov/10 hover:bg-orangeGov/20 border border-orangeGov/30 px-3 py-2 text-xs font-bold text-orangeGov transition cursor-pointer"
+        title="Instalar SCVehículos en tu dispositivo"
+      >
+        <span class="flex items-center gap-2">
+          <svg class="h-4 w-4 shrink-0 text-orangeGov" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span class="sidebar-copy">Instalar App</span>
+        </span>
+        <span class="sidebar-copy rounded bg-orangeGov text-white px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider">PWA</span>
+      </button>
+    </div>
+
     <div class="flex items-center justify-between px-2 py-1">
       <span class="sidebar-copy text-[10px] font-bold uppercase tracking-[.15em] text-muted">Cuenta activa</span>
       <a
