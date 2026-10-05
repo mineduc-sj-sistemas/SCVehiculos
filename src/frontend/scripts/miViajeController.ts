@@ -1,6 +1,7 @@
 /**
  * Controlador de cliente para el Portal Móvil del Chofer (/mi-viaje)
- * Maneja geolocalización en tiempo real, check-ins de paradas, salida y regreso
+ * Maneja geolocalización en tiempo real, check-ins de paradas, salida, regreso
+ * y validación estricta de horario de comisión coincidente con la hora actual.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -30,12 +31,170 @@ async function obtenerCoordenadasGps(): Promise<{ latitud?: number; longitud?: n
   })
 }
 
+/**
+ * Evalúa si la fecha y hora actual coinciden con el itinerario de la comisión
+ */
+function evaluarHorarioViaje(): { valido: boolean; motivo: 'valido' | 'previo' | 'vencido' | 'sin_datos' } {
+  const container = document.getElementById('portal-mi-viaje')
+  if (!container) return { valido: false, motivo: 'sin_datos' }
+
+  // En modo supervisor administrativo, permite simular coincidencia para pruebas si el checkbox está activo
+  const checkSimular = document.getElementById('check-simular-horario') as HTMLInputElement | null
+  if (checkSimular && checkSimular.checked) {
+    return { valido: true, motivo: 'valido' }
+  }
+
+  const salidaStr = container.getAttribute('data-fecha-salida')
+  const regresoStr = container.getAttribute('data-fecha-regreso')
+  if (!salidaStr || !regresoStr) return { valido: false, motivo: 'sin_datos' }
+
+  const ahora = Date.now()
+  const salida = new Date(salidaStr).getTime()
+  const regreso = new Date(regresoStr).getTime()
+
+  if (isNaN(salida) || isNaN(regreso)) return { valido: false, motivo: 'sin_datos' }
+
+  if (ahora < salida) {
+    return { valido: false, motivo: 'previo' }
+  }
+  if (ahora > regreso) {
+    return { valido: false, motivo: 'vencido' }
+  }
+  return { valido: true, motivo: 'valido' }
+}
+
+/**
+ * Actualiza en tiempo real los banners informativos y el estado de habilitación de todos los botones táctiles
+ */
+function actualizarEstadoHorarioEnTiempoReal() {
+  const { valido, motivo } = evaluarHorarioViaje()
+  const container = document.getElementById('portal-mi-viaje')
+  if (!container) return
+
+  const banner = document.getElementById('banner-horario-viaje')
+  const titulo = document.getElementById('banner-horario-titulo')
+  const badge = document.getElementById('banner-horario-badge')
+  const mensaje = document.getElementById('banner-horario-mensaje')
+  const reloj = document.getElementById('reloj-tiempo-real')
+
+  if (reloj) {
+    reloj.textContent = `Hora actual: ${new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} hs`
+  }
+
+  // Actualizar banner reactivo
+  if (banner && titulo && badge && mensaje) {
+    banner.classList.remove(
+      'bg-emerald-50', 'border-emerald-200', 'text-emerald-900',
+      'bg-amber-50', 'border-amber-200', 'text-amber-900',
+      'bg-rose-50', 'border-rose-200', 'text-rose-900'
+    )
+    badge.classList.remove(
+      'bg-emerald-200', 'text-emerald-900',
+      'bg-amber-200', 'text-amber-900',
+      'bg-rose-200', 'text-rose-900'
+    )
+
+    if (valido) {
+      banner.classList.add('bg-emerald-50', 'border-emerald-200', 'text-emerald-900')
+      badge.classList.add('bg-emerald-200', 'text-emerald-900')
+      titulo.textContent = 'Horario de Viaje Coincidente'
+      badge.textContent = 'Interacción Habilitada'
+      mensaje.textContent = 'El horario actual coincide con la franja oficial de la comisión. Puedes registrar arribos, combustible y despacho en tiempo real.'
+    } else if (motivo === 'previo') {
+      banner.classList.add('bg-amber-50', 'border-amber-200', 'text-amber-900')
+      badge.classList.add('bg-amber-200', 'text-amber-900')
+      titulo.textContent = 'Comisión Programada (Aún no iniciada)'
+      badge.textContent = 'Interacción Bloqueada'
+      const salidaStr = container.getAttribute('data-fecha-salida')
+      const salidaDate = salidaStr ? new Date(salidaStr) : null
+      mensaje.textContent = `Esta comisión está programada para iniciar el ${salidaDate?.toLocaleDateString('es-AR')} a las ${salidaDate?.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs. Las acciones operativas se habilitarán automáticamente cuando llegue el horario del viaje.`
+    } else {
+      banner.classList.add('bg-rose-50', 'border-rose-200', 'text-rose-900')
+      badge.classList.add('bg-rose-200', 'text-rose-900')
+      titulo.textContent = 'Fuera del Horario Oficial'
+      badge.textContent = 'Interacción Bloqueada'
+      const regresoStr = container.getAttribute('data-fecha-regreso')
+      const regresoDate = regresoStr ? new Date(regresoStr) : null
+      mensaje.textContent = `El horario oficial para este viaje finalizó el ${regresoDate?.toLocaleDateString('es-AR')} a las ${regresoDate?.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs. Solo se permite interactuar cuando el horario del viaje coincida con el horario actual.`
+    }
+  }
+
+  // Actualizar botones de acción táctiles
+  const btnSalida = document.getElementById('btn-abrir-modal-salida') as HTMLButtonElement | null
+  if (btnSalida) {
+    btnSalida.disabled = !valido
+    btnSalida.classList.toggle('cursor-not-allowed', !valido)
+    btnSalida.classList.toggle('opacity-60', !valido)
+    btnSalida.classList.toggle('bg-gray-200', !valido)
+    btnSalida.classList.toggle('text-gray-500', !valido)
+    btnSalida.classList.toggle('bg-emerald-600', valido)
+    btnSalida.classList.toggle('text-white', valido)
+    btnSalida.classList.toggle('cursor-pointer', valido)
+    const spanText = btnSalida.querySelector('span')
+    if (spanText) {
+      spanText.textContent = valido ? 'Iniciar Viaje / Registrar Salida Oficial' : 'Iniciar Viaje (Fuera de horario)'
+    }
+  }
+
+  const btnFuel = document.getElementById('btn-abrir-modal-fuel') as HTMLButtonElement | null
+  if (btnFuel) {
+    btnFuel.disabled = !valido
+    btnFuel.classList.toggle('cursor-not-allowed', !valido)
+    btnFuel.classList.toggle('opacity-60', !valido)
+    btnFuel.classList.toggle('border-gray-200', !valido)
+    btnFuel.classList.toggle('bg-gray-100', !valido)
+    btnFuel.classList.toggle('text-gray-400', !valido)
+    btnFuel.classList.toggle('border-line', valido)
+    btnFuel.classList.toggle('bg-white', valido)
+    btnFuel.classList.toggle('text-navy', valido)
+    btnFuel.classList.toggle('cursor-pointer', valido)
+  }
+
+  const btnLlegada = document.getElementById('btn-abrir-modal-llegada') as HTMLButtonElement | null
+  if (btnLlegada) {
+    btnLlegada.disabled = !valido
+    btnLlegada.classList.toggle('cursor-not-allowed', !valido)
+    btnLlegada.classList.toggle('opacity-60', !valido)
+    btnLlegada.classList.toggle('bg-gray-200', !valido)
+    btnLlegada.classList.toggle('text-gray-400', !valido)
+    btnLlegada.classList.toggle('bg-navy', valido)
+    btnLlegada.classList.toggle('text-white', valido)
+    btnLlegada.classList.toggle('cursor-pointer', valido)
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('.btn-marcar-checkin').forEach((btn) => {
+    btn.disabled = !valido
+    btn.classList.toggle('cursor-not-allowed', !valido)
+    btn.classList.toggle('opacity-60', !valido)
+    btn.classList.toggle('bg-gray-200', !valido)
+    btn.classList.toggle('text-gray-500', !valido)
+    btn.classList.toggle('bg-orangeGov', valido)
+    btn.classList.toggle('hover:bg-orange-700', valido)
+    btn.classList.toggle('text-white', valido)
+    btn.classList.toggle('cursor-pointer', valido)
+    const labelSpan = btn.querySelector('span')
+    if (labelSpan) {
+      labelSpan.textContent = valido ? 'Confirmar Llegada' : 'Confirmar Llegada (Bloqueado)'
+    }
+  })
+}
+
 function initMiViaje() {
   const container = document.getElementById('portal-mi-viaje')
   if (!container) return
 
   const comisionId = container.getAttribute('data-comision-id')
   const choferId = container.getAttribute('data-chofer-id')
+
+  // Evaluar estado de horario al inicio y refrescar periódicamente
+  actualizarEstadoHorarioEnTiempoReal()
+  setInterval(actualizarEstadoHorarioEnTiempoReal, 5000)
+
+  // Switch de simulación para supervisores
+  const checkSimular = document.getElementById('check-simular-horario') as HTMLInputElement | null
+  checkSimular?.addEventListener('change', () => {
+    actualizarEstadoHorarioEnTiempoReal()
+  })
 
   // Indicador GPS
   const elGpsBadge = document.getElementById('gps-status-badge')
@@ -72,6 +231,10 @@ function initMiViaje() {
   const inputOdoSalida = document.getElementById('input-odo-salida-chofer') as HTMLInputElement | null
 
   btnAbrirSalida?.addEventListener('click', () => {
+    if (!evaluarHorarioViaje().valido) {
+      alert('Acción bloqueada: solo se permite iniciar el viaje cuando el horario oficial coincida con el horario actual.')
+      return
+    }
     modalSalida?.classList.remove('hidden')
     inputOdoSalida?.focus()
   })
@@ -83,6 +246,11 @@ function initMiViaje() {
   formSalida?.addEventListener('submit', async (e) => {
     e.preventDefault()
     if (!comisionId) return
+
+    if (!evaluarHorarioViaje().valido) {
+      alert('Acción bloqueada: solo se permite iniciar el viaje cuando el horario oficial coincida con el horario actual.')
+      return
+    }
 
     const odo = inputOdoSalida?.value ? parseInt(inputOdoSalida.value, 10) : undefined
     if (!odo) {
@@ -125,6 +293,11 @@ function initMiViaje() {
   // 3. Marcar Check-in de Parada con GPS
   document.querySelectorAll<HTMLButtonElement>('.btn-marcar-checkin').forEach((btn) => {
     btn.addEventListener('click', async () => {
+      if (!evaluarHorarioViaje().valido) {
+        alert('Acción bloqueada: solo se permite registrar paradas cuando el horario del viaje coincida con el horario actual.')
+        return
+      }
+
       const paradaIndex = btn.getAttribute('data-parada-index')
       const destinoNombre = btn.getAttribute('data-destino-nombre')
       if (!comisionId || !choferId || !paradaIndex || !destinoNombre) return
@@ -173,6 +346,10 @@ function initMiViaje() {
   const formFuel = document.getElementById('form-fuel-chofer') as HTMLFormElement | null
 
   btnAbrirFuel?.addEventListener('click', () => {
+    if (!evaluarHorarioViaje().valido) {
+      alert('Acción bloqueada: solo se permite registrar cargas de combustible cuando el horario del viaje coincida con el horario actual.')
+      return
+    }
     modalFuel?.classList.remove('hidden')
   })
 
@@ -182,6 +359,11 @@ function initMiViaje() {
 
   formFuel?.addEventListener('submit', async (e) => {
     e.preventDefault()
+    if (!evaluarHorarioViaje().valido) {
+      alert('Acción bloqueada: solo se permite registrar cargas de combustible cuando el horario del viaje coincida con el horario actual.')
+      return
+    }
+
     const vehiculoId = container.getAttribute('data-vehiculo-id')
     if (!vehiculoId) return
 
@@ -244,6 +426,10 @@ function initMiViaje() {
   const odoSalidaBase = parseInt(container.getAttribute('data-odometro-salida') || '0', 10)
 
   btnAbrirLlegada?.addEventListener('click', () => {
+    if (!evaluarHorarioViaje().valido) {
+      alert('Acción bloqueada: solo se permite finalizar la comisión cuando el horario del viaje coincida con el horario actual.')
+      return
+    }
     modalLlegada?.classList.remove('hidden')
     inputOdoLlegada?.focus()
   })
@@ -255,6 +441,11 @@ function initMiViaje() {
   formLlegada?.addEventListener('submit', async (e) => {
     e.preventDefault()
     if (!comisionId) return
+
+    if (!evaluarHorarioViaje().valido) {
+      alert('Acción bloqueada: solo se permite finalizar la comisión cuando el horario del viaje coincida con el horario actual.')
+      return
+    }
 
     const odo = inputOdoLlegada?.value ? parseInt(inputOdoLlegada.value, 10) : undefined
     if (!odo) {

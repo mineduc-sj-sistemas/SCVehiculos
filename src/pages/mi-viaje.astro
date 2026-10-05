@@ -42,6 +42,26 @@ const formatFechaCorta = (dStr: string | null) => {
   const d = new Date(dStr)
   return d.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' })
 }
+
+const formatFechaLarga = (d: Date | null) => {
+  if (!d) return '--'
+  return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
+
+// Validación de Coincidencia de Horario con Hora Actual
+const ahora = new Date()
+const fechaSalida = viajeActivo ? new Date(viajeActivo.fecha_salida_programada) : null
+const fechaRegreso = viajeActivo ? new Date(viajeActivo.fecha_regreso_estimada) : null
+
+const esHorarioValido = Boolean(
+  fechaSalida &&
+  fechaRegreso &&
+  ahora >= fechaSalida &&
+  ahora <= fechaRegreso
+)
+
+const esHorarioPrevio = Boolean(fechaSalida && ahora < fechaSalida)
+const esHorarioVencido = Boolean(fechaRegreso && ahora > fechaRegreso)
 ---
 
 <DashboardLayout activeNav="mi-viaje" title="Mi Viaje Oficial · Portal del Conductor · Ministerio de Educación">
@@ -52,6 +72,9 @@ const formatFechaCorta = (dStr: string | null) => {
     data-chofer-id={chofer?.id || ''}
     data-vehiculo-id={viajeActivo?.vehiculo_id || ''}
     data-odometro-salida={viajeActivo?.odometro_salida || viajeActivo?.vehiculo_odometro || '0'}
+    data-fecha-salida={viajeActivo?.fecha_salida_programada || ''}
+    data-fecha-regreso={viajeActivo?.fecha_regreso_estimada || ''}
+    data-es-horario-valido={esHorarioValido ? 'true' : 'false'}
   >
     <!-- Encabezado de Identificación del Conductor -->
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-line/70 pb-4">
@@ -91,10 +114,16 @@ const formatFechaCorta = (dStr: string | null) => {
     <!-- Barra de Supervisión Administrativa (si es Staff) -->
     {isStaff && (
       <div class="rounded-2xl border border-orange-200 bg-orange-50/60 p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-        <div class="flex items-center gap-2 text-orangeGov font-bold">
-          <Compass size={16} />
-          <span>Modo Supervisor / Prueba:</span>
-          <span class="text-ink font-normal">Estás visualizando la pantalla que ve el chofer en su teléfono.</span>
+        <div class="space-y-1">
+          <div class="flex items-center gap-2 text-orangeGov font-bold">
+            <Compass size={16} />
+            <span>Modo Supervisor / Auditoría:</span>
+            <span class="text-ink font-normal">Estás visualizando la pantalla operativa del chofer.</span>
+          </div>
+          <label class="flex items-center gap-1.5 text-[11px] font-semibold text-orange-950 cursor-pointer pt-0.5">
+            <input type="checkbox" id="check-simular-horario" class="rounded border-orange-300 text-orangeGov focus:ring-orangeGov/30" />
+            <span>Simular coincidencia de horario para pruebas administrativas</span>
+          </label>
         </div>
         <div class="w-full sm:w-auto">
           <select
@@ -139,6 +168,64 @@ const formatFechaCorta = (dStr: string | null) => {
 
     {viajeActivo ? (
       <div class="space-y-4">
+        {/* Banner de Validación de Horario Oficial */}
+        <div
+          id="banner-horario-viaje"
+          class={`card rounded-2xl p-4 flex items-start gap-3 border transition-all ${
+            esHorarioValido
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+              : esHorarioPrevio
+              ? 'bg-amber-50 border-amber-200 text-amber-900'
+              : 'bg-rose-50 border-rose-200 text-rose-900'
+          }`}
+        >
+          <div class="mt-0.5 shrink-0" id="banner-horario-icon">
+            {esHorarioValido ? (
+              <CheckCircle2 size={18} class="text-emerald-600" />
+            ) : esHorarioPrevio ? (
+              <Clock size={18} class="text-amber-600" />
+            ) : (
+              <ShieldAlert size={18} class="text-rose-600" />
+            )}
+          </div>
+          <div class="space-y-1 text-xs flex-1">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <span class="font-bold uppercase tracking-wider text-[11px]" id="banner-horario-titulo">
+                  {esHorarioValido
+                    ? 'Horario de Viaje Coincidente'
+                    : esHorarioPrevio
+                    ? 'Comisión Programada (Aún no iniciada)'
+                    : 'Fuera del Horario Oficial'}
+                </span>
+                <span
+                  id="banner-horario-badge"
+                  class={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                    esHorarioValido
+                      ? 'bg-emerald-200 text-emerald-900'
+                      : esHorarioPrevio
+                      ? 'bg-amber-200 text-amber-900'
+                      : 'bg-rose-200 text-rose-900'
+                  }`}
+                >
+                  {esHorarioValido ? 'Interacción Habilitada' : 'Interacción Bloqueada'}
+                </span>
+              </div>
+              <span class="font-mono text-[10px] opacity-80" id="reloj-tiempo-real">
+                Hora actual: {ahora.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs
+              </span>
+            </div>
+            <p class="text-[12px] leading-relaxed" id="banner-horario-mensaje">
+              {esHorarioValido
+                ? 'El horario actual coincide con la franja oficial de la comisión. Puedes registrar arribos, combustible y despacho en tiempo real.'
+                : esHorarioPrevio
+                ? `Esta comisión está programada para iniciar el ${formatFechaLarga(fechaSalida)} a las ${formatHora(viajeActivo.fecha_salida_programada)} hs. Las acciones operativas se habilitarán automáticamente cuando llegue el horario del viaje.`
+                : `El horario oficial para este viaje finalizó el ${formatFechaLarga(fechaRegreso)} a las ${formatHora(viajeActivo.fecha_regreso_estimada)} hs. Solo se permite interactuar cuando el horario del viaje coincida con el horario actual.`
+              }
+            </p>
+          </div>
+        </div>
+
         {/* Banner de Estado de la Comisión */}
         <div class="card overflow-hidden rounded-3xl border border-line bg-white shadow-sm">
           {/* Cabecera de Estado */}
@@ -187,11 +274,11 @@ const formatFechaCorta = (dStr: string | null) => {
               </div>
               <div class="rounded-xl bg-paper p-2.5">
                 <span class="text-[10px] font-bold text-muted uppercase">Salida Prog.</span>
-                <p class="font-bold text-navy mt-0.5">{formatHora(viajeActivo.fecha_salida_programada)} hs</p>
+                <p class="font-bold text-navy mt-0.5">{formatFechaCorta(viajeActivo.fecha_salida_programada)} {formatHora(viajeActivo.fecha_salida_programada)} hs</p>
               </div>
               <div class="rounded-xl bg-paper p-2.5">
                 <span class="text-[10px] font-bold text-muted uppercase">Regreso Estim.</span>
-                <p class="font-bold text-navy mt-0.5">{formatHora(viajeActivo.fecha_regreso_estimada)} hs</p>
+                <p class="font-bold text-navy mt-0.5">{formatFechaCorta(viajeActivo.fecha_regreso_estimada)} {formatHora(viajeActivo.fecha_regreso_estimada)} hs</p>
               </div>
             </div>
 
@@ -287,12 +374,18 @@ const formatFechaCorta = (dStr: string | null) => {
                     {!parada.visitada && viajeActivo.estado === 'en_curso' && (
                       <button
                         type="button"
-                        class="btn-marcar-checkin flex items-center justify-center gap-1.5 rounded-xl bg-orangeGov hover:bg-orange-700 px-3.5 py-2 text-xs font-bold text-white shadow-xs transition active:scale-95 cursor-pointer shrink-0"
+                        class={`btn-marcar-checkin flex items-center justify-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition shadow-xs shrink-0 ${
+                          esHorarioValido
+                            ? 'bg-orangeGov hover:bg-orange-700 text-white active:scale-95 cursor-pointer'
+                            : 'bg-gray-200 text-gray-500 cursor-not-allowed opacity-60'
+                        }`}
                         data-parada-index={parada.index}
                         data-destino-nombre={parada.nombre}
+                        disabled={!esHorarioValido}
+                        title={esHorarioValido ? 'Confirmar llegada con GPS' : 'Solo se permite interactuar cuando el horario del viaje coincida con el horario actual'}
                       >
-                        <MapPin size={14} />
-                        <span>Confirmar Llegada</span>
+                        {esHorarioValido ? <MapPin size={14} /> : <Clock size={14} />}
+                        <span>{esHorarioValido ? 'Confirmar Llegada' : 'Confirmar Llegada (Bloqueado)'}</span>
                       </button>
                     )}
 
@@ -314,10 +407,16 @@ const formatFechaCorta = (dStr: string | null) => {
             <button
               type="button"
               id="btn-abrir-modal-salida"
-              class="col-span-full flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 py-4 px-6 text-sm font-bold text-white shadow-lg shadow-emerald-600/25 active:scale-[0.99] transition cursor-pointer"
+              disabled={!esHorarioValido}
+              class={`col-span-full flex items-center justify-center gap-2 rounded-2xl py-4 px-6 text-sm font-bold transition ${
+                esHorarioValido
+                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/25 active:scale-[0.99] cursor-pointer'
+                  : 'bg-gray-200 text-gray-500 cursor-not-allowed opacity-60'
+              }`}
+              title={esHorarioValido ? 'Iniciar Viaje Oficial' : 'Habilitado únicamente cuando el horario del viaje coincida con el horario actual'}
             >
-              <Play size={18} fill="currentColor" />
-              <span>Iniciar Viaje / Registrar Salida Oficial</span>
+              {esHorarioValido ? <Play size={18} fill="currentColor" /> : <Clock size={18} />}
+              <span>{esHorarioValido ? 'Iniciar Viaje / Registrar Salida Oficial' : 'Iniciar Viaje (Fuera de horario)'}</span>
             </button>
           ) : (
             <>
@@ -325,9 +424,15 @@ const formatFechaCorta = (dStr: string | null) => {
               <button
                 type="button"
                 id="btn-abrir-modal-fuel"
-                class="flex items-center justify-center gap-2 rounded-2xl border border-line bg-white hover:bg-paper py-3.5 px-4 text-xs font-bold text-navy shadow-xs transition cursor-pointer"
+                disabled={!esHorarioValido}
+                class={`flex items-center justify-center gap-2 rounded-2xl border py-3.5 px-4 text-xs font-bold transition ${
+                  esHorarioValido
+                    ? 'border-line bg-white hover:bg-paper text-navy shadow-xs cursor-pointer'
+                    : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed opacity-60'
+                }`}
+                title={esHorarioValido ? 'Registrar Carga de Combustible' : 'Habilitado únicamente en el horario del viaje'}
               >
-                <Fuel size={16} class="text-orangeGov" />
+                <Fuel size={16} class={esHorarioValido ? 'text-orangeGov' : 'text-gray-400'} />
                 <span>Registrar Carga de Combustible</span>
               </button>
 
@@ -335,9 +440,15 @@ const formatFechaCorta = (dStr: string | null) => {
               <button
                 type="button"
                 id="btn-abrir-modal-llegada"
-                class="flex items-center justify-center gap-2 rounded-2xl bg-navy hover:bg-slate-900 py-3.5 px-4 text-xs font-bold text-white shadow-md active:scale-[0.99] transition cursor-pointer"
+                disabled={!esHorarioValido}
+                class={`flex items-center justify-center gap-2 rounded-2xl py-3.5 px-4 text-xs font-bold transition ${
+                  esHorarioValido
+                    ? 'bg-navy hover:bg-slate-900 text-white shadow-md active:scale-[0.99] cursor-pointer'
+                    : 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-60'
+                }`}
+                title={esHorarioValido ? 'Finalizar Viaje y Registrar Odómetro' : 'Habilitado únicamente en el horario del viaje'}
               >
-                <StopCircle size={16} class="text-orangeGov" />
+                <StopCircle size={16} class={esHorarioValido ? 'text-orangeGov' : 'text-gray-400'} />
                 <span>Finalizar Viaje / Registrar Regreso</span>
               </button>
             </>
