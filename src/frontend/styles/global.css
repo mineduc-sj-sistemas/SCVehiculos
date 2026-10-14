@@ -118,30 +118,177 @@ button, input, select, textarea { font: inherit; }
 }
 
 .sidebar-brand-link { display: flex; width: 100%; height: 100%; align-items: center; }
-.sidebar-brand-expanded { display: flex; width: 100%; align-items: center; gap: 7px; }
-.sidebar-full-logo { display: block; width: 112px; height: 44px; flex: none; object-fit: contain; object-position: left center; }
+.sidebar-brand-expanded { display: flex; width: 100%; align-items: center; gap: 8px; }
+.sidebar-full-logo { display: block; width: 96px; height: 36px; flex: none; object-fit: contain; object-position: left center; }
 .sidebar-full-logo-dark { display: none; }
-.sidebar-ministry-copy { display: flex; min-width: 0; flex-direction: column; border-left: 1px solid #cbd5e1; padding-left: 6px; color: #202127; font-size: 9px; font-weight: 700; line-height: 1.2; }
-.sidebar-ministry-copy span + span { margin-top: 3px; color: #64748b; font-size: 8px; font-weight: 500; }
+.sidebar-ministry-copy { display: flex; min-width: 0; flex-direction: column; border-left: 1px solid #cbd5e1; padding-left: 8px; color: #1e293b; font-size: 9.5px; font-weight: 700; line-height: 1.25; }
+.sidebar-ministry-copy span:first-child { color: #0f172a; font-weight: 700; }
+.sidebar-ministry-copy span + span { margin-top: 2px; color: #64748b; font-size: 8.5px; font-weight: 600; }
 .sidebar-brand-compact { display: none; }
 .sidebar-brand-compact .sidebar-logo { display: block; width: 32px; height: 32px; object-fit: contain; object-position: center; }
 .sidebar-brand-compact .sidebar-logo-dark { display: none; }
 
 @media (min-width: 901px) {
-  .sidebar-collapsed .sidebar { width: 72px; }
-  .sidebar-collapsed .main-shell { margin-left: 72px; }
-  .sidebar-collapsed .sidebar-brand { justify-content: center; padding-inline: 0; }
-  .sidebar-collapsed .sidebar-brand-expanded { display: none; }
-  .sidebar-collapsed .sidebar-brand-compact { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; }
-  .sidebar-collapsed #sidebar .sidebar-group-label,
-  .sidebar-collapsed #sidebar .sidebar-copy,
-  .sidebar-collapsed #sidebar .sidebar-active-dot { display: none; }
-  .sidebar-collapsed #sidebar nav a {
+  /* Por defecto: Sidebar cerrada / compacta (72px) para máxima área útil */
+  #sidebar.sidebar {
+    width: 72px;
+    overflow-x: hidden;
+    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease;
+    z-index: 40;
+  }
+
+  .main-shell {
+    margin-left: 72px;
+    transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Estado cerrado (por defecto en desktop) */
+  #sidebar.sidebar .sidebar-brand {
     justify-content: center;
     padding-inline: 0;
   }
-  .sidebar-collapsed #sidebar nav a svg { flex: none; }
-  .sidebar-collapsed #sidebar .sidebar-user-card { justify-content: center; padding: 8px; }
+  #sidebar.sidebar .sidebar-brand-expanded {
+    display: none;
+    opacity: 0;
+    white-space: nowrap;
+  }
+  #sidebar.sidebar .sidebar-brand-compact {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+  }
+  #sidebar.sidebar .sidebar-group-label,
+  #sidebar.sidebar .sidebar-copy,
+  #sidebar.sidebar .sidebar-active-dot {
+    display: none;
+    opacity: 0;
+    white-space: nowrap;
+  }
+  #sidebar.sidebar nav a {
+    justify-content: center;
+    padding-inline: 0;
+  }
+  #sidebar.sidebar nav a svg {
+    flex: none;
+  }
+  #sidebar.sidebar .sidebar-user-card {
+    justify-content: center;
+    padding: 8px;
+  }
+  #sidebar.sidebar .sidebar-account-row {
+    justify-content: center;
+  }
+  #sidebar.sidebar .pwa-install-trigger {
+    display: none !important;
+  }
+
+  /* REACTIVA: Se despliega cuando el cursor está encima (:hover) o foco (:focus-within) */
+  #sidebar.sidebar:hover,
+  #sidebar.sidebar:focus-within {
+    width: 248px;
+    box-shadow: 6px 0 28px rgba(0, 0, 0, 0.12), 2px 0 6px rgba(0, 0, 0, 0.05);
+    z-index: 50;
+  }
+
+  html.dark #sidebar.sidebar:hover,
+  html.dark #sidebar.sidebar:focus-within {
+    box-shadow: 6px 0 28px rgba(0, 0, 0, 0.65), 2px 0 6px rgba(0, 0, 0, 0.3);
+  }
+
+  #sidebar.sidebar:hover .sidebar-brand,
+  #sidebar.sidebar:focus-within .sidebar-brand {
+    justify-content: flex-start;
+    padding-inline: 1rem;
+  }
+  #sidebar.sidebar:hover .sidebar-brand-expanded,
+  #sidebar.sidebar:focus-within .sidebar-brand-expanded {
+    display: flex;
+    opacity: 1;
+    transition: opacity 0.2s ease 0.05s;
+  }
+  #sidebar.sidebar:hover .sidebar-brand-compact,
+  #sidebar.sidebar:focus-within .sidebar-brand-compact {
+    display: none;
+  }
+  #sidebar.sidebar:hover .sidebar-group-label,
+  #sidebar.sidebar:focus-within .sidebar-group-label {
+    display: block;
+    opacity: 1;
+    white-space: nowrap;
+    transition: opacity 0.2s ease 0.05s;
+  }
+  #sidebar.sidebar:hover .sidebar-copy,
+  #sidebar.sidebar:focus-within .sidebar-copy {
+    display: inline;
+    opacity: 1;
+    white-space: nowrap;
+    transition: opacity 0.2s ease 0.05s;
+  }
+  #sidebar.sidebar:hover nav a,
+  #sidebar.sidebar:focus-within nav a {
+    justify-content: flex-start;
+    padding-inline: 0.75rem;
+  }
+  #sidebar.sidebar:hover .sidebar-user-card,
+  #sidebar.sidebar:focus-within .sidebar-user-card {
+    justify-content: flex-start;
+    padding: 0.625rem;
+  }
+  #sidebar.sidebar:hover .sidebar-account-row,
+  #sidebar.sidebar:focus-within .sidebar-account-row {
+    justify-content: space-between;
+  }
+  #sidebar.sidebar:hover .pwa-install-trigger,
+  #sidebar.sidebar:focus-within .pwa-install-trigger {
+    display: block !important;
+  }
+
+  /* Modo fijado permanente (opcional mediante clic en botón de menú) */
+  body.sidebar-pinned #sidebar.sidebar {
+    width: 248px;
+    box-shadow: 3px 0 14px rgba(32, 33, 39, .035);
+    z-index: 40;
+  }
+  body.sidebar-pinned .main-shell {
+    margin-left: 248px;
+  }
+  body.sidebar-pinned #sidebar.sidebar .sidebar-brand {
+    justify-content: flex-start;
+    padding-inline: 1rem;
+  }
+  body.sidebar-pinned #sidebar.sidebar .sidebar-brand-expanded {
+    display: flex;
+    opacity: 1;
+  }
+  body.sidebar-pinned #sidebar.sidebar .sidebar-brand-compact {
+    display: none;
+  }
+  body.sidebar-pinned #sidebar.sidebar .sidebar-group-label {
+    display: block;
+    opacity: 1;
+    white-space: nowrap;
+  }
+  body.sidebar-pinned #sidebar.sidebar .sidebar-copy {
+    display: inline;
+    white-space: nowrap;
+    opacity: 1;
+  }
+  body.sidebar-pinned #sidebar.sidebar nav a {
+    justify-content: flex-start;
+    padding-inline: 0.75rem;
+  }
+  body.sidebar-pinned #sidebar.sidebar .sidebar-user-card {
+    justify-content: flex-start;
+    padding: 0.625rem;
+  }
+  body.sidebar-pinned #sidebar.sidebar .sidebar-account-row {
+    justify-content: space-between;
+  }
+  body.sidebar-pinned #sidebar.sidebar .pwa-install-trigger {
+    display: block !important;
+  }
 }
 
 html.dark {

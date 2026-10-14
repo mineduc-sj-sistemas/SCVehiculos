@@ -57,7 +57,7 @@ if (isAuditor) {
 
 <aside id="sidebar" class="sidebar fixed inset-y-0 left-0 z-40 flex w-[248px] flex-col border-r">
   <!-- Identificación institucional con Emblema San Juan -->
-  <div class="sidebar-brand flex h-[76px] items-center border-b border-line px-5">
+  <div class="sidebar-brand flex h-[76px] items-center border-b border-line px-4">
     <a href="/" class="sidebar-brand-link hover:opacity-95 transition" title="Ir al panel de inicio">
       <div class="sidebar-brand-expanded" aria-label="San Juan Gobierno, Ministerio de Educación, Gestión de Movilidades">
         <img class="sidebar-full-logo sidebar-full-logo-light" src="/branding/logo%20san%20juan.png" alt="San Juan Gobierno" />
@@ -83,8 +83,7 @@ if (isAuditor) {
   </div>
   
   <!-- Enlaces de navegación -->
-  <div class="flex-1 overflow-y-auto px-3 pt-5">
-    <p class="sidebar-group-label mb-3 px-3 text-[10px] font-bold uppercase tracking-[.18em] text-muted">Gestión operativa</p>
+  <div class="flex-1 overflow-y-auto px-3 pt-3.5">
     <nav class="space-y-1">
       {navItems.map((item) => {
         const isActive = activeNav === item.id
@@ -129,7 +128,7 @@ if (isAuditor) {
       </button>
     </div>
 
-    <div class="flex items-center justify-between px-2 py-1">
+    <div class="sidebar-account-row flex items-center justify-between px-2 py-1">
       <span class="sidebar-copy text-[10px] font-bold uppercase tracking-[.15em] text-muted">Cuenta activa</span>
       <a
         href="/api/auth/logout"

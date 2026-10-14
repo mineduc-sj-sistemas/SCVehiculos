@@ -90,47 +90,51 @@ const DEPARTAMENTOS_SAN_JUAN = [
     </div>
 
     <!-- Barra de Progreso del Wizard (Stepper) -->
-    <div class="border-b border-gray-100 dark:border-slate-800 bg-gray-50/90 dark:bg-[#14181f] px-4 sm:px-6 py-2.5">
-      <div class="flex items-center justify-between relative">
-        <!-- Líneas conectoras de fondo -->
-        <div class="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-0.5 bg-gray-200 dark:bg-slate-700 z-0"></div>
-        <div id="dispatch-wizard-progress" class="absolute left-6 top-1/2 -translate-y-1/2 h-0.5 bg-orangeGov z-0 transition-all duration-300" style="width: 0%;"></div>
+    <div class="border-b border-gray-100 dark:border-slate-800 bg-gray-50/90 dark:bg-[#14181f] px-3 sm:px-6 py-3.5">
+      <div class="relative max-w-xl mx-auto">
+        <!-- Pista conectora de fondo centrada verticalmente con los círculos -->
+        <div class="absolute left-[12.5%] right-[12.5%] top-4 -translate-y-1/2 h-[3px] bg-gray-200 dark:bg-slate-700/80 rounded-full z-0 overflow-hidden">
+          <div id="dispatch-wizard-progress" class="h-full bg-emerald-500 rounded-full transition-all duration-300 ease-out" style="width: 0%;"></div>
+        </div>
 
-        <!-- Paso 1 -->
-        <button type="button" class="step-btn relative z-10 flex flex-col items-center gap-1 cursor-pointer group" data-step-target="1">
-          <div id="step-indicator-1" class="flex h-7 w-7 items-center justify-center rounded-full bg-orangeGov text-white text-xs font-black shadow-sm ring-4 ring-orange-100 dark:ring-orange-950 transition-all">
-            <span class="step-number">1</span>
-            <Check size={13} strokeWidth={3} class="step-check hidden" />
-          </div>
-          <span id="step-label-1" class="text-[10px] font-bold text-navy dark:text-white whitespace-nowrap">1. Movilidad & Chofer</span>
-        </button>
+        <!-- 4 Pasos equidistantes -->
+        <div class="flex items-start justify-between relative z-10">
+          <!-- Paso 1 -->
+          <button type="button" class="step-btn flex-1 flex flex-col items-center cursor-pointer group focus:outline-none" data-step-target="1">
+            <div id="step-indicator-1" class="flex h-8 w-8 items-center justify-center rounded-full bg-orangeGov text-white text-xs font-black shadow-md ring-4 ring-orange-200/90 dark:ring-orange-950/90 transition-all scale-105">
+              <span class="step-number">1</span>
+              <Check size={14} strokeWidth={3} class="step-check hidden" />
+            </div>
+            <span id="step-label-1" class="mt-1.5 text-center text-[10px] sm:text-[11px] font-bold text-navy dark:text-white leading-tight">1. Movilidad & Chofer</span>
+          </button>
 
-        <!-- Paso 2 -->
-        <button type="button" class="step-btn relative z-10 flex flex-col items-center gap-1 cursor-pointer group" data-step-target="2">
-          <div id="step-indicator-2" class="flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 dark:bg-slate-800 text-gray-600 dark:text-slate-300 dark:border dark:border-slate-700 text-xs font-bold transition-all">
-            <span class="step-number">2</span>
-            <Check size={13} strokeWidth={3} class="step-check hidden" />
-          </div>
-          <span id="step-label-2" class="text-[10px] font-medium text-gray-500 dark:text-slate-400 whitespace-nowrap">2. Solicitante</span>
-        </button>
+          <!-- Paso 2 -->
+          <button type="button" class="step-btn flex-1 flex flex-col items-center cursor-pointer group focus:outline-none" data-step-target="2">
+            <div id="step-indicator-2" class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 dark:bg-slate-800 text-gray-500 dark:text-slate-400 border border-gray-300 dark:border-slate-700 ring-4 ring-gray-50 dark:ring-[#14181f] text-xs font-bold transition-all">
+              <span class="step-number">2</span>
+              <Check size={14} strokeWidth={3} class="step-check hidden" />
+            </div>
+            <span id="step-label-2" class="mt-1.5 text-center text-[10px] sm:text-[11px] font-medium text-gray-500 dark:text-slate-400 leading-tight">2. Solicitante</span>
+          </button>
 
-        <!-- Paso 3 -->
-        <button type="button" class="step-btn relative z-10 flex flex-col items-center gap-1 cursor-pointer group" data-step-target="3">
-          <div id="step-indicator-3" class="flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 dark:bg-slate-800 text-gray-600 dark:text-slate-300 dark:border dark:border-slate-700 text-xs font-bold transition-all">
-            <span class="step-number">3</span>
-            <Check size={13} strokeWidth={3} class="step-check hidden" />
-          </div>
-          <span id="step-label-3" class="text-[10px] font-medium text-gray-500 dark:text-slate-400 whitespace-nowrap">3. Trayecto</span>
-        </button>
+          <!-- Paso 3 -->
+          <button type="button" class="step-btn flex-1 flex flex-col items-center cursor-pointer group focus:outline-none" data-step-target="3">
+            <div id="step-indicator-3" class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 dark:bg-slate-800 text-gray-500 dark:text-slate-400 border border-gray-300 dark:border-slate-700 ring-4 ring-gray-50 dark:ring-[#14181f] text-xs font-bold transition-all">
+              <span class="step-number">3</span>
+              <Check size={14} strokeWidth={3} class="step-check hidden" />
+            </div>
+            <span id="step-label-3" class="mt-1.5 text-center text-[10px] sm:text-[11px] font-medium text-gray-500 dark:text-slate-400 leading-tight">3. Trayecto</span>
+          </button>
 
-        <!-- Paso 4 -->
-        <button type="button" class="step-btn relative z-10 flex flex-col items-center gap-1 cursor-pointer group" data-step-target="4">
-          <div id="step-indicator-4" class="flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 dark:bg-slate-800 text-gray-600 dark:text-slate-300 dark:border dark:border-slate-700 text-xs font-bold transition-all">
-            <span class="step-number">4</span>
-            <Check size={13} strokeWidth={3} class="step-check hidden" />
-          </div>
-          <span id="step-label-4" class="text-[10px] font-medium text-gray-500 dark:text-slate-400 whitespace-nowrap">4. Horarios & Misión</span>
-        </button>
+          <!-- Paso 4 -->
+          <button type="button" class="step-btn flex-1 flex flex-col items-center cursor-pointer group focus:outline-none" data-step-target="4">
+            <div id="step-indicator-4" class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 dark:bg-slate-800 text-gray-500 dark:text-slate-400 border border-gray-300 dark:border-slate-700 ring-4 ring-gray-50 dark:ring-[#14181f] text-xs font-bold transition-all">
+              <span class="step-number">4</span>
+              <Check size={14} strokeWidth={3} class="step-check hidden" />
+            </div>
+            <span id="step-label-4" class="mt-1.5 text-center text-[10px] sm:text-[11px] font-medium text-gray-500 dark:text-slate-400 leading-tight">4. Horarios & Misión</span>
+          </button>
+        </div>
       </div>
     </div>
 

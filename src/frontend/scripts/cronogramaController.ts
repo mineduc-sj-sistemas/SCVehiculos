@@ -478,27 +478,27 @@ function setWizardStep(step: number) {
     if (indicator) {
       if (i < currentDispatchStep) {
         // Completado
-        indicator.className = 'flex h-7 w-7 items-center justify-center rounded-full bg-emerald-600 text-white text-xs font-bold shadow-xs ring-2 ring-emerald-100 dark:ring-emerald-950 transition-all'
+        indicator.className = 'flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-white text-xs font-bold shadow-xs ring-4 ring-emerald-100 dark:ring-emerald-950/80 transition-all'
         numSpan?.classList.add('hidden')
         checkIcon?.classList.remove('hidden')
         if (label) {
-          label.className = 'text-[10px] font-bold text-emerald-700 dark:text-emerald-400 whitespace-nowrap'
+          label.className = 'mt-1.5 text-center text-[10px] sm:text-[11px] font-bold text-emerald-700 dark:text-emerald-400 leading-tight'
         }
       } else if (i === currentDispatchStep) {
         // Activo
-        indicator.className = 'flex h-7 w-7 items-center justify-center rounded-full bg-orangeGov text-white text-xs font-black shadow-sm ring-4 ring-orange-100 dark:ring-orange-950/80 transition-all'
+        indicator.className = 'flex h-8 w-8 items-center justify-center rounded-full bg-orangeGov text-white text-xs font-black shadow-md ring-4 ring-orange-200/90 dark:ring-orange-950/90 transition-all scale-105'
         numSpan?.classList.remove('hidden')
         checkIcon?.classList.add('hidden')
         if (label) {
-          label.className = 'text-[10px] font-bold text-navy dark:text-white whitespace-nowrap'
+          label.className = 'mt-1.5 text-center text-[10px] sm:text-[11px] font-bold text-navy dark:text-white leading-tight'
         }
       } else {
         // Futuro / Pendiente
-        indicator.className = 'flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 dark:bg-slate-700 text-gray-600 dark:text-slate-300 text-xs font-bold transition-all'
+        indicator.className = 'flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 dark:bg-slate-800 text-gray-500 dark:text-slate-400 border border-gray-300 dark:border-slate-700 ring-4 ring-gray-50 dark:ring-[#14181f] text-xs font-bold transition-all'
         numSpan?.classList.remove('hidden')
         checkIcon?.classList.add('hidden')
         if (label) {
-          label.className = 'text-[10px] font-medium text-gray-500 dark:text-slate-400 whitespace-nowrap'
+          label.className = 'mt-1.5 text-center text-[10px] sm:text-[11px] font-medium text-gray-500 dark:text-slate-400 leading-tight'
         }
       }
     }
@@ -507,7 +507,7 @@ function setWizardStep(step: number) {
   // 2. Barra de progreso conectora
   const progressBar = document.getElementById('dispatch-wizard-progress')
   if (progressBar) {
-    const percentages = ['0%', '33.3%', '66.6%', '100%']
+    const percentages = ['0%', '33.33%', '66.66%', '100%']
     progressBar.style.width = percentages[currentDispatchStep - 1]
   }
 

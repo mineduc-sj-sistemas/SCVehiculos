@@ -46,7 +46,7 @@ const {
       <Sidebar activeNav={activeNav} />
 
       <!-- Contenedor Principal -->
-      <main class="main-shell ml-0 min-h-screen transition-[margin] duration-200 lg:ml-[248px]">
+      <main class="main-shell ml-0 min-h-screen transition-[margin] duration-200 lg:ml-[72px]">
         <!-- Cabecera Superior -->
         <Header>
           <slot name="header-title" slot="header-title" />
@@ -81,14 +81,15 @@ const {
         overlay?.classList.remove('open')
       }
 
-      if (window.matchMedia('(min-width: 901px)').matches && localStorage.getItem('sc-sidebar-collapsed') === 'true') {
-        document.body.classList.add('sidebar-collapsed')
+      // Si el usuario fijó la sidebar previamente en desktop, la mantenemos fija; de lo contrario, se mantiene reactiva al cursor
+      if (window.matchMedia('(min-width: 901px)').matches && localStorage.getItem('sc-sidebar-pinned') === 'true') {
+        document.body.classList.add('sidebar-pinned')
       }
 
       menuButton?.addEventListener('click', () => {
         if (window.matchMedia('(min-width: 901px)').matches) {
-          const isCollapsed = document.body.classList.toggle('sidebar-collapsed')
-          localStorage.setItem('sc-sidebar-collapsed', String(isCollapsed))
+          const isPinned = document.body.classList.toggle('sidebar-pinned')
+          localStorage.setItem('sc-sidebar-pinned', String(isPinned))
         } else {
           sidebar?.classList.toggle('open')
           overlay?.classList.toggle('open')
