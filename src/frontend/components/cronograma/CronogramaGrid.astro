@@ -20,18 +20,18 @@ interface Props {
 const { dias, filas } = Astro.props
 ---
 
-<div class="relative rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+<div class="relative rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-[#15191f] shadow-sm overflow-hidden">
   <!-- Grilla con Scroll Horizontal fluido -->
   <div class="overflow-x-auto min-w-full">
     <table class="w-full border-collapse text-left text-xs min-w-[1050px]" id="tabla-cronograma">
       <!-- Encabezado de la Grilla (Días de la Semana) -->
       <thead>
-        <tr class="border-b border-gray-200 bg-gray-50/75">
+        <tr class="border-b border-gray-200 dark:border-slate-800 bg-gray-50/75 dark:bg-[#12151b]">
           <!-- Columna Móvil -->
-          <th class="sticky left-0 z-20 w-[240px] min-w-[240px] bg-gray-50/95 px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-navy shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)] border-r border-gray-200">
+          <th class="sticky left-0 z-20 w-[240px] min-w-[240px] bg-gray-50/95 dark:bg-[#14181f] px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-navy dark:text-white shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)] border-r border-gray-200 dark:border-slate-800">
             <div class="flex items-center justify-between">
               <span>Móvil / Vehículo</span>
-              <span class="text-[10px] font-normal text-muted lowercase">({filas.length} móviles)</span>
+              <span class="text-[10px] font-normal text-muted dark:text-slate-400 lowercase">({filas.length} móviles)</span>
             </div>
           </th>
 
@@ -40,15 +40,15 @@ const { dias, filas } = Astro.props
             <th
               data-fecha={d.fecha}
               class:list={[
-                'w-[180px] min-w-[170px] px-3 py-3 text-center border-r border-gray-200 transition-colors cursor-pointer hover:bg-blue/15 group/day-th',
-                d.esHoy ? 'bg-blue/10 border-blue/30' : (d.esFinDeSemana ? 'bg-gray-100/50' : 'bg-gray-50/50')
+                'w-[180px] min-w-[170px] px-3 py-3 text-center border-r border-gray-200 dark:border-slate-800 transition-colors cursor-pointer hover:bg-blue/15 dark:hover:bg-blue/20 group/day-th',
+                d.esHoy ? 'bg-blue/10 dark:bg-blue/20 border-blue/30 dark:border-blue/40' : (d.esFinDeSemana ? 'bg-gray-100/50 dark:bg-slate-900/60' : 'bg-gray-50/50 dark:bg-[#151920]')
               ]}
               title={`Click para programar comisión el ${d.diaNombre} ${d.diaNumero}`}
             >
               <div class="flex flex-col items-center justify-center gap-0.5">
                 <span class:list={[
                   'text-[11px] uppercase tracking-wider font-bold',
-                  d.esHoy ? 'text-blue' : 'text-gray-600'
+                  d.esHoy ? 'text-blue dark:text-orange-400' : 'text-gray-600 dark:text-slate-300'
                 ]}>
                   {d.diaNombre}
                 </span>
@@ -56,15 +56,15 @@ const { dias, filas } = Astro.props
                 <div class="flex items-center gap-1.5">
                   <span class:list={[
                     'inline-flex items-center justify-center h-6 w-6 rounded-full text-xs font-bold transition',
-                    d.esHoy ? 'bg-blue text-white shadow-sm' : 'text-navy'
+                    d.esHoy ? 'bg-blue text-white shadow-sm' : 'text-navy dark:text-white'
                   ]}>
                     {d.diaNumero}
                   </span>
-                  <span class="text-[10px] font-medium text-muted">{d.mesNombre}</span>
+                  <span class="text-[10px] font-medium text-muted dark:text-slate-400">{d.mesNombre}</span>
                 </div>
 
                 {d.esHoy && (
-                  <span class="inline-flex items-center rounded-full bg-gold/25 px-2 py-0.5 text-[9px] font-bold text-navy mt-0.5 border border-gold/40">
+                  <span class="inline-flex items-center rounded-full bg-gold/25 px-2 py-0.5 text-[9px] font-bold text-navy dark:text-amber-300 mt-0.5 border border-gold/40">
                     HOY
                   </span>
                 )}
@@ -75,36 +75,36 @@ const { dias, filas } = Astro.props
       </thead>
 
       <!-- Filas de Vehículos y sus Asignaciones -->
-      <tbody class="divide-y divide-gray-100" id="tbody-cronograma">
+      <tbody class="divide-y divide-gray-100 dark:divide-slate-800/80" id="tbody-cronograma">
         {filas.map((v) => {
           const isTaller = v.estadoVehiculo === 'en_taller'
           return (
             <tr
-              class="group hover:bg-gray-50/40 transition-colors fila-vehiculo"
+              class="group hover:bg-gray-50/40 dark:hover:bg-slate-800/30 transition-colors fila-vehiculo"
               data-patente={v.patente.toLowerCase()}
               data-modelo={`${v.marca} ${v.modelo}`.toLowerCase()}
               data-estado={v.estadoVehiculo}
             >
               <!-- Celda fija de Vehículo -->
-              <td class="sticky left-0 z-10 bg-white group-hover:bg-gray-50/90 transition-colors px-4 py-3.5 border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)] align-top">
+              <td class="sticky left-0 z-10 bg-white dark:bg-[#15191f] group-hover:bg-gray-50/90 dark:group-hover:bg-[#1a1f26] transition-colors px-4 py-3.5 border-r border-gray-200 dark:border-slate-800 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)] align-top">
                 <div class="space-y-1.5">
                   <div class="flex items-center justify-between gap-1">
                     <PlateBadge patente={v.patente} />
                     {isTaller ? (
-                      <span class="inline-flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800">
+                      <span class="inline-flex items-center gap-1 rounded bg-amber-100 dark:bg-amber-950/50 px-1.5 py-0.5 text-[10px] font-bold text-amber-800 dark:text-amber-300 border dark:border-amber-700/50">
                         <Wrench size={11} />
                         <span>En taller</span>
                       </span>
                     ) : (
-                      <span class="text-[10px] font-medium text-muted">
+                      <span class="text-[10px] font-medium text-muted dark:text-slate-400">
                         {v.capacidadPasajeros} pas.
                       </span>
                     )}
                   </div>
 
                   <div>
-                    <p class="font-bold text-navy leading-tight">{v.marca} {v.modelo}</p>
-                    <p class="text-[10px] text-muted">{v.tipoVehiculo} · {v.odometroActual.toLocaleString('es-AR')} km</p>
+                    <p class="font-bold text-navy dark:text-white leading-tight">{v.marca} {v.modelo}</p>
+                    <p class="text-[10px] text-muted dark:text-slate-400">{v.tipoVehiculo} · {v.odometroActual.toLocaleString('es-AR')} km</p>
                   </div>
                 </div>
               </td>
@@ -117,16 +117,16 @@ const { dias, filas } = Astro.props
                 return (
                   <td
                     class:list={[
-                      'px-2 py-2 border-r border-gray-200 align-top transition-colors',
-                      d.esHoy ? 'bg-blue/[0.02]' : '',
-                      isTaller ? 'bg-amber-50/20' : ''
+                      'px-2 py-2 border-r border-gray-200 dark:border-slate-800 align-top transition-colors',
+                      d.esHoy ? 'bg-blue/[0.02] dark:bg-blue/[0.04]' : '',
+                      isTaller ? 'bg-amber-50/20 dark:bg-amber-950/15' : ''
                     ]}
                   >
                     {isTaller ? (
-                      <div class="flex flex-col items-center justify-center rounded-lg border border-dashed border-amber-300 bg-amber-50/60 p-2 text-center text-amber-800">
-                        <Wrench size={13} class="text-amber-600 mb-0.5" />
+                      <div class="flex flex-col items-center justify-center rounded-lg border border-dashed border-amber-300 dark:border-amber-500/40 bg-amber-50/60 dark:bg-amber-950/30 p-2 text-center text-amber-800 dark:text-amber-300">
+                        <Wrench size={13} class="text-amber-600 dark:text-amber-400 mb-0.5" />
                         <span class="text-[10px] font-bold">En Servicio Técnico</span>
-                        <span class="text-[9px] text-amber-700/80">No disponible</span>
+                        <span class="text-[9px] text-amber-700/80 dark:text-amber-200/80">No disponible</span>
                       </div>
                     ) : hasComisiones ? (
                       <div class="space-y-2">
@@ -140,10 +140,10 @@ const { dias, filas } = Astro.props
                               class:list={[
                                 'group/card relative rounded-xl border p-2.5 transition-all cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5 card-comision',
                                 isEnCurso
-                                  ? 'border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50/60 text-amber-950 ring-1 ring-amber-400/30'
+                                  ? 'border-amber-300 dark:border-amber-500/40 bg-gradient-to-br from-amber-50 to-orange-50/60 dark:from-amber-950/40 dark:to-orange-950/30 text-amber-950 dark:text-amber-100 ring-1 ring-amber-400/30 dark:ring-amber-500/30'
                                   : isProgramada
-                                  ? 'border-blue/30 bg-blue/5 text-navy hover:border-blue'
-                                  : 'border-emerald-200 bg-emerald-50/50 text-emerald-950'
+                                  ? 'border-blue/30 dark:border-orangeGov/40 bg-blue/5 dark:bg-orangeGov/10 text-navy dark:text-white hover:border-blue dark:hover:border-orangeGov'
+                                  : 'border-emerald-200 dark:border-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-950/30 text-emerald-950 dark:text-emerald-100'
                               ]}
                               data-comision-id={c.id}
                               data-chofer={`${c.choferNombre} ${c.choferApellido}`.toLowerCase()}
@@ -152,45 +152,45 @@ const { dias, filas } = Astro.props
                               title="Click para ver hoja de ruta y opciones"
                             >
                               <div class="flex items-center justify-between gap-1 mb-1.5">
-                                <span class="font-mono text-[9px] font-bold text-muted">
+                                <span class="font-mono text-[9px] font-bold text-muted dark:text-slate-400">
                                   {c.codigoComision}
                                 </span>
 
                                 {isEnCurso && (
-                                  <span class="inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-1.5 py-0.5 text-[9px] font-bold text-amber-800 border border-amber-500/30 animate-pulse">
+                                  <span class="inline-flex items-center gap-1 rounded-full bg-amber-500/20 dark:bg-amber-900/50 px-1.5 py-0.5 text-[9px] font-bold text-amber-800 dark:text-amber-300 border border-amber-500/30 dark:border-amber-600/40 animate-pulse">
                                     <Radio size={9} />
                                     <span>En viaje</span>
                                   </span>
                                 )}
 
                                 {isProgramada && (
-                                  <span class="inline-flex items-center gap-1 rounded-full bg-blue/15 px-1.5 py-0.5 text-[9px] font-bold text-blue">
+                                  <span class="inline-flex items-center gap-1 rounded-full bg-blue/15 dark:bg-orangeGov/25 px-1.5 py-0.5 text-[9px] font-bold text-blue dark:text-orange-400 border dark:border-orangeGov/30">
                                     <Clock size={9} />
                                     <span>Programada</span>
                                   </span>
                                 )}
 
                                 {isFinalizada && (
-                                  <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold text-emerald-700">
+                                  <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-900/50 px-1.5 py-0.5 text-[9px] font-bold text-emerald-700 dark:text-emerald-300 border dark:border-emerald-700/40">
                                     <CheckCircle size={9} />
                                     <span>Finalizada</span>
                                   </span>
                                 )}
                               </div>
 
-                              <div class="flex items-start gap-1 font-bold text-navy text-[11px] leading-tight mb-1">
-                                <MapPin size={12} class="text-blue shrink-0 mt-0.5" />
+                              <div class="flex items-start gap-1 font-bold text-navy dark:text-white text-[11px] leading-tight mb-1">
+                                <MapPin size={12} class="text-blue dark:text-orange-400 shrink-0 mt-0.5" />
                                 <span class="line-clamp-1">{c.destino}</span>
                               </div>
 
-                              <div class="flex items-center gap-1 text-[10px] text-gray-700 font-medium mb-1">
-                                <User size={11} class="text-gray-400 shrink-0" />
+                              <div class="flex items-center gap-1 text-[10px] text-gray-700 dark:text-slate-200 font-medium mb-1">
+                                <User size={11} class="text-gray-400 dark:text-slate-400 shrink-0" />
                                 <span class="truncate">{c.choferNombre} {c.choferApellido}</span>
                               </div>
 
-                              <div class="flex items-center justify-between text-[9px] text-muted border-t border-black/5 pt-1 mt-1">
+                              <div class="flex items-center justify-between text-[9px] text-muted dark:text-slate-400 border-t border-black/5 dark:border-white/10 pt-1 mt-1">
                                 <span class="truncate">{c.dependenciaNombre.replace('Dirección de ', 'Dir. ')}</span>
-                                <span class="font-bold text-navy">
+                                <span class="font-bold text-navy dark:text-orange-300">
                                   {new Date(c.fechaSalidaProgramada).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs
                                 </span>
                               </div>
@@ -200,7 +200,7 @@ const { dias, filas } = Astro.props
 
                         <button
                           type="button"
-                          class="w-full rounded-lg border border-dashed border-gray-200 py-1 text-[10px] font-semibold text-gray-400 hover:border-blue hover:text-blue hover:bg-blue/5 transition cursor-pointer flex items-center justify-center gap-1 btn-asignar-celda"
+                          class="w-full rounded-lg border border-dashed border-gray-200 dark:border-slate-700 py-1 text-[10px] font-semibold text-gray-400 dark:text-slate-400 hover:border-blue dark:hover:border-orangeGov hover:text-blue dark:hover:text-orange-400 hover:bg-blue/5 dark:hover:bg-orangeGov/10 transition cursor-pointer flex items-center justify-center gap-1 btn-asignar-celda"
                           data-vehiculo-id={v.vehiculoId}
                           data-vehiculo-patente={v.patente}
                           data-fecha={d.fecha}
@@ -213,19 +213,19 @@ const { dias, filas } = Astro.props
                     ) : (
                       <button
                         type="button"
-                        class="group/slot flex h-24 w-full flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-transparent text-gray-300 hover:border-blue/60 hover:bg-blue/[0.04] hover:text-blue transition-all cursor-pointer btn-asignar-celda"
+                        class="group/slot flex h-24 w-full flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 dark:border-slate-800 bg-transparent text-gray-300 dark:text-slate-500 hover:border-blue/60 dark:hover:border-orangeGov/60 hover:bg-blue/[0.04] dark:hover:bg-orangeGov/10 hover:text-blue dark:hover:text-orange-400 transition-all cursor-pointer btn-asignar-celda"
                         data-vehiculo-id={v.vehiculoId}
                         data-vehiculo-patente={v.patente}
                         data-fecha={d.fecha}
                         title={`Asignar comisión a ${v.patente} el ${d.diaNombre} ${d.diaNumero}`}
                       >
-                        <div class="flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 group-hover/slot:bg-blue group-hover/slot:text-white transition-colors mb-1">
+                        <div class="flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 dark:bg-slate-800 group-hover/slot:bg-blue dark:group-hover/slot:bg-orangeGov group-hover/slot:text-white text-gray-500 dark:text-slate-400 transition-colors mb-1">
                           <Plus size={14} strokeWidth={2.5} />
                         </div>
                         <span class="text-[10px] font-bold opacity-0 group-hover/slot:opacity-100 transition-opacity">
                           Asignar
                         </span>
-                        <span class="text-[9px] text-gray-400 group-hover/slot:opacity-0 transition-opacity">
+                        <span class="text-[9px] text-gray-400 dark:text-slate-400 group-hover/slot:opacity-0 transition-opacity">
                           Disponible
                         </span>
                       </button>
@@ -239,9 +239,9 @@ const { dias, filas } = Astro.props
 
         {filas.length === 0 && (
           <tr>
-            <td colspan="8" class="py-12 text-center text-muted">
-              <Calendar size={32} class="mx-auto text-gray-300 mb-2" />
-              <p class="font-bold text-navy text-sm">No se encontraron vehículos registrados</p>
+            <td colspan="8" class="py-12 text-center text-muted dark:text-slate-400">
+              <Calendar size={32} class="mx-auto text-gray-300 dark:text-slate-600 mb-2" />
+              <p class="font-bold text-navy dark:text-white text-sm">No se encontraron vehículos registrados</p>
               <p class="text-xs">Registre unidades en la sección de Vehículos para comenzar a despachar comisiones.</p>
             </td>
           </tr>

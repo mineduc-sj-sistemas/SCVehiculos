@@ -145,21 +145,36 @@ button, input, select, textarea { font: inherit; }
 }
 
 html.dark {
-  --ink: #e9edf0;
-  --muted: #98a2ad;
-  --line: #2b3035;
-  --paper: #101214;
-  --white: #171a1d;
-  --navy: #f1f3f5;
-  --sky: #24282c;
-  --orange-light: #392411;
+  --ink: #f1f5f9;
+  --muted: #94a3b8;
+  --line: #2a313c;
+  --paper: #0c0e12;
+  --white: #15191f;
+  --navy: #181d24;        /* Fondo oscuro institucional para elementos nav y cabeceras */
+  --sky: #1e242c;
+  --orange-light: #2c1a0e;
+  --charcoal-dark: #12151b;
+  --charcoal: #1c2128;
 }
+
+/* Forzar esquema de color oscuro nativo para controles de formulario */
+html.dark,
+html.dark body,
+html.dark select,
+html.dark input,
+html.dark textarea {
+  color-scheme: dark;
+}
+
+html.dark .text-navy { color: #f1f5f9 !important; }
+html.dark .bg-navy { background-color: #181d24 !important; }
+html.dark .border-line { border-color: #2a313c !important; }
 
 html.dark .bg-white { background-color: var(--white) !important; }
 html.dark .dashboard-welcome::after { color: rgba(255, 255, 255, .025); }
 html.dark .sidebar {
   background-color: var(--white);
-  background-image: radial-gradient(rgba(212, 220, 228, .1) .7px, transparent .7px);
+  background-image: radial-gradient(rgba(212, 220, 228, .08) .7px, transparent .7px);
 }
 html.dark #sidebar .sidebar-logo-light { display: none; }
 html.dark #sidebar .sidebar-logo-dark { display: block; }
@@ -167,13 +182,137 @@ html.dark #sidebar .sidebar-full-logo-light { display: none; }
 html.dark #sidebar .sidebar-full-logo-dark { display: block; }
 html.dark #sidebar .sidebar-ministry-copy { border-color: #4b5563; color: #f4f6f8; }
 html.dark #sidebar .sidebar-ministry-copy span + span { color: #b7c1cb; }
-html.dark .bg-amber-50 { background-color: #302b17; }
-html.dark .border-amber-200 { border-color: #62531d; }
-html.dark .bg-orange-50 { background-color: #322316; }
-html.dark .bg-slate-100 { background-color: #282d31; }
-html.dark .text-amber-900 { color: #f2d576; }
-html.dark .text-amber-800 { color: #dec76f; }
-html.dark .text-orange-800 { color: #ffb46f; }
+
+/* Adaptación de fondos y bordes neutros a modo oscuro */
+html.dark .bg-gray-50,
+html.dark .bg-gray-50\/40,
+html.dark .bg-gray-50\/50,
+html.dark .bg-gray-50\/60,
+html.dark .bg-gray-50\/75,
+html.dark .bg-gray-50\/90,
+html.dark .bg-gray-50\/95,
+html.dark .bg-slate-50\/80 {
+  background-color: #1a1e26 !important;
+}
+
+html.dark .bg-gray-100,
+html.dark .bg-gray-100\/50,
+html.dark .bg-slate-100 {
+  background-color: #212630 !important;
+}
+
+html.dark .bg-gray-200 {
+  background-color: #2d3542 !important;
+}
+
+html.dark .border-gray-100,
+html.dark .border-gray-200,
+html.dark .border-gray-300,
+html.dark .border-slate-200,
+html.dark .border-slate-300 {
+  border-color: #2a313c !important;
+}
+
+html.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]),
+html.dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #2a313c !important;
+}
+
+/* Textos de alto contraste en modo oscuro */
+html.dark .text-gray-400 { color: #94a3b8 !important; }
+html.dark .text-gray-500 { color: #cbd5e1 !important; }
+html.dark .text-gray-600 { color: #e2e8f0 !important; }
+html.dark .text-gray-700 { color: #f1f5f9 !important; }
+html.dark .text-gray-800 { color: #f8fafc !important; }
+
+/* Modales */
+html.dark #modal-dispatch .bg-white,
+html.dark #modal-detail .bg-white,
+html.dark #vehicle-detail-modal .bg-white,
+html.dark #vehicle-form-modal .bg-white,
+html.dark #chofer-detail-modal .bg-white,
+html.dark #chofer-form-modal .bg-white,
+html.dark #chofer-licencia-modal .bg-white {
+  background-color: #15191f !important;
+  border-color: #2a313c !important;
+}
+
+/* Tarjetas semánticas (KPIs, estados y alertas) */
+html.dark .bg-amber-50,
+html.dark .bg-amber-50\/20,
+html.dark .bg-amber-50\/40,
+html.dark .bg-amber-50\/50,
+html.dark .bg-amber-50\/60 {
+  background-color: rgba(245, 158, 11, 0.12) !important;
+}
+
+html.dark .border-amber-200,
+html.dark .border-amber-300 {
+  border-color: rgba(245, 158, 11, 0.35) !important;
+}
+
+html.dark .text-amber-950,
+html.dark .text-amber-900 {
+  color: #fde047 !important;
+}
+
+html.dark .text-amber-800 {
+  color: #fbbf24 !important;
+}
+
+html.dark .text-amber-700 {
+  color: #fef08a !important;
+}
+
+html.dark .bg-orange-50,
+html.dark .bg-orange-50\/20,
+html.dark .bg-orange-50\/40,
+html.dark .bg-orange-50\/60 {
+  background-color: rgba(234, 88, 12, 0.12) !important;
+}
+
+html.dark .border-orange-100,
+html.dark .border-orange-200 {
+  border-color: rgba(234, 88, 12, 0.35) !important;
+}
+
+html.dark .text-orange-950,
+html.dark .text-orange-900 {
+  color: #fed7aa !important;
+}
+
+html.dark .text-orange-800 {
+  color: #fb923c !important;
+}
+
+html.dark .text-orange-700 {
+  color: #fdba74 !important;
+}
+
+html.dark .bg-emerald-50,
+html.dark .bg-emerald-50\/20,
+html.dark .bg-emerald-50\/40,
+html.dark .bg-emerald-50\/50 {
+  background-color: rgba(16, 185, 129, 0.12) !important;
+}
+
+html.dark .border-emerald-200 {
+  border-color: rgba(16, 185, 129, 0.35) !important;
+}
+
+html.dark .text-emerald-950,
+html.dark .text-emerald-900 {
+  color: #a7f3d0 !important;
+}
+
+html.dark .text-emerald-800 {
+  color: #34d399 !important;
+}
+
+html.dark .text-emerald-700 {
+  color: #6ee7b7 !important;
+}
+
 html.dark #sidebar .logo-brand-name,
 html.dark #sidebar .logo-ministry-name { color: #f4f6f8; }
 html.dark #sidebar .logo-ministry-subtitle { color: #b7c1cb; }
@@ -305,5 +444,58 @@ span.flatpickr-weekday {
   font-weight: 800 !important;
   border-color: var(--blue) !important;
   box-shadow: 0 4px 8px rgba(234, 88, 12, 0.35) !important;
+}
+
+/* Flatpickr en Modo Oscuro */
+html.dark .flatpickr-calendar {
+  background: #181d24 !important;
+  border-color: #2a313c !important;
+  box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.6), 0 5px 15px -3px rgba(0, 0, 0, 0.4) !important;
+}
+
+html.dark .flatpickr-months {
+  border-bottom-color: #2a313c !important;
+}
+
+html.dark .flatpickr-current-month,
+html.dark .flatpickr-current-month .cur-month,
+html.dark .flatpickr-current-month input.cur-year {
+  color: #f1f5f9 !important;
+}
+
+html.dark .flatpickr-months .flatpickr-prev-month,
+html.dark .flatpickr-months .flatpickr-next-month {
+  color: #94a3b8 !important;
+  fill: #94a3b8 !important;
+}
+
+html.dark .flatpickr-months .flatpickr-prev-month:hover,
+html.dark .flatpickr-months .flatpickr-next-month:hover {
+  color: var(--blue) !important;
+}
+
+html.dark span.flatpickr-weekday {
+  color: #94a3b8 !important;
+}
+
+html.dark .flatpickr-day {
+  color: #e2e8f0 !important;
+}
+
+html.dark .flatpickr-day:hover {
+  background: #2a313c !important;
+  color: #ffffff !important;
+}
+
+html.dark .flatpickr-day.today {
+  border-color: var(--blue) !important;
+  color: #ffad52 !important;
+}
+
+html.dark .flatpickr-day.selected,
+html.dark .flatpickr-day.startRange,
+html.dark .flatpickr-day.endRange {
+  background: var(--blue) !important;
+  color: #ffffff !important;
 }
 

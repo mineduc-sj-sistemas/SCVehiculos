@@ -23,9 +23,9 @@ import {
   aria-modal="true"
   aria-labelledby="modal-detail-codigo"
 >
-  <div class="relative w-full max-w-2xl rounded-2xl bg-white shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95">
+  <div class="relative w-full max-w-2xl rounded-2xl bg-white dark:bg-[#15191f] border border-transparent dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95">
     <!-- Cabecera -->
-    <div class="flex items-center justify-between border-b border-gray-100 bg-navy px-6 py-4 text-white">
+    <div class="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 bg-navy dark:bg-[#12151b] px-6 py-4 text-white">
       <div class="flex items-center gap-3">
         <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-gold text-navy shadow-sm">
           <FileText size={18} strokeWidth={2.5} />
@@ -37,7 +37,7 @@ import {
               Programada
             </span>
           </div>
-          <p class="text-[11px] text-white/60">Hoja de Ruta y Despacho Oficial</p>
+          <p class="text-[11px] text-white/70 dark:text-slate-300">Hoja de Ruta y Despacho Oficial</p>
         </div>
       </div>
       <button
@@ -55,105 +55,105 @@ import {
       <div id="detail-feedback-msg" class="hidden rounded-xl p-3 text-xs flex items-center gap-2"></div>
 
       <!-- Tarjeta Móvil y Chofer -->
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 rounded-xl border border-gray-100 bg-gray-50/60 p-4">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 rounded-xl border border-gray-100 dark:border-slate-800 bg-gray-50/60 dark:bg-slate-900/50 p-4">
         <!-- Móvil -->
         <div class="space-y-1">
-          <span class="text-[10px] font-bold uppercase tracking-wider text-muted flex items-center gap-1">
-            <Truck size={12} class="text-blue" />
+          <span class="text-[10px] font-bold uppercase tracking-wider text-muted dark:text-slate-400 flex items-center gap-1">
+            <Truck size={12} class="text-blue dark:text-orange-400" />
             <span>Movilidad Asignada</span>
           </span>
-          <p class="font-bold text-navy text-sm" id="detail-vehiculo-patente">--</p>
-          <p class="text-gray-600" id="detail-vehiculo-modelo">--</p>
+          <p class="font-bold text-navy dark:text-white text-sm" id="detail-vehiculo-patente">--</p>
+          <p class="text-gray-600 dark:text-slate-300" id="detail-vehiculo-modelo">--</p>
         </div>
 
         <!-- Chofer -->
         <div class="space-y-1">
-          <span class="text-[10px] font-bold uppercase tracking-wider text-muted flex items-center gap-1">
-            <User size={12} class="text-blue" />
+          <span class="text-[10px] font-bold uppercase tracking-wider text-muted dark:text-slate-400 flex items-center gap-1">
+            <User size={12} class="text-blue dark:text-orange-400" />
             <span>Chofer Oficial</span>
           </span>
-          <p class="font-bold text-navy text-sm" id="detail-chofer-nombre">--</p>
-          <p class="text-gray-600" id="detail-dependencia-nombre">--</p>
+          <p class="font-bold text-navy dark:text-white text-sm" id="detail-chofer-nombre">--</p>
+          <p class="text-gray-600 dark:text-slate-300" id="detail-dependencia-nombre">--</p>
         </div>
       </div>
 
       <!-- Itinerario y Destino -->
       <div class="space-y-3">
-        <h4 class="font-bold text-navy text-[13px] border-b border-gray-100 pb-1 flex items-center gap-1.5">
-          <MapPin size={15} class="text-blue" />
+        <h4 class="font-bold text-navy dark:text-white text-[13px] border-b border-gray-100 dark:border-slate-800 pb-1 flex items-center gap-1.5">
+          <MapPin size={15} class="text-blue dark:text-orange-400" />
           <span>Itinerario y Misión</span>
         </h4>
 
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
-            <span class="text-[10px] font-bold uppercase text-muted">Origen</span>
-            <p class="font-medium text-navy" id="detail-origen">Ministerio de Educación - Centro Cívico</p>
+            <span class="text-[10px] font-bold uppercase text-muted dark:text-slate-400">Origen</span>
+            <p class="font-medium text-navy dark:text-slate-200" id="detail-origen">Ministerio de Educación - Centro Cívico</p>
           </div>
           <div>
-            <span class="text-[10px] font-bold uppercase text-muted">Destino Departamental</span>
-            <p class="font-bold text-navy text-sm" id="detail-destino">--</p>
+            <span class="text-[10px] font-bold uppercase text-muted dark:text-slate-400">Destino Departamental</span>
+            <p class="font-bold text-navy dark:text-white text-sm" id="detail-destino">--</p>
           </div>
         </div>
 
         <div>
-          <span class="text-[10px] font-bold uppercase text-muted">Motivo / Misión Oficial</span>
-          <p class="mt-0.5 rounded-lg bg-gray-50 border border-gray-200 p-2.5 text-navy font-medium leading-relaxed" id="detail-motivo">
+          <span class="text-[10px] font-bold uppercase text-muted dark:text-slate-400">Motivo / Misión Oficial</span>
+          <p class="mt-0.5 rounded-lg bg-gray-50 dark:bg-slate-800/80 border border-gray-200 dark:border-slate-700 p-2.5 text-navy dark:text-white font-medium leading-relaxed" id="detail-motivo">
             --
           </p>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <span class="text-[10px] font-bold uppercase text-muted">Solicitante Responsable</span>
-            <p class="font-medium text-navy" id="detail-solicitante">--</p>
+            <span class="text-[10px] font-bold uppercase text-muted dark:text-slate-400">Solicitante Responsable</span>
+            <p class="font-medium text-navy dark:text-slate-200" id="detail-solicitante">--</p>
           </div>
           <div>
-            <span class="text-[10px] font-bold uppercase text-muted">Pasajeros Previstos</span>
-            <p class="font-medium text-navy" id="detail-pasajeros">--</p>
+            <span class="text-[10px] font-bold uppercase text-muted dark:text-slate-400">Pasajeros Previstos</span>
+            <p class="font-medium text-navy dark:text-slate-200" id="detail-pasajeros">--</p>
           </div>
         </div>
       </div>
 
       <!-- Cronograma y Odómetros -->
       <div class="space-y-3">
-        <h4 class="font-bold text-navy text-[13px] border-b border-gray-100 pb-1 flex items-center gap-1.5">
-          <Clock size={15} class="text-blue" />
+        <h4 class="font-bold text-navy dark:text-white text-[13px] border-b border-gray-100 dark:border-slate-800 pb-1 flex items-center gap-1.5">
+          <Clock size={15} class="text-blue dark:text-orange-400" />
           <span>Horarios y Odómetros</span>
         </h4>
 
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <!-- Salida -->
-          <div class="rounded-xl border border-gray-200 p-3 space-y-1">
-            <span class="text-[10px] font-bold uppercase text-blue">Salida</span>
-            <p class="text-navy font-medium"><span class="text-muted">Prog:</span> <span id="detail-salida-prog">--</span></p>
-            <p class="text-navy font-medium"><span class="text-muted">Real:</span> <span id="detail-salida-real" class="font-bold">--</span></p>
-            <p class="text-navy font-medium"><span class="text-muted">Odómetro:</span> <span id="detail-odo-salida" class="font-mono">--</span> km</p>
+          <div class="rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50/30 dark:bg-slate-900/40 p-3 space-y-1">
+            <span class="text-[10px] font-bold uppercase text-blue dark:text-orange-400">Salida</span>
+            <p class="text-navy dark:text-slate-200 font-medium"><span class="text-muted dark:text-slate-400">Prog:</span> <span id="detail-salida-prog">--</span></p>
+            <p class="text-navy dark:text-slate-200 font-medium"><span class="text-muted dark:text-slate-400">Real:</span> <span id="detail-salida-real" class="font-bold text-navy dark:text-white">--</span></p>
+            <p class="text-navy dark:text-slate-200 font-medium"><span class="text-muted dark:text-slate-400">Odómetro:</span> <span id="detail-odo-salida" class="font-mono font-bold text-navy dark:text-white">--</span> km</p>
           </div>
 
           <!-- Regreso -->
-          <div class="rounded-xl border border-gray-200 p-3 space-y-1">
-            <span class="text-[10px] font-bold uppercase text-emerald-700">Regreso</span>
-            <p class="text-navy font-medium"><span class="text-muted">Estimado:</span> <span id="detail-regreso-estimado">--</span></p>
-            <p class="text-navy font-medium"><span class="text-muted">Real:</span> <span id="detail-regreso-real" class="font-bold">--</span></p>
-            <p class="text-navy font-medium"><span class="text-muted">Odómetro:</span> <span id="detail-odo-regreso" class="font-mono">--</span> km</p>
+          <div class="rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50/30 dark:bg-slate-900/40 p-3 space-y-1">
+            <span class="text-[10px] font-bold uppercase text-emerald-700 dark:text-emerald-400">Regreso</span>
+            <p class="text-navy dark:text-slate-200 font-medium"><span class="text-muted dark:text-slate-400">Estimado:</span> <span id="detail-regreso-estimado">--</span></p>
+            <p class="text-navy dark:text-slate-200 font-medium"><span class="text-muted dark:text-slate-400">Real:</span> <span id="detail-regreso-real" class="font-bold text-navy dark:text-white">--</span></p>
+            <p class="text-navy dark:text-slate-200 font-medium"><span class="text-muted dark:text-slate-400">Odómetro:</span> <span id="detail-odo-regreso" class="font-mono font-bold text-navy dark:text-white">--</span> km</p>
           </div>
         </div>
 
         <!-- Recorrido total si finalizó -->
-        <div id="detail-km-section" class="hidden rounded-xl bg-emerald-50 border border-emerald-200 p-3 flex items-center justify-between">
-          <span class="font-bold text-emerald-900">Distancia Total Recorrida:</span>
-          <span class="font-mono text-sm font-bold text-emerald-800" id="detail-km-total">0 km</span>
+        <div id="detail-km-section" class="hidden rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-500/30 p-3 flex items-center justify-between">
+          <span class="font-bold text-emerald-900 dark:text-emerald-200">Distancia Total Recorrida:</span>
+          <span class="font-mono text-sm font-bold text-emerald-800 dark:text-emerald-300" id="detail-km-total">0 km</span>
         </div>
       </div>
 
       <!-- Check-ins en Ruta del Chofer -->
       <div id="detail-checkins-container" class="space-y-2">
-        <div class="flex items-center justify-between border-b border-gray-100 pb-1">
-          <h4 class="font-bold text-navy text-[13px] flex items-center gap-1.5">
-            <Radio size={15} class="text-blue" />
+        <div class="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 pb-1">
+          <h4 class="font-bold text-navy dark:text-white text-[13px] flex items-center gap-1.5">
+            <Radio size={15} class="text-blue dark:text-orange-400" />
             <span>Check-ins de Paradas del Chofer (GPS)</span>
           </h4>
-          <span id="detail-checkins-count" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue/10 text-blue border border-blue/20">0 paradas</span>
+          <span id="detail-checkins-count" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue/10 dark:bg-orangeGov/20 text-blue dark:text-orange-400 border border-blue/20 dark:border-orangeGov/30">0 paradas</span>
         </div>
         <div id="detail-checkins-list" class="space-y-2">
           <!-- Renderizado dinámico -->
@@ -162,26 +162,26 @@ import {
 
       <!-- Observaciones -->
       <div id="detail-obs-container">
-        <span class="text-[10px] font-bold uppercase text-muted">Observaciones del Viaje</span>
-        <p class="mt-0.5 text-gray-700 italic" id="detail-observaciones">Sin observaciones registradas.</p>
+        <span class="text-[10px] font-bold uppercase text-muted dark:text-slate-400">Observaciones del Viaje</span>
+        <p class="mt-0.5 text-gray-700 dark:text-slate-300 italic" id="detail-observaciones">Sin observaciones registradas.</p>
       </div>
 
       <!-- Zona de Despacho Operativo In-Modal -->
-      <div id="section-acciones-operativas" class="rounded-xl border border-blue/20 bg-blue/5 p-4 space-y-3">
-        <h5 class="font-bold text-navy text-xs flex items-center gap-1.5">
-          <Radio size={14} class="text-blue" />
+      <div id="section-acciones-operativas" class="rounded-xl border border-blue/20 dark:border-orangeGov/30 bg-blue/5 dark:bg-orangeGov/10 p-4 space-y-3">
+        <h5 class="font-bold text-navy dark:text-white text-xs flex items-center gap-1.5">
+          <Radio size={14} class="text-blue dark:text-orange-400" />
           <span>Acciones de Despacho y Registro</span>
         </h5>
 
         <!-- Form Salida -->
         <div id="form-marcar-salida" class="space-y-2">
-          <p class="text-navy text-[11px]">La comisión está programada. Puede registrar la partida oficial del móvil:</p>
+          <p class="text-navy dark:text-slate-200 text-[11px]">La comisión está programada. Puede registrar la partida oficial del móvil:</p>
           <div class="flex items-center gap-2">
             <input
               type="number"
               id="input-odo-salida"
               placeholder="Odómetro al salir (km)"
-              class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs text-navy focus:border-blue focus:outline-none w-48 font-mono"
+              class="rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1.5 text-xs text-navy dark:text-white focus:border-blue dark:focus:border-orangeGov focus:outline-none w-48 font-mono"
             />
             <button
               type="button"
@@ -195,13 +195,13 @@ import {
 
         <!-- Form Regreso -->
         <div id="form-marcar-regreso" class="space-y-2 hidden">
-          <p class="text-amber-900 text-[11px] font-medium">El móvil se encuentra actualmente en comisión. Registre el arribo oficial:</p>
+          <p class="text-amber-900 dark:text-amber-300 text-[11px] font-medium">El móvil se encuentra actualmente en comisión. Registre el arribo oficial:</p>
           <div class="flex items-center gap-2">
             <input
               type="number"
               id="input-odo-regreso"
               placeholder="Odómetro de llegada (km)"
-              class="rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs text-navy focus:border-blue focus:outline-none w-48 font-mono"
+              class="rounded-lg border border-amber-300 dark:border-amber-600 bg-white dark:bg-slate-800 px-3 py-1.5 text-xs text-navy dark:text-white focus:border-blue dark:focus:border-orangeGov focus:outline-none w-48 font-mono"
             />
             <button
               type="button"
@@ -216,11 +216,11 @@ import {
     </div>
 
     <!-- Pie del Modal -->
-    <div class="flex items-center justify-between border-t border-gray-100 bg-gray-50/50 px-6 py-3">
+    <div class="flex items-center justify-between border-t border-gray-100 dark:border-slate-800 bg-gray-50/50 dark:bg-[#12151b] px-6 py-3">
       <button
         type="button"
         id="btn-cancelar-comision"
-        class="text-xs font-bold text-red-600 hover:text-red-700 hover:underline transition cursor-pointer"
+        class="text-xs font-bold text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:underline transition cursor-pointer"
       >
         Cancelar Comisión
       </button>
@@ -229,7 +229,7 @@ import {
         <button
           type="button"
           id="btn-editar-comision"
-          class="flex items-center gap-1.5 rounded-xl border border-blue/30 bg-blue/10 px-3.5 py-2 text-xs font-bold text-blue hover:bg-blue hover:text-white transition cursor-pointer shadow-xs"
+          class="flex items-center gap-1.5 rounded-xl border border-blue/30 dark:border-orangeGov/30 bg-blue/10 dark:bg-orangeGov/15 px-3.5 py-2 text-xs font-bold text-blue dark:text-orange-400 hover:bg-blue hover:text-white transition cursor-pointer shadow-xs"
           title="Editar datos de la comisión"
         >
           <Pencil size={14} />
@@ -239,7 +239,7 @@ import {
         <button
           type="button"
           id="btn-imprimir-hoja-ruta"
-          class="flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-xs font-bold text-gray-700 hover:bg-gray-100 transition cursor-pointer"
+          class="flex items-center gap-1.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-xs font-bold text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition cursor-pointer"
         >
           <Printer size={14} />
           <span>Imprimir Hoja de Ruta</span>
@@ -248,7 +248,7 @@ import {
         <button
           type="button"
           id="btn-close-detail-modal-footer"
-          class="rounded-xl bg-navy px-4 py-2 text-xs font-bold text-white hover:opacity-90 transition cursor-pointer"
+          class="rounded-xl bg-navy dark:bg-slate-800 px-4 py-2 text-xs font-bold text-white hover:opacity-90 dark:hover:bg-slate-700 border dark:border-slate-700 transition cursor-pointer"
         >
           Cerrar
         </button>

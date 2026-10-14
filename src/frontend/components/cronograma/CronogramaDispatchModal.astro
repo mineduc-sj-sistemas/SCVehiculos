@@ -61,10 +61,10 @@ const DEPARTAMENTOS_SAN_JUAN = [
   aria-modal="true"
   aria-labelledby="modal-dispatch-title"
 >
-  <div class="relative w-full max-w-2xl rounded-2xl bg-white shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95">
+  <div class="relative w-full max-w-2xl rounded-2xl bg-white dark:bg-[#15191f] border border-transparent dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95">
     
     <!-- Cabecera del Modal -->
-    <div class="flex items-center justify-between border-b border-gray-100 bg-navy px-6 py-3.5 text-white">
+    <div class="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 bg-navy dark:bg-[#12151b] px-6 py-3.5 text-white">
       <div class="flex items-center gap-2.5">
         <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-orangeGov text-white shadow-sm">
           <Send size={18} strokeWidth={2.5} id="dispatch-header-icon-send" />
@@ -74,7 +74,7 @@ const DEPARTAMENTOS_SAN_JUAN = [
           <h3 id="modal-dispatch-title" class="font-display text-base font-bold text-white">
             Despachar Nueva Comisión Oficial
           </h3>
-          <p id="modal-dispatch-subtitle" class="text-[11px] text-white/70">
+          <p id="modal-dispatch-subtitle" class="text-[11px] text-white/80 dark:text-slate-300">
             Asignación de móvil, conductor y emisión de hoja de ruta ministerial
           </p>
         </div>
@@ -90,46 +90,46 @@ const DEPARTAMENTOS_SAN_JUAN = [
     </div>
 
     <!-- Barra de Progreso del Wizard (Stepper) -->
-    <div class="border-b border-gray-100 bg-gray-50/90 px-4 sm:px-6 py-2.5">
+    <div class="border-b border-gray-100 dark:border-slate-800 bg-gray-50/90 dark:bg-[#14181f] px-4 sm:px-6 py-2.5">
       <div class="flex items-center justify-between relative">
         <!-- Líneas conectoras de fondo -->
-        <div class="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-0.5 bg-gray-200 z-0"></div>
+        <div class="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-0.5 bg-gray-200 dark:bg-slate-700 z-0"></div>
         <div id="dispatch-wizard-progress" class="absolute left-6 top-1/2 -translate-y-1/2 h-0.5 bg-orangeGov z-0 transition-all duration-300" style="width: 0%;"></div>
 
         <!-- Paso 1 -->
         <button type="button" class="step-btn relative z-10 flex flex-col items-center gap-1 cursor-pointer group" data-step-target="1">
-          <div id="step-indicator-1" class="flex h-7 w-7 items-center justify-center rounded-full bg-orangeGov text-white text-xs font-black shadow-sm ring-4 ring-orange-100 transition-all">
+          <div id="step-indicator-1" class="flex h-7 w-7 items-center justify-center rounded-full bg-orangeGov text-white text-xs font-black shadow-sm ring-4 ring-orange-100 dark:ring-orange-950 transition-all">
             <span class="step-number">1</span>
             <Check size={13} strokeWidth={3} class="step-check hidden" />
           </div>
-          <span id="step-label-1" class="text-[10px] font-bold text-navy whitespace-nowrap">1. Movilidad & Chofer</span>
+          <span id="step-label-1" class="text-[10px] font-bold text-navy dark:text-white whitespace-nowrap">1. Movilidad & Chofer</span>
         </button>
 
         <!-- Paso 2 -->
         <button type="button" class="step-btn relative z-10 flex flex-col items-center gap-1 cursor-pointer group" data-step-target="2">
-          <div id="step-indicator-2" class="flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 text-gray-600 text-xs font-bold transition-all">
+          <div id="step-indicator-2" class="flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 dark:bg-slate-800 text-gray-600 dark:text-slate-300 dark:border dark:border-slate-700 text-xs font-bold transition-all">
             <span class="step-number">2</span>
             <Check size={13} strokeWidth={3} class="step-check hidden" />
           </div>
-          <span id="step-label-2" class="text-[10px] font-medium text-gray-500 whitespace-nowrap">2. Solicitante</span>
+          <span id="step-label-2" class="text-[10px] font-medium text-gray-500 dark:text-slate-400 whitespace-nowrap">2. Solicitante</span>
         </button>
 
         <!-- Paso 3 -->
         <button type="button" class="step-btn relative z-10 flex flex-col items-center gap-1 cursor-pointer group" data-step-target="3">
-          <div id="step-indicator-3" class="flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 text-gray-600 text-xs font-bold transition-all">
+          <div id="step-indicator-3" class="flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 dark:bg-slate-800 text-gray-600 dark:text-slate-300 dark:border dark:border-slate-700 text-xs font-bold transition-all">
             <span class="step-number">3</span>
             <Check size={13} strokeWidth={3} class="step-check hidden" />
           </div>
-          <span id="step-label-3" class="text-[10px] font-medium text-gray-500 whitespace-nowrap">3. Trayecto</span>
+          <span id="step-label-3" class="text-[10px] font-medium text-gray-500 dark:text-slate-400 whitespace-nowrap">3. Trayecto</span>
         </button>
 
         <!-- Paso 4 -->
         <button type="button" class="step-btn relative z-10 flex flex-col items-center gap-1 cursor-pointer group" data-step-target="4">
-          <div id="step-indicator-4" class="flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 text-gray-600 text-xs font-bold transition-all">
+          <div id="step-indicator-4" class="flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 dark:bg-slate-800 text-gray-600 dark:text-slate-300 dark:border dark:border-slate-700 text-xs font-bold transition-all">
             <span class="step-number">4</span>
             <Check size={13} strokeWidth={3} class="step-check hidden" />
           </div>
-          <span id="step-label-4" class="text-[10px] font-medium text-gray-500 whitespace-nowrap">4. Horarios & Misión</span>
+          <span id="step-label-4" class="text-[10px] font-medium text-gray-500 dark:text-slate-400 whitespace-nowrap">4. Horarios & Misión</span>
         </button>
       </div>
     </div>
@@ -148,7 +148,7 @@ const DEPARTAMENTOS_SAN_JUAN = [
       <!-- PASO 1: CHOFER Y MOVILIDAD OFICIAL                             -->
       <!-- ============================================================== -->
       <div id="dispatch-step-pane-1" class="step-pane space-y-4">
-        <div class="flex items-center gap-2 bg-orange-50/60 border border-orange-100 rounded-xl px-3 py-2 text-xs text-orange-900">
+        <div class="flex items-center gap-2 bg-orange-50/60 dark:bg-orange-950/30 border border-orange-100 dark:border-orange-500/30 rounded-xl px-3 py-2 text-xs text-orange-900 dark:text-orange-200">
           <Car size={16} class="text-orangeGov shrink-0" />
           <span><strong>Paso 1 de 4:</strong> Seleccione la unidad del parque automotor y el conductor habilitado.</span>
         </div>
@@ -156,15 +156,15 @@ const DEPARTAMENTOS_SAN_JUAN = [
         <div class="space-y-4">
           <!-- Móvil / Vehículo -->
           <div>
-            <label for="dispatch-vehiculo" class="block text-xs font-bold text-navy mb-1.5 flex items-center justify-between">
+            <label for="dispatch-vehiculo" class="block text-xs font-bold text-navy dark:text-white mb-1.5 flex items-center justify-between">
               <span>Vehículo / Móvil Oficial *</span>
-              <span id="dispatch-vehiculo-cap-badge" class="text-[11px] font-semibold text-muted"></span>
+              <span id="dispatch-vehiculo-cap-badge" class="text-[11px] font-semibold text-muted dark:text-slate-400"></span>
             </label>
             <select
               id="dispatch-vehiculo"
               name="vehiculoId"
               required
-              class="w-full rounded-xl border border-gray-200 bg-gray-50/40 px-3.5 py-2.5 text-xs font-semibold text-navy focus:border-orangeGov focus:bg-white focus:outline-none focus:ring-1 focus:ring-orangeGov transition shadow-2xs"
+              class="w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50/40 dark:bg-slate-800/80 px-3.5 py-2.5 text-xs font-semibold text-navy dark:text-white focus:border-orangeGov focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-orangeGov transition shadow-2xs"
             >
               <option value="">-- Seleccionar Movilidad Oficial --</option>
               {datosAuxiliares.vehiculos.map((v) => (
@@ -182,14 +182,14 @@ const DEPARTAMENTOS_SAN_JUAN = [
 
           <!-- Chofer Oficial -->
           <div>
-            <label for="dispatch-chofer" class="block text-xs font-bold text-navy mb-1.5">
+            <label for="dispatch-chofer" class="block text-xs font-bold text-navy dark:text-white mb-1.5">
               Chofer Oficial Asignado *
             </label>
             <select
               id="dispatch-chofer"
               name="choferId"
               required
-              class="w-full rounded-xl border border-gray-200 bg-gray-50/40 px-3.5 py-2.5 text-xs font-semibold text-navy focus:border-orangeGov focus:bg-white focus:outline-none focus:ring-1 focus:ring-orangeGov transition shadow-2xs"
+              class="w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50/40 dark:bg-slate-800/80 px-3.5 py-2.5 text-xs font-semibold text-navy dark:text-white focus:border-orangeGov focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-orangeGov transition shadow-2xs"
             >
               <option value="">-- Seleccionar Chofer Oficial --</option>
               {datosAuxiliares.choferes.map((c) => (
@@ -204,8 +204,8 @@ const DEPARTAMENTOS_SAN_JUAN = [
           </div>
         </div>
 
-        <div class="p-3 bg-gray-50 rounded-xl border border-gray-100 text-[11px] text-gray-500 flex items-start gap-2">
-          <Info size={14} class="shrink-0 text-gray-400 mt-0.5" />
+        <div class="p-3 bg-gray-50 dark:bg-slate-800/60 rounded-xl border border-gray-100 dark:border-slate-700/60 text-[11px] text-gray-500 dark:text-slate-300 flex items-start gap-2">
+          <Info size={14} class="shrink-0 text-gray-400 dark:text-slate-400 mt-0.5" />
           <span>El sistema inhabilita automáticamente vehículos en servicio técnico o choferes con carnet expirado para garantizar la seguridad jurídica del despacho.</span>
         </div>
       </div>
@@ -214,22 +214,22 @@ const DEPARTAMENTOS_SAN_JUAN = [
       <!-- PASO 2: DATOS DEL SOLICITANTE                                  -->
       <!-- ============================================================== -->
       <div id="dispatch-step-pane-2" class="step-pane space-y-4 hidden">
-        <div class="flex items-center gap-2 bg-blue/10 border border-blue/20 rounded-xl px-3 py-2 text-xs text-navy">
-          <Building size={16} class="text-blue shrink-0" />
+        <div class="flex items-center gap-2 bg-blue/10 dark:bg-orangeGov/15 border border-blue/20 dark:border-orangeGov/30 rounded-xl px-3 py-2 text-xs text-navy dark:text-orange-200">
+          <Building size={16} class="text-blue dark:text-orange-400 shrink-0" />
           <span><strong>Paso 2 de 4:</strong> Indique el área ministerial requirente y el funcionario responsable.</span>
         </div>
 
         <div class="space-y-4">
           <!-- Dependencia Solicitante -->
           <div>
-            <label for="dispatch-dependencia" class="block text-xs font-bold text-navy mb-1.5">
+            <label for="dispatch-dependencia" class="block text-xs font-bold text-navy dark:text-white mb-1.5">
               Dependencia / Área Solicitante *
             </label>
             <select
               id="dispatch-dependencia"
               name="dependenciaId"
               required
-              class="w-full rounded-xl border border-gray-200 bg-gray-50/40 px-3.5 py-2.5 text-xs font-semibold text-navy focus:border-orangeGov focus:bg-white focus:outline-none focus:ring-1 focus:ring-orangeGov transition shadow-2xs"
+              class="w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50/40 dark:bg-slate-800/80 px-3.5 py-2.5 text-xs font-semibold text-navy dark:text-white focus:border-orangeGov focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-orangeGov transition shadow-2xs"
             >
               <option value="">-- Seleccionar Área / Dirección Ministerial --</option>
               {datosAuxiliares.dependencias.map((d) => (
@@ -240,20 +240,20 @@ const DEPARTAMENTOS_SAN_JUAN = [
 
           <!-- Funcionario o Solicitante Responsable -->
           <div>
-            <label for="dispatch-solicitante" class="block text-xs font-bold text-navy mb-1.5">
+            <label for="dispatch-solicitante" class="block text-xs font-bold text-navy dark:text-white mb-1.5">
               Funcionario o Solicitante Responsable
             </label>
             <div class="relative">
-              <User size={15} class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+              <User size={15} class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-400" />
               <input
                 type="text"
                 id="dispatch-solicitante"
                 name="solicitanteNombre"
                 placeholder="Ej. Prof. Laura Morales (Directora de Nivel Inicial)"
-                class="w-full rounded-xl border border-gray-200 bg-gray-50/40 py-2.5 pl-10 pr-3.5 text-xs text-navy focus:border-orangeGov focus:bg-white focus:outline-none focus:ring-1 focus:ring-orangeGov transition shadow-2xs"
+                class="w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50/40 dark:bg-slate-800/80 py-2.5 pl-10 pr-3.5 text-xs text-navy dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:border-orangeGov focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-orangeGov transition shadow-2xs"
               />
             </div>
-            <p class="mt-1 text-[11px] text-gray-400">Nombre del funcionario que suscribirá la Hoja de Ruta Oficial A4.</p>
+            <p class="mt-1 text-[11px] text-gray-400 dark:text-slate-400">Nombre del funcionario que suscribirá la Hoja de Ruta Oficial A4.</p>
           </div>
         </div>
       </div>
@@ -262,23 +262,23 @@ const DEPARTAMENTOS_SAN_JUAN = [
       <!-- PASO 3: LUGAR Y DEPARTAMENTO DE SALIDA / DESTINO               -->
       <!-- ============================================================== -->
       <div id="dispatch-step-pane-3" class="step-pane space-y-4 hidden">
-        <div class="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 text-xs text-emerald-900">
-          <Compass size={16} class="text-emerald-600 shrink-0" />
+        <div class="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-500/30 rounded-xl px-3 py-2 text-xs text-emerald-900 dark:text-emerald-200">
+          <Compass size={16} class="text-emerald-600 dark:text-emerald-400 shrink-0" />
           <span><strong>Paso 3 de 4:</strong> Trayecto e itinerario oficial de salida y arribo.</span>
         </div>
 
         <div class="space-y-4">
           <!-- Bloque Salida (Origen) -->
-          <div class="rounded-xl border border-gray-200 bg-gray-50/50 p-3.5 space-y-3">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-muted block">1. Origen del Viaje</span>
+          <div class="rounded-xl border border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/50 p-3.5 space-y-3">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-muted dark:text-slate-400 block">1. Origen del Viaje</span>
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
-                <label for="dispatch-origen-depto" class="block text-xs font-bold text-navy mb-1">
+                <label for="dispatch-origen-depto" class="block text-xs font-bold text-navy dark:text-white mb-1">
                   Departamento de Salida
                 </label>
                 <select
                   id="dispatch-origen-depto"
-                  class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-navy focus:border-orangeGov focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
+                  class="w-full rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-semibold text-navy dark:text-white focus:border-orangeGov focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
                 >
                   {DEPARTAMENTOS_SAN_JUAN.map((depto) => (
                     <option value={depto} selected={depto === 'Capital'}>{depto}</option>
@@ -287,7 +287,7 @@ const DEPARTAMENTOS_SAN_JUAN = [
               </div>
 
               <div>
-                <label for="dispatch-origen" class="block text-xs font-bold text-navy mb-1">
+                <label for="dispatch-origen" class="block text-xs font-bold text-navy dark:text-white mb-1">
                   Lugar Específico de Salida *
                 </label>
                 <input
@@ -296,16 +296,16 @@ const DEPARTAMENTOS_SAN_JUAN = [
                   name="origen"
                   value="Ministerio de Educación - Centro Cívico"
                   required
-                  class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-navy focus:border-orangeGov focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
+                  class="w-full rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs text-navy dark:text-white focus:border-orangeGov focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
                 />
               </div>
             </div>
           </div>
 
           <!-- Bloque Destinos (Soporta Múltiples Paradas en el mismo viaje) -->
-          <div class="rounded-xl border border-gray-200 bg-gray-50/50 p-3.5 space-y-3">
+          <div class="rounded-xl border border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/50 p-3.5 space-y-3">
             <div class="flex items-center justify-between">
-              <span class="text-[11px] font-bold uppercase tracking-wider text-muted block">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-muted dark:text-slate-400 block">
                 2. Destinos e Itinerario del Viaje
               </span>
               <!-- Botón Signo Más (+) para agregar otro destino -->
@@ -313,7 +313,7 @@ const DEPARTAMENTOS_SAN_JUAN = [
                 type="button"
                 id="btn-agregar-destino"
                 data-departamentos={JSON.stringify(DEPARTAMENTOS_SAN_JUAN)}
-                class="inline-flex items-center gap-1.5 text-[11px] font-bold text-orangeGov hover:text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-200 px-3 py-1.5 rounded-lg transition cursor-pointer shadow-2xs active:scale-98"
+                class="inline-flex items-center gap-1.5 text-[11px] font-bold text-orangeGov hover:text-orange-700 bg-orange-50 dark:bg-orange-950/40 hover:bg-orange-100 dark:hover:bg-orange-900/50 border border-orange-200 dark:border-orange-500/40 px-3 py-1.5 rounded-lg transition cursor-pointer shadow-2xs active:scale-98"
                 title="Agregar otra parada o destino en el mismo viaje"
               >
                 <Plus size={14} strokeWidth={2.5} />
@@ -324,24 +324,24 @@ const DEPARTAMENTOS_SAN_JUAN = [
             <!-- Contenedor de Destinos / Paradas -->
             <div id="destinos-container" class="space-y-3">
               <!-- Destino 1 (Principal) -->
-              <div class="destino-item bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs space-y-2.5 relative" data-destino-index="1">
-                <div class="flex items-center justify-between text-[11px] font-bold text-navy">
+              <div class="destino-item bg-white dark:bg-slate-800/90 p-3.5 rounded-xl border border-gray-200 dark:border-slate-700 shadow-2xs space-y-2.5 relative" data-destino-index="1">
+                <div class="flex items-center justify-between text-[11px] font-bold text-navy dark:text-white">
                   <span class="flex items-center gap-1.5">
-                    <span class="destino-num-badge flex h-4 w-4 items-center justify-center rounded-full bg-navy text-white text-[9px] font-bold">1</span>
+                    <span class="destino-num-badge flex h-4 w-4 items-center justify-center rounded-full bg-navy dark:bg-slate-700 text-white text-[9px] font-bold">1</span>
                     <span class="destino-title-text">Destino Principal *</span>
                   </span>
-                  <span class="text-[10px] text-gray-400 font-medium">Primera parada oficial</span>
+                  <span class="text-[10px] text-gray-400 dark:text-slate-400 font-medium">Primera parada oficial</span>
                 </div>
 
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
-                    <label for="dispatch-depto" class="block text-xs font-bold text-navy mb-1">
+                    <label for="dispatch-depto" class="block text-xs font-bold text-navy dark:text-white mb-1">
                       Departamento de San Juan (Destino) *
                     </label>
                     <select
                       id="dispatch-depto"
                       required
-                      class="dispatch-depto-select w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-navy focus:border-orangeGov focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
+                      class="dispatch-depto-select w-full rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-semibold text-navy dark:text-white focus:border-orangeGov focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
                     >
                       <option value="">-- Seleccionar Departamento --</option>
                       {DEPARTAMENTOS_SAN_JUAN.map((depto) => (
@@ -351,18 +351,18 @@ const DEPARTAMENTOS_SAN_JUAN = [
                   </div>
 
                   <div>
-                    <label for="dispatch-destino" class="block text-xs font-bold text-navy mb-1">
+                    <label for="dispatch-destino" class="block text-xs font-bold text-navy dark:text-white mb-1">
                       Destino Detallado / Escuela / Localidad *
                     </label>
                     <div class="relative">
-                      <MapPin size={15} class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <MapPin size={15} class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-400" />
                       <input
                         type="text"
                         id="dispatch-destino"
                         name="destino"
                         placeholder="Ej. Escuela Albergue Álvarez Condarco"
                         required
-                        class="dispatch-destino-input w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-xs text-navy focus:border-orangeGov focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
+                        class="dispatch-destino-input w-full rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 py-2 pl-9 pr-3 text-xs text-navy dark:text-white focus:border-orangeGov focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
                       />
                     </div>
                   </div>
@@ -377,24 +377,24 @@ const DEPARTAMENTOS_SAN_JUAN = [
       <!-- PASO 4: HORARIOS, PASAJEROS, MISIÓN Y RESUMEN FINAL            -->
       <!-- ============================================================== -->
       <div id="dispatch-step-pane-4" class="step-pane space-y-3.5 hidden">
-        <div class="flex items-center gap-2 bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800">
+        <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200">
           <Calendar size={16} class="text-orangeGov shrink-0" />
           <span><strong>Paso 4 de 4:</strong> Cronograma temporal, cupo de pasajeros y misión oficial.</span>
         </div>
 
         <!-- Bloque de Fecha Fijada por Calendario (No modificable) -->
-        <div class="rounded-xl border border-blue/30 bg-blue/5 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 shadow-2xs">
+        <div class="rounded-xl border border-blue/30 dark:border-orangeGov/40 bg-blue/5 dark:bg-orangeGov/10 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 shadow-2xs">
           <div class="flex items-center gap-2.5">
-            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue/15 text-blue">
+            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue/15 dark:bg-orangeGov/20 text-blue dark:text-orange-400">
               <Calendar size={16} />
             </div>
             <div>
-              <span class="text-[10px] font-bold uppercase tracking-wider text-muted block">Día del Viaje (Fijado por Calendario)</span>
-              <span id="dispatch-fecha-fijada-display" class="text-xs font-black text-navy">Cargando fecha...</span>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-muted dark:text-slate-400 block">Día del Viaje (Fijado por Calendario)</span>
+              <span id="dispatch-fecha-fijada-display" class="text-xs font-black text-navy dark:text-white">Cargando fecha...</span>
             </div>
           </div>
-          <div class="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-full bg-slate-200/80 px-2.5 py-1 text-[10px] font-bold text-slate-700 border border-slate-300 shadow-2xs">
-            <Lock size={12} class="text-slate-600" />
+          <div class="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-full bg-slate-200/80 dark:bg-slate-800 px-2.5 py-1 text-[10px] font-bold text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 shadow-2xs">
+            <Lock size={12} class="text-slate-600 dark:text-slate-400" />
             <span>Fecha Bloqueada</span>
           </div>
         </div>
@@ -403,36 +403,36 @@ const DEPARTAMENTOS_SAN_JUAN = [
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <!-- Hora de Salida -->
           <div>
-            <label for="dispatch-hora-salida" class="block text-xs font-bold text-navy mb-1 flex items-center justify-between">
+            <label for="dispatch-hora-salida" class="block text-xs font-bold text-navy dark:text-white mb-1 flex items-center justify-between">
               <span>Hora de Salida *</span>
-              <span class="text-[10px] font-medium text-muted">Horario programado</span>
+              <span class="text-[10px] font-medium text-muted dark:text-slate-400">Horario programado</span>
             </label>
             <div class="relative">
-              <Clock size={15} class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Clock size={15} class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-400" />
               <input
                 type="time"
                 id="dispatch-hora-salida"
                 value="08:00"
                 required
-                class="w-full rounded-xl border border-gray-200 bg-white py-2 pl-9 pr-3 text-xs font-semibold text-navy focus:border-orangeGov focus:outline-none focus:ring-1 focus:ring-orangeGov transition shadow-2xs"
+                class="w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 py-2 pl-9 pr-3 text-xs font-semibold text-navy dark:text-white focus:border-orangeGov focus:outline-none focus:ring-1 focus:ring-orangeGov transition shadow-2xs"
               />
             </div>
           </div>
 
           <!-- Hora Estimada de Regreso -->
           <div>
-            <label for="dispatch-hora-regreso" class="block text-xs font-bold text-navy mb-1 flex items-center justify-between">
+            <label for="dispatch-hora-regreso" class="block text-xs font-bold text-navy dark:text-white mb-1 flex items-center justify-between">
               <span>Hora Estimada de Regreso *</span>
-              <span class="text-[10px] font-medium text-muted">Horario estimado</span>
+              <span class="text-[10px] font-medium text-muted dark:text-slate-400">Horario estimado</span>
             </label>
             <div class="relative">
-              <Clock size={15} class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Clock size={15} class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-400" />
               <input
                 type="time"
                 id="dispatch-hora-regreso"
                 value="17:00"
                 required
-                class="w-full rounded-xl border border-gray-200 bg-white py-2 pl-9 pr-3 text-xs font-semibold text-navy focus:border-orangeGov focus:outline-none focus:ring-1 focus:ring-orangeGov transition shadow-2xs"
+                class="w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 py-2 pl-9 pr-3 text-xs font-semibold text-navy dark:text-white focus:border-orangeGov focus:outline-none focus:ring-1 focus:ring-orangeGov transition shadow-2xs"
               />
             </div>
           </div>
@@ -447,11 +447,11 @@ const DEPARTAMENTOS_SAN_JUAN = [
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <!-- Cantidad de Pasajeros -->
           <div>
-            <label for="dispatch-pasajeros" class="block text-xs font-bold text-navy mb-1">
+            <label for="dispatch-pasajeros" class="block text-xs font-bold text-navy dark:text-white mb-1">
               Pasajeros Previstos *
             </label>
             <div class="relative">
-              <Users size={15} class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Users size={15} class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-400" />
               <input
                 type="number"
                 id="dispatch-pasajeros"
@@ -460,14 +460,14 @@ const DEPARTAMENTOS_SAN_JUAN = [
                 min="1"
                 max="30"
                 required
-                class="w-full rounded-xl border border-gray-200 bg-gray-50/40 py-2 pl-9 pr-3 text-xs text-navy focus:border-orangeGov focus:bg-white focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
+                class="w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50/40 dark:bg-slate-800/80 py-2 pl-9 pr-3 text-xs text-navy dark:text-white focus:border-orangeGov focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
               />
             </div>
           </div>
 
           <!-- Motivo de la Misión -->
           <div class="sm:col-span-2">
-            <label for="dispatch-motivo" class="block text-xs font-bold text-navy mb-1">
+            <label for="dispatch-motivo" class="block text-xs font-bold text-navy dark:text-white mb-1">
               Motivo / Misión Oficial *
             </label>
             <input
@@ -476,14 +476,14 @@ const DEPARTAMENTOS_SAN_JUAN = [
               name="motivo"
               placeholder="Ej. Traslado de comitiva ministerial para supervisión escolar"
               required
-              class="w-full rounded-xl border border-gray-200 bg-gray-50/40 px-3 py-2 text-xs text-navy focus:border-orangeGov focus:bg-white focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
+              class="w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50/40 dark:bg-slate-800/80 px-3 py-2 text-xs text-navy dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:border-orangeGov focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
             />
           </div>
         </div>
 
         <!-- Observaciones -->
         <div>
-          <label for="dispatch-observaciones" class="block text-xs font-bold text-navy mb-1">
+          <label for="dispatch-observaciones" class="block text-xs font-bold text-navy dark:text-white mb-1">
             Observaciones Adicionales
           </label>
           <textarea
@@ -491,35 +491,35 @@ const DEPARTAMENTOS_SAN_JUAN = [
             name="observaciones"
             rows="2"
             placeholder="Novedades de itinerario, autorizaciones especiales o indicaciones para el chofer..."
-            class="w-full rounded-xl border border-gray-200 bg-gray-50/40 px-3 py-2 text-xs text-navy focus:border-orangeGov focus:bg-white focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
+            class="w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50/40 dark:bg-slate-800/80 px-3 py-2 text-xs text-navy dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:border-orangeGov focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
           ></textarea>
         </div>
 
         <!-- Tarjeta de Resumen Previo al Despacho -->
-        <div id="dispatch-summary-box" class="rounded-xl border border-slate-200 bg-slate-50/80 p-3 space-y-1.5 text-xs">
-          <div class="flex items-center justify-between border-b border-slate-200/60 pb-1">
-            <span class="font-bold text-navy text-[11px] flex items-center gap-1.5">
+        <div id="dispatch-summary-box" class="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60 p-3 space-y-1.5 text-xs">
+          <div class="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-1">
+            <span class="font-bold text-navy dark:text-white text-[11px] flex items-center gap-1.5">
               <FileText size={13} class="text-orangeGov" />
               <span>Resumen de la Comisión Oficial</span>
             </span>
-            <span class="text-[10px] text-muted">Revisión previa a confirmación</span>
+            <span class="text-[10px] text-muted dark:text-slate-400">Revisión previa a confirmación</span>
           </div>
           <div class="grid grid-cols-2 gap-2 text-[11px]">
             <div>
-              <span class="text-gray-400">Móvil:</span>
-              <strong id="summary-movil" class="text-navy ml-1">No asignado</strong>
+              <span class="text-gray-400 dark:text-slate-400">Móvil:</span>
+              <strong id="summary-movil" class="text-navy dark:text-white ml-1">No asignado</strong>
             </div>
             <div>
-              <span class="text-gray-400">Conductor:</span>
-              <strong id="summary-chofer" class="text-navy ml-1">No asignado</strong>
+              <span class="text-gray-400 dark:text-slate-400">Conductor:</span>
+              <strong id="summary-chofer" class="text-navy dark:text-white ml-1">No asignado</strong>
             </div>
             <div>
-              <span class="text-gray-400">Dependencia:</span>
-              <strong id="summary-dep" class="text-navy ml-1">No asignada</strong>
+              <span class="text-gray-400 dark:text-slate-400">Dependencia:</span>
+              <strong id="summary-dep" class="text-navy dark:text-white ml-1">No asignada</strong>
             </div>
             <div>
-              <span class="text-gray-400">Trayecto:</span>
-              <strong id="summary-destino" class="text-navy ml-1">No definido</strong>
+              <span class="text-gray-400 dark:text-slate-400">Trayecto:</span>
+              <strong id="summary-destino" class="text-navy dark:text-white ml-1">No definido</strong>
             </div>
           </div>
         </div>
@@ -528,11 +528,11 @@ const DEPARTAMENTOS_SAN_JUAN = [
       <!-- ============================================================== -->
       <!-- BARRA DE NAVEGACIÓN DEL WIZARD (FOOTER)                        -->
       <!-- ============================================================== -->
-      <div class="flex items-center justify-between pt-4 border-t border-gray-100 mt-5">
+      <div class="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-slate-800 mt-5">
         <button
           type="button"
           id="btn-cancel-dispatch"
-          class="rounded-xl border border-gray-200 px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 transition cursor-pointer"
+          class="rounded-xl border border-gray-200 dark:border-slate-700 px-4 py-2 text-xs font-bold text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-navy dark:hover:text-white transition cursor-pointer"
         >
           Cancelar
         </button>
@@ -542,7 +542,7 @@ const DEPARTAMENTOS_SAN_JUAN = [
           <button
             type="button"
             id="btn-wizard-prev"
-            class="hidden items-center gap-1.5 rounded-xl border border-gray-300 bg-white px-4 py-2 text-xs font-bold text-navy hover:bg-gray-50 transition cursor-pointer shadow-2xs"
+            class="hidden items-center gap-1.5 rounded-xl border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-xs font-bold text-navy dark:text-white hover:bg-gray-50 dark:hover:bg-slate-700 transition cursor-pointer shadow-2xs"
           >
             <ArrowLeft size={14} />
             <span>Anterior</span>

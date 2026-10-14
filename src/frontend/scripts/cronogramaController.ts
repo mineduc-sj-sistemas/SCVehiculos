@@ -202,21 +202,25 @@ function renderTheadDias(thead: Element, dias: CronogramaDiaHeader[], totalMovil
   if (!tr) return
 
   let html = `
-    <th class="sticky left-0 z-20 w-[240px] min-w-[240px] bg-gray-50/95 px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-navy shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)] border-r border-gray-200">
+    <th class="sticky left-0 z-20 w-[240px] min-w-[240px] bg-gray-50/95 dark:bg-[#14181f] px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-navy dark:text-white shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)] border-r border-gray-200 dark:border-slate-800">
       <div class="flex items-center justify-between">
         <span>Móvil / Vehículo</span>
-        <span class="text-[10px] font-normal text-muted lowercase">(${totalMoviles} móviles)</span>
+        <span class="text-[10px] font-normal text-muted dark:text-slate-400 lowercase">(${totalMoviles} móviles)</span>
       </div>
     </th>
   `
 
   dias.forEach((d) => {
-    const bgClass = d.esHoy ? 'bg-blue/10 border-blue/30' : d.esFinDeSemana ? 'bg-gray-100/50' : 'bg-gray-50/50'
-    const textDayClass = d.esHoy ? 'text-blue' : 'text-gray-600'
-    const numBadgeClass = d.esHoy ? 'bg-blue text-white shadow-sm' : 'text-navy'
+    const bgClass = d.esHoy
+      ? 'bg-blue/10 dark:bg-blue/20 border-blue/30 dark:border-blue/40'
+      : d.esFinDeSemana
+      ? 'bg-gray-100/50 dark:bg-slate-900/60'
+      : 'bg-gray-50/50 dark:bg-[#151920]'
+    const textDayClass = d.esHoy ? 'text-blue dark:text-orange-400' : 'text-gray-600 dark:text-slate-300'
+    const numBadgeClass = d.esHoy ? 'bg-blue text-white shadow-sm' : 'text-navy dark:text-white'
 
     html += `
-      <th data-fecha="${d.fecha}" class="w-[180px] min-w-[170px] px-3 py-3 text-center border-r border-gray-200 transition-colors cursor-pointer hover:bg-blue/15 group/day-th ${bgClass}" title="Click para programar comisión el ${d.diaNombre} ${d.diaNumero}">
+      <th data-fecha="${d.fecha}" class="w-[180px] min-w-[170px] px-3 py-3 text-center border-r border-gray-200 dark:border-slate-800 transition-colors cursor-pointer hover:bg-blue/15 dark:hover:bg-blue/20 group/day-th ${bgClass}" title="Click para programar comisión el ${d.diaNombre} ${d.diaNumero}">
         <div class="flex flex-col items-center justify-center gap-0.5">
           <span class="text-[11px] uppercase tracking-wider font-bold ${textDayClass}">
             ${d.diaNombre}
@@ -225,9 +229,9 @@ function renderTheadDias(thead: Element, dias: CronogramaDiaHeader[], totalMovil
             <span class="inline-flex items-center justify-center h-6 w-6 rounded-full text-xs font-bold transition ${numBadgeClass}">
               ${d.diaNumero}
             </span>
-            <span class="text-[10px] font-medium text-muted">${d.mesNombre}</span>
+            <span class="text-[10px] font-medium text-muted dark:text-slate-400">${d.mesNombre}</span>
           </div>
-          ${d.esHoy ? '<span class="inline-flex items-center rounded-full bg-gold/25 px-2 py-0.5 text-[9px] font-bold text-navy mt-0.5 border border-gold/40">HOY</span>' : ''}
+          ${d.esHoy ? '<span class="inline-flex items-center rounded-full bg-gold/25 px-2 py-0.5 text-[9px] font-bold text-navy dark:text-amber-300 mt-0.5 border border-gold/40">HOY</span>' : ''}
         </div>
       </th>
     `
@@ -243,8 +247,8 @@ function renderTbodyFilas(tbody: HTMLElement, dias: CronogramaDiaHeader[], filas
   if (filas.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="8" class="py-12 text-center text-muted">
-          <p class="font-bold text-navy text-sm">No se encontraron vehículos registrados</p>
+        <td colspan="8" class="py-12 text-center text-muted dark:text-slate-400">
+          <p class="font-bold text-navy dark:text-white text-sm">No se encontraron vehículos registrados</p>
           <p class="text-xs">Registre unidades en la sección de Vehículos para comenzar a despachar comisiones.</p>
         </td>
       </tr>
@@ -258,30 +262,30 @@ function renderTbodyFilas(tbody: HTMLElement, dias: CronogramaDiaHeader[], filas
 
     html += `
       <tr
-        class="group hover:bg-gray-50/40 transition-colors fila-vehiculo"
+        class="group hover:bg-gray-50/40 dark:hover:bg-slate-800/30 transition-colors fila-vehiculo"
         data-patente="${v.patente.toLowerCase()}"
         data-modelo="${v.marca.toLowerCase()} ${v.modelo.toLowerCase()}"
         data-estado="${v.estadoVehiculo}"
       >
-        <td class="sticky left-0 z-10 bg-white group-hover:bg-gray-50/90 transition-colors px-4 py-3.5 border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)] align-top">
+        <td class="sticky left-0 z-10 bg-white dark:bg-[#15191f] group-hover:bg-gray-50/90 dark:group-hover:bg-[#1a1f26] transition-colors px-4 py-3.5 border-r border-gray-200 dark:border-slate-800 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)] align-top">
           <div class="space-y-1.5">
             <div class="flex items-center justify-between gap-1">
-              <span class="inline-flex items-center rounded border border-navy/20 bg-navy/5 px-2 py-0.5 font-mono text-xs font-bold text-navy">
+              <span class="inline-flex items-center rounded border border-navy/20 dark:border-slate-700 bg-navy/5 dark:bg-slate-800 px-2 py-0.5 font-mono text-xs font-bold text-navy dark:text-slate-200">
                 ${v.patente}
               </span>
               ${isTaller ? `
-                <span class="inline-flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800">
+                <span class="inline-flex items-center gap-1 rounded bg-amber-100 dark:bg-amber-950/50 px-1.5 py-0.5 text-[10px] font-bold text-amber-800 dark:text-amber-300 border dark:border-amber-700/50">
                   <span>En taller</span>
                 </span>
               ` : `
-                <span class="text-[10px] font-medium text-muted">
+                <span class="text-[10px] font-medium text-muted dark:text-slate-400">
                   ${v.capacidadPasajeros} pas.
                 </span>
               `}
             </div>
             <div>
-              <p class="font-bold text-navy leading-tight">${v.marca} ${v.modelo}</p>
-              <p class="text-[10px] text-muted">${v.tipoVehiculo} · ${v.odometroActual.toLocaleString('es-AR')} km</p>
+              <p class="font-bold text-navy dark:text-white leading-tight">${v.marca} ${v.modelo}</p>
+              <p class="text-[10px] text-muted dark:text-slate-400">${v.tipoVehiculo} · ${v.odometroActual.toLocaleString('es-AR')} km</p>
             </div>
           </div>
         </td>
@@ -290,15 +294,15 @@ function renderTbodyFilas(tbody: HTMLElement, dias: CronogramaDiaHeader[], filas
     dias.forEach((d) => {
       const comisiones = v.comisionesPorDia[d.fecha] || []
       const hasComisiones = comisiones.length > 0
-      const tdClass = `${d.esHoy ? 'bg-blue/[0.02]' : ''} ${isTaller ? 'bg-amber-50/20' : ''}`
+      const tdClass = `${d.esHoy ? 'bg-blue/[0.02] dark:bg-blue/[0.04]' : ''} ${isTaller ? 'bg-amber-50/20 dark:bg-amber-950/15' : ''}`
 
-      html += `<td class="px-2 py-2 border-r border-gray-200 align-top transition-colors ${tdClass}">`
+      html += `<td class="px-2 py-2 border-r border-gray-200 dark:border-slate-800 align-top transition-colors ${tdClass}">`
 
       if (isTaller) {
         html += `
-          <div class="flex flex-col items-center justify-center rounded-lg border border-dashed border-amber-300 bg-amber-50/60 p-2 text-center text-amber-800">
+          <div class="flex flex-col items-center justify-center rounded-lg border border-dashed border-amber-300 dark:border-amber-500/40 bg-amber-50/60 dark:bg-amber-950/30 p-2 text-center text-amber-800 dark:text-amber-300">
             <span class="text-[10px] font-bold">En Servicio Técnico</span>
-            <span class="text-[9px] text-amber-700/80">No disponible</span>
+            <span class="text-[9px] text-amber-700/80 dark:text-amber-200/80">No disponible</span>
           </div>
         `
       } else if (hasComisiones) {
@@ -309,16 +313,16 @@ function renderTbodyFilas(tbody: HTMLElement, dias: CronogramaDiaHeader[], filas
           const isFinalizada = c.estado === 'finalizada'
 
           const cardStyle = isEnCurso
-            ? 'border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50/60 text-amber-950 ring-1 ring-amber-400/30'
+            ? 'border-amber-300 dark:border-amber-500/40 bg-gradient-to-br from-amber-50 to-orange-50/60 dark:from-amber-950/40 dark:to-orange-950/30 text-amber-950 dark:text-amber-100 ring-1 ring-amber-400/30 dark:ring-amber-500/30'
             : isProgramada
-            ? 'border-blue/30 bg-blue/5 text-navy hover:border-blue'
-            : 'border-emerald-200 bg-emerald-50/50 text-emerald-950'
+            ? 'border-blue/30 dark:border-orangeGov/40 bg-blue/5 dark:bg-orangeGov/10 text-navy dark:text-white hover:border-blue dark:hover:border-orangeGov'
+            : 'border-emerald-200 dark:border-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-950/30 text-emerald-950 dark:text-emerald-100'
 
           const badgeHtml = isEnCurso
-            ? '<span class="inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-1.5 py-0.5 text-[9px] font-bold text-amber-800 border border-amber-500/30 animate-pulse">En viaje</span>'
+            ? '<span class="inline-flex items-center gap-1 rounded-full bg-amber-500/20 dark:bg-amber-900/50 px-1.5 py-0.5 text-[9px] font-bold text-amber-800 dark:text-amber-300 border border-amber-500/30 dark:border-amber-600/40 animate-pulse">En viaje</span>'
             : isProgramada
-            ? '<span class="inline-flex items-center gap-1 rounded-full bg-blue/15 px-1.5 py-0.5 text-[9px] font-bold text-blue">Programada</span>'
-            : '<span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold text-emerald-700">Finalizada</span>'
+            ? '<span class="inline-flex items-center gap-1 rounded-full bg-blue/15 dark:bg-orangeGov/25 px-1.5 py-0.5 text-[9px] font-bold text-blue dark:text-orange-400 border dark:border-orangeGov/30">Programada</span>'
+            : '<span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-900/50 px-1.5 py-0.5 text-[9px] font-bold text-emerald-700 dark:text-emerald-300 border dark:border-emerald-700/40">Finalizada</span>'
 
           const horaSalida = new Date(c.fechaSalidaProgramada).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
 
@@ -332,18 +336,18 @@ function renderTbodyFilas(tbody: HTMLElement, dias: CronogramaDiaHeader[], filas
               title="Click para ver hoja de ruta y opciones"
             >
               <div class="flex items-center justify-between gap-1 mb-1.5">
-                <span class="font-mono text-[9px] font-bold text-muted">${c.codigoComision}</span>
+                <span class="font-mono text-[9px] font-bold text-muted dark:text-slate-400">${c.codigoComision}</span>
                 ${badgeHtml}
               </div>
-              <div class="flex items-start gap-1 font-bold text-navy text-[11px] leading-tight mb-1">
+              <div class="flex items-start gap-1 font-bold text-navy dark:text-white text-[11px] leading-tight mb-1">
                 <span class="line-clamp-1">${c.destino}</span>
               </div>
-              <div class="flex items-center gap-1 text-[10px] text-gray-700 font-medium mb-1">
+              <div class="flex items-center gap-1 text-[10px] text-gray-700 dark:text-slate-200 font-medium mb-1">
                 <span class="truncate">${c.choferNombre} ${c.choferApellido}</span>
               </div>
-              <div class="flex items-center justify-between text-[9px] text-muted border-t border-black/5 pt-1 mt-1">
+              <div class="flex items-center justify-between text-[9px] text-muted dark:text-slate-400 border-t border-black/5 dark:border-white/10 pt-1 mt-1">
                 <span class="truncate">${c.dependenciaNombre.replace('Dirección de ', 'Dir. ')}</span>
-                <span class="font-bold text-navy">${horaSalida} hs</span>
+                <span class="font-bold text-navy dark:text-orange-300">${horaSalida} hs</span>
               </div>
             </div>
           `
@@ -352,7 +356,7 @@ function renderTbodyFilas(tbody: HTMLElement, dias: CronogramaDiaHeader[], filas
         html += `
           <button
             type="button"
-            class="w-full rounded-lg border border-dashed border-gray-200 py-1 text-[10px] font-semibold text-gray-400 hover:border-blue hover:text-blue hover:bg-blue/5 transition cursor-pointer flex items-center justify-center gap-1 btn-asignar-celda"
+            class="w-full rounded-lg border border-dashed border-gray-200 dark:border-slate-700 py-1 text-[10px] font-semibold text-gray-400 dark:text-slate-400 hover:border-blue dark:hover:border-orangeGov hover:text-blue dark:hover:text-orange-400 hover:bg-blue/5 dark:hover:bg-orangeGov/10 transition cursor-pointer flex items-center justify-center gap-1 btn-asignar-celda"
             data-vehiculo-id="${v.vehiculoId}"
             data-vehiculo-patente="${v.patente}"
             data-fecha="${d.fecha}"
@@ -365,19 +369,19 @@ function renderTbodyFilas(tbody: HTMLElement, dias: CronogramaDiaHeader[], filas
         html += `
           <button
             type="button"
-            class="group/slot flex h-24 w-full flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-transparent text-gray-300 hover:border-blue/60 hover:bg-blue/[0.04] hover:text-blue transition-all cursor-pointer btn-asignar-celda"
+            class="group/slot flex h-24 w-full flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 dark:border-slate-800 bg-transparent text-gray-300 dark:text-slate-500 hover:border-blue/60 dark:hover:border-orangeGov/60 hover:bg-blue/[0.04] dark:hover:bg-orangeGov/10 hover:text-blue dark:hover:text-orange-400 transition-all cursor-pointer btn-asignar-celda"
             data-vehiculo-id="${v.vehiculoId}"
             data-vehiculo-patente="${v.patente}"
             data-fecha="${d.fecha}"
             title="Asignar comisión a ${v.patente} el ${d.diaNombre} ${d.diaNumero}"
           >
-            <div class="flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 group-hover/slot:bg-blue group-hover/slot:text-white transition-colors mb-1 font-bold">
+            <div class="flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 dark:bg-slate-800 group-hover/slot:bg-blue dark:group-hover/slot:bg-orangeGov group-hover/slot:text-white text-gray-500 dark:text-slate-400 transition-colors mb-1 font-bold">
               +
             </div>
             <span class="text-[10px] font-bold opacity-0 group-hover/slot:opacity-100 transition-opacity">
               Asignar
             </span>
-            <span class="text-[9px] text-gray-400 group-hover/slot:opacity-0 transition-opacity">
+            <span class="text-[9px] text-gray-400 dark:text-slate-400 group-hover/slot:opacity-0 transition-opacity">
               Disponible
             </span>
           </button>
@@ -474,27 +478,27 @@ function setWizardStep(step: number) {
     if (indicator) {
       if (i < currentDispatchStep) {
         // Completado
-        indicator.className = 'flex h-7 w-7 items-center justify-center rounded-full bg-emerald-600 text-white text-xs font-bold shadow-xs ring-2 ring-emerald-100 transition-all'
+        indicator.className = 'flex h-7 w-7 items-center justify-center rounded-full bg-emerald-600 text-white text-xs font-bold shadow-xs ring-2 ring-emerald-100 dark:ring-emerald-950 transition-all'
         numSpan?.classList.add('hidden')
         checkIcon?.classList.remove('hidden')
         if (label) {
-          label.className = 'text-[10px] font-bold text-emerald-700 whitespace-nowrap'
+          label.className = 'text-[10px] font-bold text-emerald-700 dark:text-emerald-400 whitespace-nowrap'
         }
       } else if (i === currentDispatchStep) {
         // Activo
-        indicator.className = 'flex h-7 w-7 items-center justify-center rounded-full bg-orangeGov text-white text-xs font-black shadow-sm ring-4 ring-orange-100 transition-all'
+        indicator.className = 'flex h-7 w-7 items-center justify-center rounded-full bg-orangeGov text-white text-xs font-black shadow-sm ring-4 ring-orange-100 dark:ring-orange-950/80 transition-all'
         numSpan?.classList.remove('hidden')
         checkIcon?.classList.add('hidden')
         if (label) {
-          label.className = 'text-[10px] font-bold text-navy whitespace-nowrap'
+          label.className = 'text-[10px] font-bold text-navy dark:text-white whitespace-nowrap'
         }
       } else {
         // Futuro / Pendiente
-        indicator.className = 'flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 text-gray-600 text-xs font-bold transition-all'
+        indicator.className = 'flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 dark:bg-slate-700 text-gray-600 dark:text-slate-300 text-xs font-bold transition-all'
         numSpan?.classList.remove('hidden')
         checkIcon?.classList.add('hidden')
         if (label) {
-          label.className = 'text-[10px] font-medium text-gray-500 whitespace-nowrap'
+          label.className = 'text-[10px] font-medium text-gray-500 dark:text-slate-400 whitespace-nowrap'
         }
       }
     }
@@ -655,7 +659,7 @@ function agregarDestinoItem(initialDepto = '', initialDestino = '') {
   const nextIndex = items.length + 1
 
   const itemDiv = document.createElement('div')
-  itemDiv.className = 'destino-item bg-white p-3.5 rounded-xl border border-orange-200/80 shadow-2xs space-y-2.5 relative animate-in fade-in zoom-in-95'
+  itemDiv.className = 'destino-item bg-white dark:bg-slate-800/90 p-3.5 rounded-xl border border-orange-200/80 dark:border-orange-500/30 shadow-2xs space-y-2.5 relative animate-in fade-in zoom-in-95'
   itemDiv.setAttribute('data-destino-index', String(nextIndex))
 
   const optionsHtml = departamentos
@@ -663,14 +667,14 @@ function agregarDestinoItem(initialDepto = '', initialDestino = '') {
     .join('')
 
   itemDiv.innerHTML = `
-    <div class="flex items-center justify-between text-[11px] font-bold text-navy">
-      <span class="flex items-center gap-1.5 text-orangeGov">
+    <div class="flex items-center justify-between text-[11px] font-bold text-navy dark:text-white">
+      <span class="flex items-center gap-1.5 text-orangeGov dark:text-orange-400">
         <span class="destino-num-badge flex h-4 w-4 items-center justify-center rounded-full bg-orangeGov text-white text-[9px] font-bold">${nextIndex}</span>
         <span class="destino-title-text">Parada Adicional #${nextIndex}</span>
       </span>
       <button
         type="button"
-        class="btn-eliminar-destino text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-0.5 rounded-md transition text-[11px] font-bold flex items-center gap-1 cursor-pointer"
+        class="btn-eliminar-destino text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/40 px-2 py-0.5 rounded-md transition text-[11px] font-bold flex items-center gap-1 cursor-pointer"
         title="Quitar parada"
       >
         <span>✕ Quitar Parada</span>
@@ -679,12 +683,12 @@ function agregarDestinoItem(initialDepto = '', initialDestino = '') {
 
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <div>
-        <label class="block text-xs font-bold text-navy mb-1">
+        <label class="block text-xs font-bold text-navy dark:text-slate-200 mb-1">
           Departamento de San Juan *
         </label>
         <select
           required
-          class="dispatch-depto-select w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-navy focus:border-orangeGov focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
+          class="dispatch-depto-select w-full rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold text-navy dark:text-white focus:border-orangeGov focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
         >
           <option value="">-- Seleccionar Departamento --</option>
           ${optionsHtml}
@@ -692,7 +696,7 @@ function agregarDestinoItem(initialDepto = '', initialDestino = '') {
       </div>
 
       <div>
-        <label class="block text-xs font-bold text-navy mb-1">
+        <label class="block text-xs font-bold text-navy dark:text-slate-200 mb-1">
           Destino Detallado / Escuela / Localidad *
         </label>
         <input
@@ -700,7 +704,7 @@ function agregarDestinoItem(initialDepto = '', initialDestino = '') {
           value="${initialDestino.replace(/"/g, '&quot;')}"
           placeholder="Ej. Escuela Albergue Colola"
           required
-          class="dispatch-destino-input w-full rounded-lg border border-gray-200 bg-white py-2 px-3 text-xs text-navy focus:border-orangeGov focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
+          class="dispatch-destino-input w-full rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 py-2 px-3 text-xs text-navy dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:border-orangeGov focus:outline-none focus:ring-1 focus:ring-orangeGov transition"
         />
       </div>
     </div>
@@ -1361,7 +1365,7 @@ async function openDetailModalForId(id: number) {
       if (c.destino && c.destino.includes(' // ')) {
         const paradas = c.destino.split(' // ')
         elDestino.innerHTML = paradas
-          .map((p: string, idx: number) => `<div class="flex items-center gap-1.5"><span class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orangeGov text-[10px] font-bold">${idx + 1}</span><span>${p}</span></div>`)
+          .map((p: string, idx: number) => `<div class="flex items-center gap-1.5"><span class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-950/60 text-orangeGov dark:text-orange-300 text-[10px] font-bold">${idx + 1}</span><span class="dark:text-slate-200">${p}</span></div>`)
           .join('')
       } else {
         elDestino.innerText = c.destino || '--'
@@ -1412,7 +1416,7 @@ async function openDetailModalForId(id: number) {
     if (elCheckinsList) {
       if (!c.checkins || c.checkins.length === 0) {
         if (elCheckinsCount) elCheckinsCount.innerText = '0 paradas'
-        elCheckinsList.innerHTML = '<p class="text-muted italic py-1">Sin paradas o arribos intermedios registrados aún.</p>'
+        elCheckinsList.innerHTML = '<p class="text-muted dark:text-slate-400 italic py-1">Sin paradas o arribos intermedios registrados aún.</p>'
       } else {
         if (elCheckinsCount) elCheckinsCount.innerText = `${c.checkins.length} parada${c.checkins.length > 1 ? 's' : ''}`
         elCheckinsList.innerHTML = c.checkins
@@ -1421,21 +1425,21 @@ async function openDetailModalForId(id: number) {
             const fecha = chk.fechaRegistro ? new Date(chk.fechaRegistro).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' }) : ''
             const mapsUrl = chk.latitud && chk.longitud ? `https://maps.google.com/?q=${chk.latitud},${chk.longitud}` : null
             return `
-              <div class="flex items-start justify-between p-2.5 rounded-xl border border-gray-100 bg-gray-50/80 hover:bg-gray-50 transition">
+              <div class="flex items-start justify-between p-2.5 rounded-xl border border-gray-100 dark:border-slate-800 bg-gray-50/80 dark:bg-slate-800/80 hover:bg-gray-50 dark:hover:bg-slate-800 transition">
                 <div class="flex items-start gap-2">
                   <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue text-white text-[10px] font-bold mt-0.5">${chk.numeroParada}</span>
                   <div>
-                    <p class="font-bold text-navy text-xs">${chk.destinoNombre}</p>
-                    <p class="text-[11px] text-muted">${fecha} ${hora} ${chk.odometro ? `· <span class="font-mono font-medium">${chk.odometro.toLocaleString('es-AR')} km</span>` : ''}</p>
-                    ${chk.observacion ? `<p class="text-[11px] text-gray-700 italic mt-0.5">"${chk.observacion}"</p>` : ''}
+                    <p class="font-bold text-navy dark:text-white text-xs">${chk.destinoNombre}</p>
+                    <p class="text-[11px] text-muted dark:text-slate-400">${fecha} ${hora} ${chk.odometro ? `· <span class="font-mono font-medium">${chk.odometro.toLocaleString('es-AR')} km</span>` : ''}</p>
+                    ${chk.observacion ? `<p class="text-[11px] text-gray-700 dark:text-slate-300 italic mt-0.5">"${chk.observacion}"</p>` : ''}
                   </div>
                 </div>
                 ${mapsUrl ? `
-                  <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" class="shrink-0 flex items-center gap-1 text-[10px] font-bold text-blue hover:text-blue-700 bg-blue/10 hover:bg-blue/20 px-2 py-1 rounded-lg transition" title="Ver en Google Maps">
+                  <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" class="shrink-0 flex items-center gap-1 text-[10px] font-bold text-blue hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-200 bg-blue/10 hover:bg-blue/20 dark:bg-blue-950/50 dark:hover:bg-blue-900/60 px-2 py-1 rounded-lg transition" title="Ver en Google Maps">
                     <span>GPS</span>
                     <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                   </a>
-                ` : '<span class="text-[10px] text-muted font-medium">Sin GPS</span>'}
+                ` : '<span class="text-[10px] text-muted dark:text-slate-400 font-medium">Sin GPS</span>'}
               </div>
             `
           })
