@@ -49,11 +49,34 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   try {
     const body = await request.json()
 
-    if (!body.vehiculoId || !body.fechaCarga || !body.tipoCombustible || !body.litros || !body.precioPorLitro || body.odometroCarga === undefined) {
+    const vehiculoId = body.vehiculoId ? Number(body.vehiculoId) : 0
+    const litros = body.litros ? Number(body.litros) : 0
+    const importeTotal = body.importeTotal ? Number(body.importeTotal) : undefined
+    const precioPorLitro = body.precioPorLitro
+      ? Number(body.precioPorLitro)
+      : importeTotal && litros > 0
+        ? Number((importeTotal / litros).toFixed(2))
+        : 0
+
+    const rawFecha = body.fechaCarga ? String(body.fechaCarga) : new Date().toISOString()
+    const fechaCarga = rawFecha.slice(0, 19).replace('T', ' ')
+
+    let odometroCarga = body.odometroCarga !== undefined && body.odometroCarga !== null && body.odometroCarga !== ''
+      ? Number(body.odometroCarga)
+      : undefined
+
+    if ((odometroCarga === undefined || isNaN(odometroCarga) || odometroCarga <= 0) && vehiculoId > 0) {
+      const vehRows = await query<any>(`SELECT odometro_actual FROM vehiculos WHERE id = ? LIMIT 1`, [vehiculoId])
+      if (vehRows && vehRows.length > 0) {
+        odometroCarga = Number(vehRows[0].odometro_actual || 0)
+      }
+    }
+
+    if (!vehiculoId || !body.tipoCombustible || !litros || !precioPorLitro || odometroCarga === undefined) {
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'Los campos Vehículo, Fecha, Tipo de Combustible, Litros, Precio por Litro y Odómetro son obligatorios.',
+          error: 'Los campos Vehículo, Tipo de Combustible, Litros e Importe/Precio por Litro son obligatorios.',
         }),
         { status: 400, headers: { 'Content-Type': 'application/json; charset=utf-8' } }
       )
@@ -70,16 +93,16 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     }
 
     const payload = {
-      vehiculoId: Number(body.vehiculoId),
+      vehiculoId,
       choferId: choferIdToUse,
       comisionId: body.comisionId ? Number(body.comisionId) : undefined,
-      fechaCarga: String(body.fechaCarga),
+      fechaCarga,
       estacionServicio: body.estacionServicio ? String(body.estacionServicio).trim() : undefined,
       tipoCombustible: body.tipoCombustible,
-      litros: Number(body.litros),
-      precioPorLitro: Number(body.precioPorLitro),
-      importeTotal: body.importeTotal ? Number(body.importeTotal) : undefined,
-      odometroCarga: Number(body.odometroCarga),
+      litros,
+      precioPorLitro,
+      importeTotal,
+      odometroCarga,
       tanqueLleno: body.tanqueLleno !== undefined ? Boolean(body.tanqueLleno) : true,
       numeroTicket: body.numeroTicket ? String(body.numeroTicket).trim() : undefined,
       metodoPago: body.metodoPago || 'tarjeta_flota',

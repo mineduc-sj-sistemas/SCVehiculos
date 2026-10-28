@@ -690,6 +690,7 @@ const esHorarioVencido = Boolean(fechaRegreso && ahora > fechaRegreso)
                 inputmode="numeric"
                 pattern="[0-9]*"
                 id="fuel-odometro"
+                value={viajeActivo?.odometro_salida || viajeActivo?.vehiculo_odometro || 0}
                 placeholder="Km actual"
                 class="w-full rounded-2xl border border-line bg-paper px-3 py-2.5 text-base sm:text-xs font-mono font-bold text-navy focus:border-orangeGov focus:outline-none"
               />

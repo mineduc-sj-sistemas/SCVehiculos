@@ -381,6 +381,12 @@ function initMiViaje() {
     }
 
     try {
+      const litrosVal = inputLitros?.value ? parseFloat(inputLitros.value) : 0
+      const importeVal = inputImporte?.value ? parseFloat(inputImporte.value) : 0
+      const precioLitroVal = litrosVal > 0 && importeVal > 0 ? Number((importeVal / litrosVal).toFixed(2)) : 1250
+      const odoBase = parseInt(container.getAttribute('data-odometro-salida') || '0', 10)
+      const odoVal = inputOdo?.value ? parseInt(inputOdo.value, 10) : (odoBase > 0 ? odoBase : undefined)
+
       const res = await fetch('/api/combustible', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -388,11 +394,13 @@ function initMiViaje() {
           vehiculoId: parseInt(vehiculoId, 10),
           choferId: choferId ? parseInt(choferId, 10) : undefined,
           comisionId: comisionId ? parseInt(comisionId, 10) : undefined,
+          fechaCarga: new Date().toISOString().slice(0, 19).replace('T', ' '),
           estacionServicio: inputEstacion?.value || 'YPF en Ruta',
           tipoCombustible: selectTipo?.value || 'diesel_500',
-          litros: inputLitros?.value ? parseFloat(inputLitros.value) : 0,
-          importeTotal: inputImporte?.value ? parseFloat(inputImporte.value) : 0,
-          odometroCarga: inputOdo?.value ? parseInt(inputOdo.value, 10) : undefined,
+          litros: litrosVal,
+          precioPorLitro: precioLitroVal,
+          importeTotal: importeVal,
+          odometroCarga: odoVal,
           numeroTicket: inputTicket?.value || 'S/N',
           metodoPago: 'tarjeta_flota',
         }),

@@ -89,8 +89,8 @@ export const PUT: APIRoute = async ({ params, request, cookies }) => {
 }
 
 export const PATCH: APIRoute = async ({ params, request, cookies }) => {
-  // Roles autorizados para actualizar comisiones: 1 (Admin), 2 (Operador)
-  const auth = requireAuth(cookies, [1, 2])
+  // Roles autorizados para actualizar estado de comisiones (salida/regreso): 1 (Admin), 2 (Operador), 4 (Chofer)
+  const auth = requireAuth(cookies, [1, 2, 4])
   if (!auth.authorized) return auth.response!
 
   const id = Number(params.id)
@@ -104,8 +104,14 @@ export const PATCH: APIRoute = async ({ params, request, cookies }) => {
   try {
     const body = await request.json()
 
-    // Si viene para edición general en lugar de cambio de estado de despacho
+    // Si viene para edición general en lugar de cambio de estado de despacho (solo Admin y Operador)
     if (body.accion === 'editar' || (!body.estado && (body.destino || body.motivo || body.vehiculoId))) {
+      if (auth.user?.rolId === 4) {
+        return new Response(JSON.stringify({ success: false, error: 'Solo Administración o Despacho pueden modificar los datos del itinerario.' }), {
+          status: 403,
+          headers: { 'Content-Type': 'application/json; charset=utf-8' },
+        })
+      }
       const res = await editarComision(id, {
         vehiculoId: body.vehiculoId ? Number(body.vehiculoId) : undefined,
         choferId: body.choferId ? Number(body.choferId) : undefined,
