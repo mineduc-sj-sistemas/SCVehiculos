@@ -78,42 +78,53 @@ function formatDate(d: any): string | null {
  * Obtiene métricas ejecutivas de mantenimiento para el mes en curso
  */
 export async function getMaintenanceKpis(): Promise<MaintenanceKpis> {
-  const currentMonthStart = new Date()
-  currentMonthStart.setDate(1)
-  const fechaInicioMes = formatDate(currentMonthStart)
+  try {
+    const currentMonthStart = new Date()
+    currentMonthStart.setDate(1)
+    const fechaInicioMes = formatDate(currentMonthStart)
 
-  const [resTotales, resEnTaller, resGastos] = await Promise.all([
-    query<any>(
-      `SELECT 
-        COUNT(*) AS total_mes,
-        SUM(CASE WHEN tipo = 'preventivo' THEN 1 ELSE 0 END) AS preventivos,
-        SUM(CASE WHEN tipo = 'correctivo' THEN 1 ELSE 0 END) AS correctivos
-       FROM mantenimientos
-       WHERE fecha_programada >= ?`,
-      [fechaInicioMes]
-    ),
-    query<any>(
-      `SELECT COUNT(*) AS en_taller FROM vehiculos WHERE estado = 'en_taller' AND activo = 1`
-    ),
-    query<any>(
-      `SELECT COALESCE(SUM(costo_total), 0) AS gasto_mes 
-       FROM mantenimientos 
-       WHERE (fecha_egreso >= ? OR (fecha_egreso IS NULL AND fecha_programada >= ?)) 
-         AND estado != 'cancelado'`,
-      [fechaInicioMes, fechaInicioMes]
-    ),
-  ])
+    const [resTotales, resEnTaller, resGastos] = await Promise.all([
+      query<any>(
+        `SELECT 
+          COUNT(*) AS total_mes,
+          SUM(CASE WHEN tipo = 'preventivo' THEN 1 ELSE 0 END) AS preventivos,
+          SUM(CASE WHEN tipo = 'correctivo' THEN 1 ELSE 0 END) AS correctivos
+         FROM mantenimientos
+         WHERE fecha_programada >= ?`,
+        [fechaInicioMes]
+      ),
+      query<any>(
+        `SELECT COUNT(*) AS en_taller FROM vehiculos WHERE estado = 'en_taller' AND activo = 1`
+      ),
+      query<any>(
+        `SELECT COALESCE(SUM(costo_total), 0) AS gasto_mes 
+         FROM mantenimientos 
+         WHERE (fecha_egreso >= ? OR (fecha_egreso IS NULL AND fecha_programada >= ?)) 
+           AND estado != 'cancelado'`,
+        [fechaInicioMes, fechaInicioMes]
+      ),
+    ])
 
-  const t = resTotales[0] || {}
-  const et = resEnTaller[0] || {}
-  const g = resGastos[0] || {}
+    const t = resTotales[0] || {}
+    const et = resEnTaller[0] || {}
+    const g = resGastos[0] || {}
 
-  return {
-    totalMes: Number(t.total_mes ?? 0),
-    enTallerAhora: Number(et.en_taller ?? 0),
-    gastoTotalMes: Number(g.gasto_mes ?? 0),
-    preventivosCount: Number(t.preventivos ?? 0),
-    correctivosCount: Number(t.correctivos ?? 0),
+    return {
+      totalMes: Number(t.total_mes ?? 0),
+      enTallerAhora: Number(et.en_taller ?? 0),
+      gastoTotalMes: Number(g.gasto_mes ?? 0),
+      preventivosCount: Number(t.preventivos ?? 0),
+      correctivosCount: Number(t.correctivos ?? 0),
+    }
+  } catch (error) {
+    console.error('Error al obtener KPIs de mantenimientos:', error)
+    return {
+      totalMes: 0,
+      enTallerAhora: 0,
+      gastoTotalMes: 0,
+      preventivosCount: 0,
+      correctivosCount: 0,
+    }
   }
 }
 
@@ -121,60 +132,65 @@ export async function getMaintenanceKpis(): Promise<MaintenanceKpis> {
  * Obtiene el listado completo de mantenimientos ordenados cronológicamente
  */
 export async function getMaintenanceList(tipo?: string, estado?: string): Promise<MantenimientoItem[]> {
-  let sql = `
-    SELECT 
-      m.id, m.vehiculo_id, m.tipo, m.titulo, m.descripcion, m.taller_proveedor,
-      m.odometro_servicio, m.fecha_programada, m.fecha_ingreso, m.fecha_egreso,
-      m.costo_mano_obra, m.costo_repuestos, m.costo_total, m.numero_factura,
-      m.estado, m.detalle_trabajos, m.proximo_mantenimiento_km, m.proximo_mantenimiento_fecha,
-      m.created_at,
-      v.patente AS vehiculo_patente, v.marca AS vehiculo_marca, v.modelo AS vehiculo_modelo,
-      CONCAT(u.nombre, ' ', u.apellido) AS usuario_registro_nombre
-    FROM mantenimientos m
-    INNER JOIN vehiculos v ON m.vehiculo_id = v.id
-    LEFT JOIN usuarios u ON m.usuario_registro_id = u.id
-    WHERE 1=1
-  `
-  const params: any[] = []
+  try {
+    let sql = `
+      SELECT 
+        m.id, m.vehiculo_id, m.tipo, m.titulo, m.descripcion, m.taller_proveedor,
+        m.odometro_servicio, m.fecha_programada, m.fecha_ingreso, m.fecha_egreso,
+        m.costo_mano_obra, m.costo_repuestos, m.costo_total, m.numero_factura,
+        m.estado, m.detalle_trabajos, m.proximo_mantenimiento_km, m.proximo_mantenimiento_fecha,
+        m.created_at,
+        v.patente AS vehiculo_patente, v.marca AS vehiculo_marca, v.modelo AS vehiculo_modelo,
+        CONCAT(u.nombre, ' ', u.apellido) AS usuario_registro_nombre
+      FROM mantenimientos m
+      INNER JOIN vehiculos v ON m.vehiculo_id = v.id
+      LEFT JOIN usuarios u ON m.usuario_registro_id = u.id
+      WHERE 1=1
+    `
+    const params: any[] = []
 
-  if (tipo) {
-    sql += ` AND m.tipo = ?`
-    params.push(tipo)
+    if (tipo) {
+      sql += ` AND m.tipo = ?`
+      params.push(tipo)
+    }
+    if (estado) {
+      sql += ` AND m.estado = ?`
+      params.push(estado)
+    }
+
+    sql += ` ORDER BY m.fecha_programada DESC, m.id DESC`
+
+    const rows = await query<any>(sql, params)
+
+    return rows.map((r: any) => ({
+      id: Number(r.id),
+      vehiculoId: Number(r.vehiculo_id),
+      vehiculoPatente: r.vehiculo_patente,
+      vehiculoMarca: r.vehiculo_marca,
+      vehiculoModelo: r.vehiculo_modelo,
+      tipo: r.tipo as TipoMantenimiento,
+      titulo: r.titulo,
+      descripcion: r.descripcion ?? null,
+      tallerProveedor: r.taller_proveedor ?? null,
+      odometroServicio: Number(r.odometro_servicio ?? 0),
+      fechaProgramada: formatDate(r.fecha_programada) || '',
+      fechaIngreso: r.fecha_ingreso ? (r.fecha_ingreso instanceof Date ? r.fecha_ingreso.toISOString() : String(r.fecha_ingreso)) : null,
+      fechaEgreso: r.fecha_egreso ? (r.fecha_egreso instanceof Date ? r.fecha_egreso.toISOString() : String(r.fecha_egreso)) : null,
+      costoManoObra: Number(r.costo_mano_obra ?? 0),
+      costoRepuestos: Number(r.costo_repuestos ?? 0),
+      costoTotal: Number(r.costo_total ?? 0),
+      numeroFactura: r.numero_factura ?? null,
+      estado: r.estado as EstadoMantenimiento,
+      detalleTrabajos: r.detalle_trabajos ?? null,
+      proximoMantenimientoKm: r.proximo_mantenimiento_km ? Number(r.proximo_mantenimiento_km) : null,
+      proximoMantenimientoFecha: formatDate(r.proximo_mantenimiento_fecha),
+      usuarioRegistroNombre: r.usuario_registro_nombre ?? 'Administración',
+      createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : String(r.created_at),
+    }))
+  } catch (error) {
+    console.error('Error al obtener listado de mantenimientos:', error)
+    return []
   }
-  if (estado) {
-    sql += ` AND m.estado = ?`
-    params.push(estado)
-  }
-
-  sql += ` ORDER BY m.fecha_programada DESC, m.id DESC`
-
-  const rows = await query<any>(sql, params)
-
-  return rows.map((r: any) => ({
-    id: Number(r.id),
-    vehiculoId: Number(r.vehiculo_id),
-    vehiculoPatente: r.vehiculo_patente,
-    vehiculoMarca: r.vehiculo_marca,
-    vehiculoModelo: r.vehiculo_modelo,
-    tipo: r.tipo as TipoMantenimiento,
-    titulo: r.titulo,
-    descripcion: r.descripcion ?? null,
-    tallerProveedor: r.taller_proveedor ?? null,
-    odometroServicio: Number(r.odometro_servicio ?? 0),
-    fechaProgramada: formatDate(r.fecha_programada) || '',
-    fechaIngreso: r.fecha_ingreso ? (r.fecha_ingreso instanceof Date ? r.fecha_ingreso.toISOString() : String(r.fecha_ingreso)) : null,
-    fechaEgreso: r.fecha_egreso ? (r.fecha_egreso instanceof Date ? r.fecha_egreso.toISOString() : String(r.fecha_egreso)) : null,
-    costoManoObra: Number(r.costo_mano_obra ?? 0),
-    costoRepuestos: Number(r.costo_repuestos ?? 0),
-    costoTotal: Number(r.costo_total ?? 0),
-    numeroFactura: r.numero_factura ?? null,
-    estado: r.estado as EstadoMantenimiento,
-    detalleTrabajos: r.detalle_trabajos ?? null,
-    proximoMantenimientoKm: r.proximo_mantenimiento_km ? Number(r.proximo_mantenimiento_km) : null,
-    proximoMantenimientoFecha: formatDate(r.proximo_mantenimiento_fecha),
-    usuarioRegistroNombre: r.usuario_registro_nombre ?? 'Administración',
-    createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : String(r.created_at),
-  }))
 }
 
 /**

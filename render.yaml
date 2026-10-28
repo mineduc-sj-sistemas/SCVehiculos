@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: sc-vehiculos
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: oregon
+    healthCheckPath: /login
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "4321"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: "3306"
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        value: sc_vehiculos
+      - key: MYSQL_URL
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false

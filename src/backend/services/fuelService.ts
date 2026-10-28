@@ -69,57 +69,67 @@ function formatDate(d: any): string {
  * Obtiene métricas ejecutivas de combustible para el mes en curso (global de flota o específico de chofer)
  */
 export async function getFuelKpis(choferId?: number): Promise<FuelKpis> {
-  const currentMonthStart = new Date()
-  currentMonthStart.setDate(1)
-  const fechaInicioMes = formatDate(currentMonthStart)
+  try {
+    const currentMonthStart = new Date()
+    currentMonthStart.setDate(1)
+    const fechaInicioMes = formatDate(currentMonthStart)
 
-  let sqlTotales = `
-    SELECT 
-      COUNT(*) AS total_cargas,
-      COALESCE(SUM(litros), 0) AS total_litros,
-      COALESCE(SUM(importe_total), 0) AS total_importe
-    FROM cargas_combustible
-    WHERE fecha_carga >= ?
-  `
-  const paramsTotales: any[] = [fechaInicioMes]
+    let sqlTotales = `
+      SELECT 
+        COUNT(*) AS total_cargas,
+        COALESCE(SUM(litros), 0) AS total_litros,
+        COALESCE(SUM(importe_total), 0) AS total_importe
+      FROM cargas_combustible
+      WHERE fecha_carga >= ?
+    `
+    const paramsTotales: any[] = [fechaInicioMes]
 
-  if (choferId) {
-    sqlTotales += ` AND chofer_id = ?`
-    paramsTotales.push(choferId)
-  }
+    if (choferId) {
+      sqlTotales += ` AND chofer_id = ?`
+      paramsTotales.push(choferId)
+    }
 
-  let sqlRendimiento = `
-    SELECT AVG(rendimiento_km_l) AS rend_promedio 
-    FROM cargas_combustible 
-    WHERE rendimiento_km_l IS NOT NULL AND rendimiento_km_l BETWEEN 3.5 AND 30.0
-  `
-  const paramsRendimiento: any[] = []
+    let sqlRendimiento = `
+      SELECT AVG(rendimiento_km_l) AS rend_promedio 
+      FROM cargas_combustible 
+      WHERE rendimiento_km_l IS NOT NULL AND rendimiento_km_l BETWEEN 3.5 AND 30.0
+    `
+    const paramsRendimiento: any[] = []
 
-  if (choferId) {
-    sqlRendimiento += ` AND chofer_id = ?`
-    paramsRendimiento.push(choferId)
-  }
+    if (choferId) {
+      sqlRendimiento += ` AND chofer_id = ?`
+      paramsRendimiento.push(choferId)
+    }
 
-  const [resTotales, resRendimiento] = await Promise.all([
-    query<any>(sqlTotales, paramsTotales),
-    query<any>(sqlRendimiento, paramsRendimiento),
-  ])
+    const [resTotales, resRendimiento] = await Promise.all([
+      query<any>(sqlTotales, paramsTotales),
+      query<any>(sqlRendimiento, paramsRendimiento),
+    ])
 
-  const t = resTotales[0] || {}
-  const r = resRendimiento[0] || {}
+    const t = resTotales[0] || {}
+    const r = resRendimiento[0] || {}
 
-  let rendPromedio = 0
-  if (r.rend_promedio != null) {
-    rendPromedio = Number(Number(r.rend_promedio).toFixed(2))
-  } else if (!choferId) {
-    rendPromedio = 10.5 // Valor referencial para flota
-  }
+    let rendPromedio = 0
+    if (r.rend_promedio != null) {
+      rendPromedio = Number(Number(r.rend_promedio).toFixed(2))
+    } else if (!choferId) {
+      rendPromedio = 10.5 // Valor referencial para flota
+    }
 
-  return {
-    totalLitrosMes: Number(Number(t.total_litros ?? 0).toFixed(1)),
-    gastoTotalMes: Number(t.total_importe ?? 0),
-    cargasCountMes: Number(t.total_cargas ?? 0),
-    rendimientoPromedioKmL: rendPromedio,
+    return {
+      totalLitrosMes: Number(Number(t.total_litros ?? 0).toFixed(1)),
+      gastoTotalMes: Number(t.total_importe ?? 0),
+      cargasCountMes: Number(t.total_cargas ?? 0),
+      rendimientoPromedioKmL: rendPromedio,
+    }
+  } catch (error) {
+    console.error('Error al obtener KPIs de combustible:', error)
+    return {
+      totalLitrosMes: 0,
+      gastoTotalMes: 0,
+      cargasCountMes: 0,
+      rendimientoPromedioKmL: 0,
+    }
   }
 }
 
@@ -127,63 +137,68 @@ export async function getFuelKpis(choferId?: number): Promise<FuelKpis> {
  * Obtiene el listado completo de cargas de combustible con filtros opcionales
  */
 export async function getFuelList(vehiculoId?: number, choferId?: number): Promise<CargaCombustibleItem[]> {
-  let sql = `
-    SELECT 
-      c.id, c.vehiculo_id, c.chofer_id, c.comision_id, c.fecha_carga,
-      c.estacion_servicio, c.tipo_combustible, c.litros, c.precio_por_litro,
-      c.importe_total, c.odometro_carga, c.tanque_lleno, c.numero_ticket,
-      c.metodo_pago, c.rendimiento_km_l, c.observaciones, c.created_at,
-      v.patente AS vehiculo_patente, v.marca AS vehiculo_marca, v.modelo AS vehiculo_modelo,
-      CONCAT(ch.apellido, ', ', ch.nombre) AS chofer_nombre_completo,
-      com.codigo_comision,
-      CONCAT(u.nombre, ' ', u.apellido) AS usuario_registro_nombre
-    FROM cargas_combustible c
-    INNER JOIN vehiculos v ON c.vehiculo_id = v.id
-    LEFT JOIN choferes ch ON c.chofer_id = ch.id
-    LEFT JOIN comisiones com ON c.comision_id = com.id
-    LEFT JOIN usuarios u ON c.usuario_registro_id = u.id
-    WHERE 1=1
-  `
-  const params: any[] = []
+  try {
+    let sql = `
+      SELECT 
+        c.id, c.vehiculo_id, c.chofer_id, c.comision_id, c.fecha_carga,
+        c.estacion_servicio, c.tipo_combustible, c.litros, c.precio_por_litro,
+        c.importe_total, c.odometro_carga, c.tanque_lleno, c.numero_ticket,
+        c.metodo_pago, c.rendimiento_km_l, c.observaciones, c.created_at,
+        v.patente AS vehiculo_patente, v.marca AS vehiculo_marca, v.modelo AS vehiculo_modelo,
+        CONCAT(ch.apellido, ', ', ch.nombre) AS chofer_nombre_completo,
+        com.codigo_comision,
+        CONCAT(u.nombre, ' ', u.apellido) AS usuario_registro_nombre
+      FROM cargas_combustible c
+      INNER JOIN vehiculos v ON c.vehiculo_id = v.id
+      LEFT JOIN choferes ch ON c.chofer_id = ch.id
+      LEFT JOIN comisiones com ON c.comision_id = com.id
+      LEFT JOIN usuarios u ON c.usuario_registro_id = u.id
+      WHERE 1=1
+    `
+    const params: any[] = []
 
-  if (vehiculoId) {
-    sql += ` AND c.vehiculo_id = ?`
-    params.push(vehiculoId)
+    if (vehiculoId) {
+      sql += ` AND c.vehiculo_id = ?`
+      params.push(vehiculoId)
+    }
+    if (choferId) {
+      sql += ` AND c.chofer_id = ?`
+      params.push(choferId)
+    }
+
+    sql += ` ORDER BY c.fecha_carga DESC, c.id DESC`
+
+    const rows = await query<any>(sql, params)
+
+    return rows.map((r: any) => ({
+      id: Number(r.id),
+      vehiculoId: Number(r.vehiculo_id),
+      vehiculoPatente: r.vehiculo_patente,
+      vehiculoMarca: r.vehiculo_marca,
+      vehiculoModelo: r.vehiculo_modelo,
+      choferId: r.chofer_id ? Number(r.chofer_id) : null,
+      choferNombreCompleto: r.chofer_nombre_completo ?? null,
+      comisionId: r.comision_id ? Number(r.comision_id) : null,
+      codigoComision: r.codigo_comision ?? null,
+      fechaCarga: r.fecha_carga instanceof Date ? r.fecha_carga.toISOString() : String(r.fecha_carga),
+      estacionServicio: r.estacion_servicio ?? null,
+      tipoCombustible: r.tipo_combustible as TipoCombustible,
+      litros: Number(r.litros),
+      precioPorLitro: Number(r.precio_por_litro),
+      importeTotal: Number(r.importe_total),
+      odometroCarga: Number(r.odometro_carga),
+      tanqueLleno: Boolean(r.tanque_lleno),
+      numeroTicket: r.numero_ticket ?? null,
+      metodoPago: r.metodo_pago as MetodoPagoCombustible,
+      rendimientoKmL: r.rendimiento_km_l ? Number(r.rendimiento_km_l) : null,
+      observaciones: r.observaciones ?? null,
+      usuarioRegistroNombre: r.usuario_registro_nombre ?? 'Administración',
+      createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : String(r.created_at),
+    }))
+  } catch (error) {
+    console.error('Error al obtener listado de cargas de combustible:', error)
+    return []
   }
-  if (choferId) {
-    sql += ` AND c.chofer_id = ?`
-    params.push(choferId)
-  }
-
-  sql += ` ORDER BY c.fecha_carga DESC, c.id DESC`
-
-  const rows = await query<any>(sql, params)
-
-  return rows.map((r: any) => ({
-    id: Number(r.id),
-    vehiculoId: Number(r.vehiculo_id),
-    vehiculoPatente: r.vehiculo_patente,
-    vehiculoMarca: r.vehiculo_marca,
-    vehiculoModelo: r.vehiculo_modelo,
-    choferId: r.chofer_id ? Number(r.chofer_id) : null,
-    choferNombreCompleto: r.chofer_nombre_completo ?? null,
-    comisionId: r.comision_id ? Number(r.comision_id) : null,
-    codigoComision: r.codigo_comision ?? null,
-    fechaCarga: r.fecha_carga instanceof Date ? r.fecha_carga.toISOString() : String(r.fecha_carga),
-    estacionServicio: r.estacion_servicio ?? null,
-    tipoCombustible: r.tipo_combustible as TipoCombustible,
-    litros: Number(r.litros),
-    precioPorLitro: Number(r.precio_por_litro),
-    importeTotal: Number(r.importe_total),
-    odometroCarga: Number(r.odometro_carga),
-    tanqueLleno: Boolean(r.tanque_lleno),
-    numeroTicket: r.numero_ticket ?? null,
-    metodoPago: r.metodo_pago as MetodoPagoCombustible,
-    rendimientoKmL: r.rendimiento_km_l ? Number(r.rendimiento_km_l) : null,
-    observaciones: r.observaciones ?? null,
-    usuarioRegistroNombre: r.usuario_registro_nombre ?? 'Administración',
-    createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : String(r.created_at),
-  }))
 }
 
 /**

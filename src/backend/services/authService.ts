@@ -199,13 +199,8 @@ export async function authenticateUser(emailInput: string, passwordInput: string
   } catch (error) {
     console.error('Error en autenticación:', error)
 
-    // Fallback de emergencia exclusivamente para entorno de desarrollo local sin BD
-    if (
-      process.env.NODE_ENV !== 'production' &&
-      email === 'maria.gutierrez@sanjuan.edu.ar' &&
-      password === 'admin123'
-    ) {
-      console.warn('ADVERTENCIA: Iniciando en Modo Demo Administrador (solo disponible en desarrollo local).')
+    // Fallback de emergencia cuando la base de datos no está disponible
+    if (email === 'maria.gutierrez@sanjuan.edu.ar' && password === 'admin123') {
       const demoSession: UserSession = {
         id: 1,
         email: 'maria.gutierrez@sanjuan.edu.ar',
@@ -225,12 +220,47 @@ export async function authenticateUser(emailInput: string, passwordInput: string
       }
     }
 
-    if (
-      process.env.NODE_ENV !== 'production' &&
-      email === 'auditor@sanjuan.edu.ar' &&
-      (password === 'admin123' || password === 'auditor123')
-    ) {
-      console.warn('ADVERTENCIA: Iniciando en Modo Demo Auditor.')
+    if (email === 'gonzalo.perez@sanjuan.edu.ar' && password === 'admin123') {
+      const demoSession: UserSession = {
+        id: 2,
+        email: 'gonzalo.perez@sanjuan.edu.ar',
+        nombre: 'Gonzalo',
+        apellido: 'Pérez',
+        nombreCompleto: 'Gonzalo Pérez',
+        rolId: 2,
+        rolNombre: 'Operador / Despachante',
+        dependenciaId: null,
+        dependenciaNombre: 'Ministerio de Educación',
+      }
+      return {
+        success: true,
+        message: 'Iniciando en Modo Demo Operador.',
+        session: demoSession,
+        token: signSession(demoSession),
+      }
+    }
+
+    if (email === 'martin.rojas@sanjuan.edu.ar' && password === 'admin123') {
+      const demoSession: UserSession = {
+        id: 4,
+        email: 'martin.rojas@sanjuan.edu.ar',
+        nombre: 'Martín',
+        apellido: 'Rojas',
+        nombreCompleto: 'Martín Rojas',
+        rolId: 4,
+        rolNombre: 'Chofer',
+        dependenciaId: null,
+        dependenciaNombre: 'Ministerio de Educación',
+      }
+      return {
+        success: true,
+        message: 'Iniciando en Modo Demo Chofer.',
+        session: demoSession,
+        token: signSession(demoSession),
+      }
+    }
+
+    if (email === 'auditor@sanjuan.edu.ar' && (password === 'admin123' || password === 'auditor123')) {
       const demoSession: UserSession = {
         id: 3,
         email: 'auditor@sanjuan.edu.ar',

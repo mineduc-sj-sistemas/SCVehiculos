@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "start": "astro preview",
+    "start": "node scripts/init_db.mjs && node ./dist/server/entry.mjs",
+    "preview": "astro preview",
+    "db:init": "node scripts/init_db.mjs",
     "test": "node tests/system_test_suite.mjs",
     "docker:dev": "docker compose -f docker-compose.yml -f docker-compose.dev.yml up",
     "docker:build": "docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build",

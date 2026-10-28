@@ -27,6 +27,9 @@ RUN pnpm build
 FROM base AS runner
 WORKDIR /app
 
+# Instalar MariaDB liviano para modo autónomo en la nube (Render) cuando no hay BD externa
+RUN apk add --no-cache mariadb mariadb-client
+
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=4321
@@ -36,7 +39,9 @@ COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/dist ./dist
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/database ./database
+COPY --from=builder /app/scripts ./scripts
 
 EXPOSE 4321
 
-CMD ["node", "./dist/server/entry.mjs"]
+CMD ["sh", "-c", "node scripts/init_db.mjs && node ./dist/server/entry.mjs"]

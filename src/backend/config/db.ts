@@ -4,17 +4,33 @@ import mysql from 'mysql2/promise'
  * Conexión y Pool de Base de Datos MySQL (sc_vehiculos)
  * Configurado con codificación completa utf8mb4 para caracteres en español.
  */
-export const pool = mysql.createPool({
-  host: process.env.DB_HOST || '127.0.0.1',
-  port: Number(process.env.DB_PORT) || 3306,
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'sc_vehiculos',
-  charset: 'utf8mb4',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-})
+const dbHost = process.env.DB_HOST || process.env.MYSQLHOST || '127.0.0.1'
+const dbPort = Number(process.env.DB_PORT || process.env.MYSQLPORT) || 3306
+const dbUser = process.env.DB_USER || process.env.MYSQLUSER || 'root'
+const dbPassword = process.env.DB_PASSWORD || process.env.MYSQLPASSWORD || ''
+const dbName = process.env.DB_NAME || process.env.MYSQLDATABASE || 'sc_vehiculos'
+
+const poolConfig: mysql.PoolOptions = (process.env.MYSQL_URL || process.env.DATABASE_URL)
+  ? {
+      uri: process.env.MYSQL_URL || process.env.DATABASE_URL,
+      charset: 'utf8mb4',
+      waitForConnections: true,
+      connectionLimit: 10,
+      queueLimit: 0,
+    }
+  : {
+      host: dbHost,
+      port: dbPort,
+      user: dbUser,
+      password: dbPassword,
+      database: dbName,
+      charset: 'utf8mb4',
+      waitForConnections: true,
+      connectionLimit: 10,
+      queueLimit: 0,
+    }
+
+export const pool = mysql.createPool(poolConfig)
 
 /**
  * Helper genérico para ejecución de consultas SQL preparadas
