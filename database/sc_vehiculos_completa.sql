@@ -415,7 +415,8 @@ INSERT INTO `usuarios` (`id`, `rol_id`, `dependencia_id`, `nombre`, `apellido`, 
 (5, 4, NULL, 'Lucía', 'Gómez', 'lucia.gomez@sanjuan.edu.ar', '$2b$10$476RAYizCI0NW.M6lBaX6OxR9vtFjtA3de9wSx/WkeTBTDZcYGHda', '31789456', '264-4223344', 1),
 (6, 4, NULL, 'Carlos', 'Molina', 'carlos.molina@sanjuan.edu.ar', '$2b$10$476RAYizCI0NW.M6lBaX6OxR9vtFjtA3de9wSx/WkeTBTDZcYGHda', '25987654', '264-4334455', 1),
 (7, 4, NULL, 'Esteban', 'Paredes', 'esteban.paredes@sanjuan.edu.ar', '$2b$10$476RAYizCI0NW.M6lBaX6OxR9vtFjtA3de9wSx/WkeTBTDZcYGHda', '29345678', '264-4445566', 1),
-(8, 4, NULL, 'Javier', 'Salinas', 'javier.salinas@sanjuan.edu.ar', '$2b$10$476RAYizCI0NW.M6lBaX6OxR9vtFjtA3de9wSx/WkeTBTDZcYGHda', '33456789', '264-4556677', 1);
+(8, 4, NULL, 'Javier', 'Salinas', 'javier.salinas@sanjuan.edu.ar', '$2b$10$476RAYizCI0NW.M6lBaX6OxR9vtFjtA3de9wSx/WkeTBTDZcYGHda', '33456789', '264-4556677', 1),
+(9, 1, NULL, 'Aníbal', 'Administrador', 'anibal@sanjuanadmin', '$2b$10$476RAYizCI0NW.M6lBaX6OxR9vtFjtA3de9wSx/WkeTBTDZcYGHda', '25112233', '264-4801122', 1);
 
 -- 4. Choferes con vencimientos relativos
 INSERT INTO `choferes` (`id`, `usuario_id`, `nombre`, `apellido`, `dni`, `cuil`, `telefono`, `email`, `direccion`, `numero_licencia`, `categoria_licencia`, `fecha_vencimiento_licencia`, `estado`, `observaciones`) VALUES

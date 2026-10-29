@@ -1,5 +1,5 @@
 ---
-import { Bus, ClipboardCheck, Eye, EyeOff, KeyRound, Lock, Mail, Navigation, ShieldCheck } from 'lucide-astro'
+import { Eye, EyeOff, Lock, Mail } from 'lucide-astro'
 import SanJuanLogo from '../frontend/components/ui/SanJuanLogo.astro'
 import PwaManager from '../frontend/components/pwa/PwaManager.astro'
 import { verifySessionToken, SESSION_COOKIE_NAME } from '../backend/index'
@@ -69,9 +69,10 @@ if (existingSession) {
               <input
                 id="email"
                 name="email"
-                type="email"
+                type="text"
+                inputmode="email"
                 required
-                autocomplete="email"
+                autocomplete="username"
                 placeholder="usuario@sanjuan.edu.ar"
                 class="w-full rounded-xl border border-line bg-paper pl-10 pr-3.5 py-2.5 text-xs font-semibold text-navy outline-none focus:border-orangeGov focus:ring-2 focus:ring-orangeGov/15 transition"
               />
@@ -117,37 +118,6 @@ if (existingSession) {
             <span id="btn-login-text">Ingresar al Sistema</span>
           </button>
         </form>
-
-        <!-- Divisor y Acceso Rápido Demo -->
-        <div class="mt-6 pt-5 border-t border-line text-center">
-          <p class="text-[11px] font-semibold text-muted mb-3">Atajos de Acceso Rápido para Desarrollo:</p>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <button
-              type="button"
-              id="btn-quick-admin"
-              class="w-full flex items-center justify-center gap-1.5 rounded-xl border border-line bg-paper hover:bg-orange-50/50 hover:border-orangeGov/40 py-2.5 px-2 text-[11px] font-bold text-navy transition cursor-pointer"
-            >
-              <ShieldCheck size={15} class="text-orangeGov" />
-              <span>Admin</span>
-            </button>
-            <button
-              type="button"
-              id="btn-quick-auditor"
-              class="w-full flex items-center justify-center gap-1.5 rounded-xl border border-line bg-paper hover:bg-blue-50/50 hover:border-blue/40 py-2.5 px-2 text-[11px] font-bold text-navy transition cursor-pointer"
-            >
-              <ClipboardCheck size={15} class="text-blue" />
-              <span>Auditor</span>
-            </button>
-            <button
-              type="button"
-              id="btn-quick-chofer"
-              class="w-full flex items-center justify-center gap-1.5 rounded-xl border border-line bg-paper hover:bg-emerald-50/50 hover:border-emerald-500/40 py-2.5 px-2 text-[11px] font-bold text-navy transition cursor-pointer"
-            >
-              <Navigation size={15} class="text-emerald-600" />
-              <span>Chofer</span>
-            </button>
-          </div>
-        </div>
       </div>
 
       <!-- Footer inferior -->
@@ -165,9 +135,6 @@ if (existingSession) {
       const errorAlert = document.getElementById('login-error-alert')
       const btnSubmit = document.getElementById('btn-login-submit') as HTMLButtonElement | null
       const btnText = document.getElementById('btn-login-text')
-      const btnQuickAdmin = document.getElementById('btn-quick-admin')
-      const btnQuickAuditor = document.getElementById('btn-quick-auditor')
-      const btnQuickChofer = document.getElementById('btn-quick-chofer')
       const togglePassword = document.getElementById('toggle-password')
       const iconEye = document.getElementById('icon-eye')
       const iconEyeOff = document.getElementById('icon-eye-off')
@@ -179,33 +146,6 @@ if (existingSession) {
         passwordInput.type = isPassword ? 'text' : 'password'
         iconEye?.classList.toggle('hidden', isPassword)
         iconEyeOff?.classList.toggle('hidden', !isPassword)
-      })
-
-      // Rellenar con admin demo
-      btnQuickAdmin?.addEventListener('click', () => {
-        if (emailInput && passwordInput) {
-          emailInput.value = 'maria.gutierrez@sanjuan.edu.ar'
-          passwordInput.value = 'admin123'
-          errorAlert?.classList.add('hidden')
-        }
-      })
-
-      // Rellenar con auditor demo
-      btnQuickAuditor?.addEventListener('click', () => {
-        if (emailInput && passwordInput) {
-          emailInput.value = 'auditor@sanjuan.edu.ar'
-          passwordInput.value = 'admin123'
-          errorAlert?.classList.add('hidden')
-        }
-      })
-
-      // Rellenar con chofer demo
-      btnQuickChofer?.addEventListener('click', () => {
-        if (emailInput && passwordInput) {
-          emailInput.value = 'martin.rojas@sanjuan.edu.ar'
-          passwordInput.value = 'admin123'
-          errorAlert?.classList.add('hidden')
-        }
       })
 
       // Envío de Formulario

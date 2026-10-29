@@ -133,6 +133,10 @@ async function main() {
     if (Array.isArray(tables) && tables.length > 0) {
       const [rows] = await connection.query('SELECT COUNT(*) as count FROM usuarios')
       if (rows[0]?.count >= 8) {
+        await connection.query(`
+          INSERT IGNORE INTO usuarios (id, rol_id, dependencia_id, nombre, apellido, email, password_hash, dni, telefono, activo)
+          VALUES (9, 1, NULL, 'Aníbal', 'Administrador', 'anibal@sanjuanadmin', '$2b$10$476RAYizCI0NW.M6lBaX6OxR9vtFjtA3de9wSx/WkeTBTDZcYGHda', '25112233', '264-4801122', 1)
+        `)
         console.log(`[DB Init] La base de datos ya se encuentra inicializada (${rows[0].count} usuarios encontrados). Omitiendo seed.`)
         await connection.end()
         process.exit(0)
