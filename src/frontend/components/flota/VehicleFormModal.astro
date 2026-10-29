@@ -98,14 +98,32 @@ const { types, dependencias } = Astro.props
           <div>
             <label class="font-bold text-muted block mb-1">Color de la Unidad</label>
             <input type="text" id="form-color" name="color" placeholder="Ej: Blanco Polar, Gris Plata, Rojo..." class="w-full h-9 rounded-lg border border-line bg-paper px-3 focus:border-blue focus:bg-white outline-none" />
+            <p class="text-[10px] text-muted mt-2 leading-relaxed">
+              Podés subir una fotografía real de la unidad para que funcione como <strong>portada</strong> en las tarjetas del parque automotor.
+            </p>
           </div>
           <div class="sm:col-span-2">
-            <label class="font-bold text-muted block mb-1">URL de Foto / Imagen del Vehículo</label>
-            <div class="flex gap-2">
-              <input type="url" id="form-foto" name="fotoUrl" placeholder="https://ejemplo.com/fotos/hilux-blanca.jpg" class="w-full h-9 rounded-lg border border-line bg-paper px-3 focus:border-blue focus:bg-white outline-none" />
-              <button type="button" id="btn-preview-photo" class="h-9 px-3 rounded-lg border border-line bg-paper text-muted hover:text-navy hover:bg-sky flex items-center gap-1 transition" title="Ver imagen">
-                <ImageIcon size={15} />
-              </button>
+            <label class="font-bold text-muted block mb-1 flex items-center justify-between">
+              <span>Fotografía de Portada de la Movilidad</span>
+              <span class="text-[10px] text-blue font-semibold">Archivo o Cámara</span>
+            </label>
+            <input type="hidden" id="form-foto" name="fotoUrl" value="" />
+            <div class="rounded-xl border border-line bg-paper/40 p-3 space-y-2.5">
+              <div class="relative rounded-lg border-2 border-dashed border-line bg-white p-3 text-center flex flex-col items-center justify-center min-h-[120px] hover:border-blue/50 transition overflow-hidden">
+                <input type="file" id="file-vehicle-foto" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10" />
+                <div id="preview-vehicle-foto-container" class="hidden w-full flex flex-col items-center z-20">
+                  <img id="preview-vehicle-foto" src="" alt="Portada del vehículo" class="h-28 w-full max-w-xs rounded-lg object-cover border border-line shadow-xs mb-2" />
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10px] text-emerald-700 font-bold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">✓ Foto de portada lista</span>
+                    <button type="button" id="btn-clear-vehicle-foto" class="text-[10px] font-bold text-rose-600 hover:underline cursor-pointer">Quitar foto</button>
+                  </div>
+                </div>
+                <div id="placeholder-vehicle-foto" class="text-muted flex flex-col items-center pointer-events-none">
+                  <Camera size={22} class="mb-1 text-blue/80" />
+                  <span class="text-xs font-bold text-navy">Subir foto de portada de la unidad</span>
+                  <span class="text-[10px] text-muted mt-0.5">Hacé clic para seleccionar una imagen (JPG, PNG, WebP)</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -324,6 +342,72 @@ const { types, dependencias } = Astro.props
 </div>
 
 <script is:inline>
+  function setVehiclePhotoPreview(src) {
+    var hid = document.getElementById('form-foto');
+    var prevCont = document.getElementById('preview-vehicle-foto-container');
+    var prevImg = document.getElementById('preview-vehicle-foto');
+    var ph = document.getElementById('placeholder-vehicle-foto');
+    var fileInput = document.getElementById('file-vehicle-foto');
+
+    if (src) {
+      if (hid) hid.value = src;
+      if (prevImg) prevImg.src = src;
+      if (prevCont) prevCont.classList.remove('hidden');
+      if (ph) ph.classList.add('hidden');
+    } else {
+      if (hid) hid.value = '';
+      if (prevImg) prevImg.src = '';
+      if (fileInput) fileInput.value = '';
+      if (prevCont) prevCont.classList.add('hidden');
+      if (ph) ph.classList.remove('hidden');
+    }
+  }
+
+  function compressImageToDataUrl(file, maxWidth, quality, callback) {
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      var dataUrl = e.target && e.target.result ? String(e.target.result) : '';
+      var img = new Image();
+      img.onload = function () {
+        var w = img.width;
+        var h = img.height;
+        if (w > maxWidth) {
+          h = Math.round((h * maxWidth) / w);
+          w = maxWidth;
+        }
+        var canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        var ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, w, h);
+          callback(canvas.toDataURL('image/jpeg', quality));
+        } else {
+          callback(dataUrl);
+        }
+      };
+      img.onerror = function () {
+        callback(dataUrl);
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  document.getElementById('file-vehicle-foto')?.addEventListener('change', function () {
+    var file = this.files && this.files[0];
+    if (!file) return;
+    compressImageToDataUrl(file, 960, 0.84, function (compressedBase64) {
+      setVehiclePhotoPreview(compressedBase64);
+    });
+  });
+
+  document.getElementById('btn-clear-vehicle-foto')?.addEventListener('click', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    setVehiclePhotoPreview('');
+  });
+
   window.openVehicleCreateModal = function () {
     var modal = document.getElementById('vehicle-form-modal');
     var form = document.getElementById('vehicle-form');
@@ -339,6 +423,7 @@ const { types, dependencias } = Astro.props
       errorBox.classList.add('hidden');
     }
     if (form) form.reset();
+    setVehiclePhotoPreview('');
     if (idInput) idInput.value = '';
     if (estadoGroup) estadoGroup.classList.add('hidden');
     if (estadoSelect) estadoSelect.value = 'disponible';
@@ -371,6 +456,7 @@ const { types, dependencias } = Astro.props
       errorBox.classList.add('hidden');
     }
     if (form) form.reset();
+    setVehiclePhotoPreview('');
     if (estadoGroup) estadoGroup.classList.remove('hidden');
 
     try {
@@ -397,7 +483,7 @@ const { types, dependencias } = Astro.props
       setVal('form-version', v.version || '');
       setVal('form-anio', v.anio || '');
       setVal('form-color', v.color || '');
-      setVal('form-foto', v.fotoUrl || '');
+      setVehiclePhotoPreview(v.fotoUrl || '');
       setVal('form-titular-nombre', v.titularNombre || '');
       setVal('form-titular-cuit', v.titularCuitCuil || '');
       setVal('form-registro-seccional', v.registroSeccional || '');
@@ -433,16 +519,6 @@ const { types, dependencias } = Astro.props
   // Click en backdrop
   document.getElementById('vehicle-form-modal')?.addEventListener('click', function (e) {
     if (e.target === this) window.closeVehicleFormModal();
-  });
-
-  // Previsualizador de foto
-  document.getElementById('btn-preview-photo')?.addEventListener('click', function () {
-    var fotoInput = document.getElementById('form-foto');
-    if (fotoInput && fotoInput.value) {
-      window.open(fotoInput.value, '_blank');
-    } else {
-      alert('Ingresa primero una URL de imagen válida en el campo.');
-    }
   });
 
   // Envío del formulario

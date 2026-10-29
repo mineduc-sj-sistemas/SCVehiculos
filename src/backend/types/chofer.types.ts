@@ -26,6 +26,7 @@ export interface ChoferFull {
   fotoDniDorso?: string | null
   fotoLicenciaFrente?: string | null
   fotoLicenciaDorso?: string | null
+  fotoUrl?: string | null
   tieneFotoDni?: boolean
   tieneFotoLicencia?: boolean
   categoriasList?: string[]
@@ -100,6 +101,7 @@ export interface ChoferSaveInput {
   fotoDniDorso?: string | null
   fotoLicenciaFrente?: string | null
   fotoLicenciaDorso?: string | null
+  fotoUrl?: string | null
 }
 
 export interface ChoferLicenciaSaveInput {

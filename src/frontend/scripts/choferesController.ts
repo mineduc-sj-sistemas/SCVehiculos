@@ -514,8 +514,41 @@ export function initChoferesController() {
 
 
   // -------------------------------------------------------------
-  // 4. Carga y Digitalización de Documentos (Archivos o Cámara Base64)
+  // 4. Carga y Digitalización de Documentos y Foto de Portada (Archivos o Cámara Base64)
   // -------------------------------------------------------------
+  function compressImageFile(file: File, maxWidth: number, quality: number, cb: (dataUrl: string) => void) {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const rawDataUrl = (e.target?.result as string) || ''
+      if (!file.type.startsWith('image/')) {
+        cb(rawDataUrl)
+        return
+      }
+      const img = new Image()
+      img.onload = () => {
+        let w = img.width
+        let h = img.height
+        if (w > maxWidth) {
+          h = Math.round((h * maxWidth) / w)
+          w = maxWidth
+        }
+        const canvas = document.createElement('canvas')
+        canvas.width = w
+        canvas.height = h
+        const ctx = canvas.getContext('2d')
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, w, h)
+          cb(canvas.toDataURL('image/jpeg', quality))
+        } else {
+          cb(rawDataUrl)
+        }
+      }
+      img.onerror = () => cb(rawDataUrl)
+      img.src = rawDataUrl
+    }
+    reader.readAsDataURL(file)
+  }
+
   function setupDocUpload(
     fileInputId: string,
     previewContainerId: string,
@@ -533,18 +566,16 @@ export function initChoferesController() {
       const file = fileInput.files?.[0]
       if (!file) return
 
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const base64 = e.target?.result as string
+      compressImageFile(file, 900, 0.84, (base64) => {
         if (hiddenInput) hiddenInput.value = base64
         if (previewImg) previewImg.src = base64
         placeholder?.classList.add('hidden')
         previewContainer?.classList.remove('hidden')
-      }
-      reader.readAsDataURL(file)
+      })
     })
   }
 
+  setupDocUpload('#file-chofer-foto', '#preview-chofer-foto-container', '#preview-chofer-foto', '#placeholder-chofer-foto', '#form-foto-chofer')
   setupDocUpload('#file-dni-frente', '#preview-dni-frente-container', '#preview-dni-frente', '#placeholder-dni-frente', '#form-foto-dni-frente')
   setupDocUpload('#file-dni-dorso', '#preview-dni-dorso-container', '#preview-dni-dorso', '#placeholder-dni-dorso', '#form-foto-dni-dorso')
   setupDocUpload('#file-lic-frente', '#preview-lic-frente-container', '#preview-lic-frente', '#placeholder-lic-frente', '#form-foto-lic-frente')
@@ -552,6 +583,7 @@ export function initChoferesController() {
 
   function resetDocPreviews() {
     const docs = [
+      { cont: '#preview-chofer-foto-container', ph: '#placeholder-chofer-foto', img: '#preview-chofer-foto', hid: '#form-foto-chofer' },
       { cont: '#preview-dni-frente-container', ph: '#placeholder-dni-frente', img: '#preview-dni-frente', hid: '#form-foto-dni-frente' },
       { cont: '#preview-dni-dorso-container', ph: '#placeholder-dni-dorso', img: '#preview-dni-dorso', hid: '#form-foto-dni-dorso' },
       { cont: '#preview-lic-frente-container', ph: '#placeholder-lic-frente', img: '#preview-lic-frente', hid: '#form-foto-lic-frente' },
@@ -650,7 +682,8 @@ export function initChoferesController() {
         if (!c) return
 
         // Pestaña 1: Cabecera y Datos Personales
-        const avatarEl = document.querySelector('#modal-chofer-avatar')
+        const avatarEl = document.querySelector('#modal-chofer-avatar') as HTMLElement | null
+        const photoEl = document.querySelector('#modal-chofer-photo') as HTMLImageElement | null
         const nombreEl = document.querySelector('#modal-chofer-nombre')
         const catEl = document.querySelector('#modal-chofer-cat')
         const statusEl = document.querySelector('#modal-chofer-status')
@@ -668,6 +701,17 @@ export function initChoferesController() {
         const catContainer = document.querySelector('#info-categorias-container')
 
         if (avatarEl) avatarEl.textContent = c.iniciales
+        if (photoEl) {
+          if (c.fotoUrl) {
+            photoEl.src = c.fotoUrl
+            photoEl.classList.remove('hidden')
+            avatarEl?.classList.add('hidden')
+          } else {
+            photoEl.src = ''
+            photoEl.classList.add('hidden')
+            avatarEl?.classList.remove('hidden')
+          }
+        }
         if (nombreEl) nombreEl.textContent = `${c.apellido}, ${c.nombre}`
         if (catEl) catEl.textContent = `Cat. ${c.categoriaLicencia}`
         if (statusEl) {
@@ -1036,7 +1080,8 @@ export function initChoferesController() {
         const cats = c.categoriasList && c.categoriasList.length > 0 ? c.categoriasList : (c.categoriaLicencia || 'B1').split(',')
         setCategoriesFromArray(cats)
 
-        // Cargar previsualizaciones de documentos existentes
+        // Cargar previsualizaciones de documentos y foto de portada existentes
+        setDocPreview('#preview-chofer-foto-container', '#placeholder-chofer-foto', '#preview-chofer-foto', '#form-foto-chofer', c.fotoUrl)
         setDocPreview('#preview-dni-frente-container', '#placeholder-dni-frente', '#preview-dni-frente', '#form-foto-dni-frente', c.fotoDniFrente)
         setDocPreview('#preview-dni-dorso-container', '#placeholder-dni-dorso', '#preview-dni-dorso', '#form-foto-dni-dorso', c.fotoDniDorso)
         setDocPreview('#preview-lic-frente-container', '#placeholder-lic-frente', '#preview-lic-frente', '#form-foto-lic-frente', c.fotoLicenciaFrente)

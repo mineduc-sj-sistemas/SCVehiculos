@@ -47,12 +47,20 @@ const { choferes } = Astro.props
             data-estado={c.estado}
             data-direccion={(c.direccion || '').toLowerCase()}
           >
-            <!-- Conductor (Avatar + Nombre) -->
+            <!-- Conductor (Foto / Avatar + Nombre) -->
             <td class="px-5 py-3.5 whitespace-nowrap">
               <div class="flex items-center gap-3">
-                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky font-display text-xs font-bold text-blue shadow-2xs group-hover:bg-blue group-hover:text-white transition">
-                  {c.iniciales}
-                </div>
+                {c.fotoUrl ? (
+                  <img
+                    src={c.fotoUrl}
+                    alt={c.nombreCompleto}
+                    class="h-10 w-10 shrink-0 rounded-xl object-cover border border-line shadow-2xs"
+                  />
+                ) : (
+                  <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky font-display text-xs font-bold text-blue shadow-2xs group-hover:bg-blue group-hover:text-white transition">
+                    {c.iniciales}
+                  </div>
+                )}
                 <div>
                   <p class="font-bold text-navy text-[13px]">{c.apellido}, {c.nombre}</p>
                   <div class="flex items-center gap-1.5 mt-0.5">

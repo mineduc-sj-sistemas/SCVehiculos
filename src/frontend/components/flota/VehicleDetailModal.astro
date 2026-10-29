@@ -377,8 +377,10 @@ import { Bus, Calendar, ChevronRight, Clock, FileCheck2, FileText, Fuel, Gauge, 
       else if (tipoNorm.includes('camion') && !tipoNorm.includes('camioneta')) defaultPhoto = '/vehiculos/camion.png';
 
       var effectivePhoto = v.fotoUrl || defaultPhoto;
+      var isCustomPhoto = Boolean(v.fotoUrl && !v.fotoUrl.startsWith('/vehiculos/'));
       if (effectivePhoto && photoImg) {
         photoImg.src = effectivePhoto;
+        photoImg.className = isCustomPhoto ? 'h-full w-full object-cover' : 'h-full w-full object-contain p-0.5';
         photoImg.classList.remove('hidden');
         if (photoFallback) photoFallback.classList.add('hidden');
       } else {

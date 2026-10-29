@@ -103,6 +103,7 @@ CREATE TABLE `choferes` (
   `fecha_vencimiento_licencia` DATE NOT NULL,
   `foto_licencia_frente` LONGTEXT NULL,
   `foto_licencia_dorso` LONGTEXT NULL,
+  `foto_url` LONGTEXT NULL,
   `estado` ENUM('disponible', 'en_comision', 'licencia', 'inactivo') NOT NULL DEFAULT 'disponible',
   `observaciones` TEXT NULL,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -164,7 +165,7 @@ CREATE TABLE `vehiculos` (
   `fecha_vencimiento_seguro` DATE NULL,
   `estado` ENUM('disponible', 'en_comision', 'en_taller', 'baja') NOT NULL DEFAULT 'disponible',
   `observaciones` TEXT NULL,
-  `foto_url` TEXT NULL,
+  `foto_url` LONGTEXT NULL,
   `activo` TINYINT(1) NOT NULL DEFAULT 1,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -406,27 +407,11 @@ INSERT INTO `dependencias` (`id`, `nombre`, `sigla`, `responsable`, `telefono`, 
 (4, 'Dirección de Educación Primaria', 'DEP', 'Prof. Silvia Fernández', '264-4305030', 'educacion.primaria@sanjuan.edu.ar'),
 (5, 'Dirección de Educación Secundaria', 'DES', 'Prof. Alejandro Morales', '264-4305035', 'educacion.secundaria@sanjuan.edu.ar');
 
--- 3. Usuarios iniciales (Password demo: admin123)
+-- 3. Usuario Administrador Inicial (Password: admin123)
 INSERT INTO `usuarios` (`id`, `rol_id`, `dependencia_id`, `nombre`, `apellido`, `email`, `password_hash`, `dni`, `telefono`, `activo`) VALUES
-(1, 1, NULL, 'María', 'Gutiérrez', 'maria.gutierrez@sanjuan.edu.ar', '$2b$10$476RAYizCI0NW.M6lBaX6OxR9vtFjtA3de9wSx/WkeTBTDZcYGHda', '27456789', '264-5012345', 1),
-(2, 2, NULL, 'Gonzalo', 'Pérez', 'gonzalo.perez@sanjuan.edu.ar', '$2b$10$476RAYizCI0NW.M6lBaX6OxR9vtFjtA3de9wSx/WkeTBTDZcYGHda', '32145678', '264-5023456', 1),
-(3, 5, NULL, 'Roberto', 'Méndez', 'auditor@sanjuan.edu.ar', '$2b$10$476RAYizCI0NW.M6lBaX6OxR9vtFjtA3de9wSx/WkeTBTDZcYGHda', '24112334', '264-4209988', 1),
-(4, 4, NULL, 'Martín', 'Rojas', 'martin.rojas@sanjuan.edu.ar', '$2b$10$476RAYizCI0NW.M6lBaX6OxR9vtFjtA3de9wSx/WkeTBTDZcYGHda', '28456123', '264-4112233', 1),
-(5, 4, NULL, 'Lucía', 'Gómez', 'lucia.gomez@sanjuan.edu.ar', '$2b$10$476RAYizCI0NW.M6lBaX6OxR9vtFjtA3de9wSx/WkeTBTDZcYGHda', '31789456', '264-4223344', 1),
-(6, 4, NULL, 'Carlos', 'Molina', 'carlos.molina@sanjuan.edu.ar', '$2b$10$476RAYizCI0NW.M6lBaX6OxR9vtFjtA3de9wSx/WkeTBTDZcYGHda', '25987654', '264-4334455', 1),
-(7, 4, NULL, 'Esteban', 'Paredes', 'esteban.paredes@sanjuan.edu.ar', '$2b$10$476RAYizCI0NW.M6lBaX6OxR9vtFjtA3de9wSx/WkeTBTDZcYGHda', '29345678', '264-4445566', 1),
-(8, 4, NULL, 'Javier', 'Salinas', 'javier.salinas@sanjuan.edu.ar', '$2b$10$476RAYizCI0NW.M6lBaX6OxR9vtFjtA3de9wSx/WkeTBTDZcYGHda', '33456789', '264-4556677', 1),
-(9, 1, NULL, 'Aníbal', 'Administrador', 'anibal@sanjuanadmin', '$2b$10$476RAYizCI0NW.M6lBaX6OxR9vtFjtA3de9wSx/WkeTBTDZcYGHda', '25112233', '264-4801122', 1);
+(1, 1, NULL, 'Aníbal', 'Administrador', 'anibal@sanjuanadmin', '$2b$10$476RAYizCI0NW.M6lBaX6OxR9vtFjtA3de9wSx/WkeTBTDZcYGHda', '25112233', '264-4801122', 1);
 
--- 4. Choferes con vencimientos relativos
-INSERT INTO `choferes` (`id`, `usuario_id`, `nombre`, `apellido`, `dni`, `cuil`, `telefono`, `email`, `direccion`, `numero_licencia`, `categoria_licencia`, `fecha_vencimiento_licencia`, `estado`, `observaciones`) VALUES
-(1, 4, 'Martín', 'Rojas', '28456123', '20-28456123-7', '264-4112233', 'martin.rojas@sanjuan.edu.ar', 'Capital, San Juan', 'SJ-28456123', 'B2', DATE_ADD(CURDATE(), INTERVAL 320 DAY), 'en_comision', 'Chofer asignado a viajes interdepartamentales'),
-(2, 5, 'Lucía', 'Gómez', '31789456', '27-31789456-4', '264-4223344', 'lucia.gomez@sanjuan.edu.ar', 'Rivadavia, San Juan', 'SJ-31789456', 'D1', DATE_ADD(CURDATE(), INTERVAL 240 DAY), 'en_comision', 'Licencia profesional para transporte de pasajeros'),
-(3, 6, 'Carlos', 'Molina', '25987654', '20-25987654-2', '264-4334455', 'carlos.molina@sanjuan.edu.ar', 'Santa Lucía, San Juan', 'SJ-25987654', 'B1', DATE_ADD(CURDATE(), INTERVAL 14 DAY), 'disponible', 'Carnet próximo a vencer (aviso automático emitido)'),
-(4, 7, 'Esteban', 'Paredes', '29345678', '20-29345678-9', '264-4445566', 'esteban.paredes@sanjuan.edu.ar', 'Rawson, San Juan', 'SJ-29345678', 'B2', DATE_ADD(CURDATE(), INTERVAL 450 DAY), 'disponible', NULL),
-(5, 8, 'Javier', 'Salinas', '33456789', '20-33456789-1', '264-4556677', 'javier.salinas@sanjuan.edu.ar', 'Chimbas, San Juan', 'SJ-33456789', 'B1', DATE_ADD(CURDATE(), INTERVAL 22 DAY), 'disponible', 'Turno renovación asignado');
-
--- 5. Tipos de Vehículo
+-- 4. Tipos de Vehículo (Catálogo base)
 INSERT INTO `tipos_vehiculo` (`id`, `nombre`, `descripcion`) VALUES
 (1, 'Camioneta', 'Pick-up 4x2 o 4x4 para caminos de montaña y rurales'),
 (2, 'Utilitario', 'Furgón pequeño para carga ligera y logística escolar'),
@@ -435,48 +420,4 @@ INSERT INTO `tipos_vehiculo` (`id`, `nombre`, `descripcion`) VALUES
 (5, 'Camión', 'Camión de carga pesada para distribución de mobiliario escolar'),
 (6, 'SUV', 'Vehículo utilitario deportivo para supervisión pedagógica');
 
--- 6. Flota Oficial Inicial (con Formulario 08, Titularidad, Color y Foto)
-INSERT INTO `vehiculos` (
-  `id`, `patente`, `tipo_vehiculo_id`, `dependencia_id`, `titular_nombre`, `titular_cuit_cuil`,
-  `registro_seccional`, `marca`, `modelo`, `version`, `anio`, `color`,
-  `numero_chasis`, `numero_motor`, `numero_cedula`, `fecha_vencimiento_cedula`, `numero_rto`,
-  `tiene_08`, `estado_08`, `fecha_vencimiento_08`, `numero_control_08`,
-  `tipo_combustible`, `capacidad_tanque_litros`, `capacidad_pasajeros`, `odometro_actual`,
-  `fecha_vencimiento_vtv`, `compania_seguro`, `numero_poliza`, `fecha_vencimiento_seguro`,
-  `estado`, `observaciones`, `foto_url`
-) VALUES
-(1, 'AF 789 CD', 3, 1, 'Ministerio de Educación · Gob. de San Juan', '30-99901234-7', 'San Juan N° 1', 'Peugeot', '301', 'Allure 1.6 HDi', 2023, 'Blanco Banquise', '8AJ301HDK2023901', 'DV6D998124', 'CV-882190-SJ', '2027-04-15', 'RTO-SJ-2024-1102', 1, 'inscripto', NULL, NULL, 'diesel_grado_3', 50, 5, 18250, '2026-11-20', 'Nación Seguros', 'POL-982103-SJ', '2026-10-31', 'disponible', 'Unidad asignada a comisiones protocolares e inspecciones escolares urbanas.', '/vehiculos/auto.png'),
-(2, 'AE 456 EF', 2, 2, 'Ministerio de Educación · Gob. de San Juan', '30-99901234-7', 'San Juan N° 2', 'Fiat', 'Qubo', 'Dynamic 1.4 8v', 2023, 'Gris Plata', '8APQUBO14K881234', '178B8011234', 'CV-991204-SJ', '2027-02-10', 'RTO-SJ-2024-3319', 1, 'firmado', '2026-12-15', '08-SJ-88901-B', 'nafta_super', 45, 5, 29400, '2026-12-10', 'Nación Seguros', 'POL-441029-SJ', '2026-11-15', 'disponible', 'Afectada a supervisores pedagógicos en departamentos alejados (Jáchal e Iglesia).', '/vehiculos/suv.png'),
-(3, 'AF 123 CD', 1, 4, 'Ministerio de Educación · Gob. de San Juan', '30-99901234-7', 'San Juan N° 3', 'Toyota', 'Hilux 4x4', 'SRX 2.8 TDI Automática', 2024, 'Blanco Perlado', '8AJBA3CD4E5678901', '1GD9876543', 'CV-098234-SJ', '2027-05-15', 'RTO-SJ-2024-8841', 1, 'firmado', '2026-11-30', '08-SJ-99882-B', 'diesel_grado_3', 80, 5, 14500, '2027-01-31', 'Nación Seguros', 'POL-784512-SJ', '2026-12-31', 'disponible', 'Equipada con tracción 4x4 y protector de cárter para caminos cordilleranos y escuelas de difícil acceso.', '/vehiculos/camioneta.png'),
-(4, 'AD 902 KL', 4, 5, 'Ministerio de Educación · Gob. de San Juan', '30-99901234-7', 'San Juan N° 1', 'Fiat', 'Ducato Maxicargo', '2.3 Multijet Pasajeros', 2022, 'Blanco Banquise', '8APDDUC23M990142', 'F1AE0481N8812', 'CV-447192-SJ', '2026-09-30', 'RTO-SJ-2024-5501', 1, 'inscripto', NULL, NULL, 'diesel_grado_3', 90, 15, 58300, '2026-10-15', 'Nación Seguros', 'POL-119283-SJ', '2026-10-15', 'disponible', 'Combi institucional para traslado de profesionales de gabinetes y delegaciones escolares.', '/vehiculos/combi.png'),
-(5, 'AC 345 GH', 5, 3, 'Ministerio de Educación · Gob. de San Juan', '30-99901234-7', 'San Juan N° 2', 'Scania', 'P310 Cargas', '4x2 Caja Paquetera Térmica', 2021, 'Blanco Puro', '9BS310P4X2N11094', 'DC09115L01', 'CV-338291-SJ', '2026-11-15', 'RTO-SJ-2024-9041', 1, 'inscripto', NULL, NULL, 'diesel_500', 300, 3, 94200, '2026-11-30', 'Nación Seguros', 'POL-667190-SJ', '2026-11-30', 'disponible', 'Camión de carga pesada para distribución de mobiliario escolar, bancos, pupitres y módulos alimentarios.', '/vehiculos/camion.png');
-
--- 7. Comisiones en tiempo real
-INSERT INTO `comisiones` (`id`, `codigo_comision`, `vehiculo_id`, `chofer_id`, `dependencia_solicitante_id`, `solicitante_nombre`, `origen`, `destino`, `motivo`, `cantidad_pasajeros`, `fecha_salida_programada`, `fecha_salida_real`, `fecha_regreso_estimada`, `fecha_regreso_real`, `odometro_salida`, `odometro_regreso`, `estado`, `observaciones`, `usuario_creador_id`) VALUES
-(1, 'COM-2024-0089', 1, 1, 1, 'Patricia Albarracín', 'Ministerio de Educación - Centro Cívico', 'Valle Fértil', 'Relevamiento de escuelas albergue y entrega de material pedagógico', 4, DATE_SUB(NOW(), INTERVAL 3 HOUR), DATE_SUB(NOW(), INTERVAL 2 HOUR), DATE_ADD(NOW(), INTERVAL 28 HOUR), NULL, 44980, NULL, 'en_curso', 'Salió en horario. Se prevé pernocte en San Agustín.', 1),
-(2, 'COM-2024-0090', 5, 2, 2, 'Roberto Castro', 'Ministerio de Educación - Centro Cívico', 'Jáchal', 'Reunión de supervisores escolares y directivos departamento Jáchal', 12, DATE_SUB(NOW(), INTERVAL 6 HOUR), DATE_SUB(NOW(), INTERVAL 5 HOUR), DATE_ADD(NOW(), INTERVAL 14 HOUR), NULL, 104250, NULL, 'en_curso', 'En viaje por Ruta 40 Norte.', 1),
-(3, 'COM-2024-0091', 2, 3, 3, 'Marcelo Quiroga', 'Ministerio de Educación - Centro Cívico', 'Calingasta', 'Inspección técnica de obras de ampliación en Escuela Técnica de Barreal', 2, TIMESTAMP(CURDATE(), '14:30:00'), NULL, TIMESTAMP(DATE_ADD(CURDATE(), INTERVAL 1 DAY), '18:00:00'), NULL, NULL, NULL, 'programada', 'Lleva herramientas de medición e instrumental técnico.', 1);
-
--- 8. Mantenimientos
-INSERT INTO `mantenimientos` (`id`, `vehiculo_id`, `tipo`, `titulo`, `descripcion`, `taller_proveedor`, `odometro_servicio`, `fecha_programada`, `fecha_ingreso`, `fecha_egreso`, `costo_mano_obra`, `costo_repuestos`, `numero_factura`, `estado`, `detalle_trabajos`, `proximo_mantenimiento_km`, `proximo_mantenimiento_fecha`, `usuario_registro_id`) VALUES
-(1, 3, 'preventivo', 'Cambio de aceite y filtros', 'Servicio programado de los 60.000 km: aceite sintético 5W30, filtro de aceite, aire y combustible.', 'Taller Mecánico Central San Juan', 61930, CURDATE(), TIMESTAMP(CURDATE(), '09:30:00'), NULL, 45000.00, 185000.00, 'F-A-0004-0001258', 'en_curso', 'Ingresó unidad. Trabajo en ejecución.', 72000, DATE_ADD(CURDATE(), INTERVAL 180 DAY), 1),
-(2, 4, 'preventivo', 'Revisión de frenos', 'Control de pastillas de freno delanteras, discos y purgado de líquido de frenos.', 'Frenos & Embragues del Oeste', 32110, DATE_ADD(CURDATE(), INTERVAL 1 DAY), NULL, NULL, 30000.00, 75000.00, NULL, 'programado', 'Turno confirmado para primera hora.', 45000, DATE_ADD(CURDATE(), INTERVAL 270 DAY), 1);
-
--- 9. Cargas de combustible
-INSERT INTO `cargas_combustible` (`id`, `vehiculo_id`, `chofer_id`, `comision_id`, `fecha_carga`, `estacion_servicio`, `tipo_combustible`, `litros`, `precio_por_litro`, `importe_total`, `odometro_carga`, `tanque_lleno`, `numero_ticket`, `metodo_pago`, `rendimiento_km_l`, `observaciones`, `usuario_registro_id`) VALUES
-(1, 1, 1, 1, DATE_SUB(NOW(), INTERVAL 2 HOUR), 'YPF Centro Cívico', 'diesel_grado_3', 68.50, 1250.00, 85625.00, 44980, 1, 'TK-0089-14521', 'tarjeta_flota', 11.90, 'Carga previa a salida hacia Valle Fértil', 1),
-(2, 5, 2, 2, DATE_SUB(NOW(), INTERVAL 5 HOUR), 'YPF Lateral Circunvalación', 'diesel_grado_3', 70.00, 1250.00, 87500.00, 104250, 1, 'TK-0012-78945', 'tarjeta_flota', 7.50, 'Tanque lleno para recorrido ida y vuelta a Jáchal', 1),
-(3, 4, 4, NULL, DATE_SUB(NOW(), INTERVAL 2 DAY), 'Shell Av. Libertador', 'nafta_super', 38.20, 1100.00, 42020.00, 31850, 1, 'TK-0034-55612', 'tarjeta_flota', 13.50, 'Carga para comisiones en Gran San Juan', 1);
-
--- 10. Auditoría de Estados
-INSERT INTO `auditoria_estados_vehiculo` (`id`, `vehiculo_id`, `estado_anterior`, `estado_nuevo`, `motivo`, `comision_id`, `mantenimiento_id`, `usuario_id`, `created_at`) VALUES
-(1, 1, 'disponible', 'en_comision', 'Inicio de comisión a Valle Fértil COM-2024-0089', 1, NULL, 1, DATE_SUB(NOW(), INTERVAL 2 HOUR)),
-(2, 5, 'disponible', 'en_comision', 'Inicio de comisión a Jáchal COM-2024-0090', 2, NULL, 1, DATE_SUB(NOW(), INTERVAL 5 HOUR)),
-(3, 3, 'disponible', 'en_taller', 'Ingreso a servicio mecánico de 60.000 km', NULL, 1, 1, TIMESTAMP(CURDATE(), '09:30:00'));
-
--- 11. Licencias y Ausencias de Choferes
-INSERT INTO `licencias_chofer` (`id`, `chofer_id`, `tipo`, `fecha_inicio`, `fecha_fin`, `dias_habiles`, `motivo`, `estado`, `aprobado_por_id`, `observaciones`) VALUES
-(1, 1, 'franco_compensatorio', CURDATE(), DATE_ADD(CURDATE(), INTERVAL 1 DAY), 2, 'Franco compensatorio por comisión a Valle Fértil en fin de semana', 'aprobada', 1, 'Autorizado por Dirección'),
-(2, 3, 'particular', DATE_SUB(CURDATE(), INTERVAL 20 DAY), DATE_SUB(CURDATE(), INTERVAL 18 DAY), 3, 'Trámite particular y renovación de carnet', 'aprobada', 1, 'Presentó constancia oficial'),
-(3, 4, 'capacitacion', DATE_ADD(CURDATE(), INTERVAL 5 DAY), DATE_ADD(CURDATE(), INTERVAL 6 DAY), 2, 'Curso de manejo defensivo y primeros auxilios en ruta', 'aprobada', 1, 'Organizado por Seguridad Vial San Juan');
 

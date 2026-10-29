@@ -8,8 +8,9 @@ import { Calendar, CalendarDays, CheckCircle2, ChevronRight, FileBadge, FileText
     <!-- Modal Header -->
     <div class="flex items-center justify-between border-b border-line bg-paper px-6 py-4">
       <div class="flex items-center gap-3">
-        <div id="modal-chofer-avatar" class="flex h-11 w-11 items-center justify-center rounded-xl bg-blue text-white font-display text-base font-bold shadow-xs">
-          CH
+        <div id="modal-chofer-avatar-wrap" class="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-line bg-blue text-white font-display text-base font-bold shadow-xs">
+          <img id="modal-chofer-photo" src="" alt="Foto del chofer" class="hidden h-full w-full object-cover" />
+          <span id="modal-chofer-avatar">CH</span>
         </div>
         <div>
           <div class="flex items-center gap-2">

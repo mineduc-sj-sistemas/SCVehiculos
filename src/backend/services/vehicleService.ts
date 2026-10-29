@@ -486,6 +486,10 @@ export async function saveVehicle(
   data: VehicleSaveInput
 ): Promise<{ success: boolean; id?: number; error?: string }> {
   try {
+    try {
+      await query('ALTER TABLE vehiculos MODIFY COLUMN foto_url LONGTEXT NULL')
+    } catch {}
+
     const tiene08Val = data.tiene08 ? 1 : 0
     const estado08Val = data.estado08 || (data.tiene08 ? 'firmado' : 'no_aplica')
 

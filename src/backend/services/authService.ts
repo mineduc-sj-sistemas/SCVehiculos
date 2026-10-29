@@ -157,7 +157,7 @@ export async function authenticateUser(emailInput: string, passwordInput: string
     if (!rows || rows.length === 0) {
       if (isAnibalAlias && (password === 'admin123' || password === 'anibal123')) {
         const anibalSession: UserSession = {
-          id: 9,
+          id: 1,
           email: rawEmail,
           nombre: 'Aníbal',
           apellido: 'Administrador',

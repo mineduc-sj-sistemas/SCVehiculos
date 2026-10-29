@@ -11,9 +11,9 @@ const { activeNav = 'panel' } = Astro.props
 const sessionToken = Astro.cookies.get(SESSION_COOKIE_NAME)?.value
 const currentUser = verifySessionToken(sessionToken) || {
   id: 1,
-  nombre: 'María',
-  apellido: 'Gutiérrez',
-  nombreCompleto: 'María Gutiérrez',
+  nombre: 'Aníbal',
+  apellido: 'Administrador',
+  nombreCompleto: 'Aníbal Administrador',
   rolNombre: 'Administrador',
   rolId: 1
 }

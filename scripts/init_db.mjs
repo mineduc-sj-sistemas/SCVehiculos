@@ -128,22 +128,46 @@ async function main() {
       await connection.query(`USE \`${dbName}\`;`)
     }
 
-    // Verificar si la tabla usuarios ya existe y cuenta con los usuarios y choferes
+    // Verificar si la tabla usuarios ya existe y si ya está limpia (sin datos demo)
     const [tables] = await connection.query("SHOW TABLES LIKE 'usuarios'")
     if (Array.isArray(tables) && tables.length > 0) {
-      const [rows] = await connection.query('SELECT COUNT(*) as count FROM usuarios')
-      if (rows[0]?.count >= 8) {
-        await connection.query(`
-          INSERT IGNORE INTO usuarios (id, rol_id, dependencia_id, nombre, apellido, email, password_hash, dni, telefono, activo)
-          VALUES (9, 1, NULL, 'Aníbal', 'Administrador', 'anibal@sanjuanadmin', '$2b$10$476RAYizCI0NW.M6lBaX6OxR9vtFjtA3de9wSx/WkeTBTDZcYGHda', '25112233', '264-4801122', 1)
-        `)
-        console.log(`[DB Init] La base de datos ya se encuentra inicializada (${rows[0].count} usuarios encontrados). Omitiendo seed.`)
+      let hasDemoData = false
+      try {
+        const [demoUsers] = await connection.query("SELECT id FROM usuarios WHERE email = 'maria.gutierrez@sanjuan.edu.ar' LIMIT 1")
+        const [demoVehicles] = await connection.query("SELECT id FROM vehiculos WHERE patente = 'AF 789 CD' LIMIT 1")
+        if ((Array.isArray(demoUsers) && demoUsers.length > 0) || (Array.isArray(demoVehicles) && demoVehicles.length > 0)) {
+          hasDemoData = true
+          console.log('[DB Init] Datos de prueba detectados. Limpiando base de datos para inicio en producción...')
+        }
+      } catch {
+        hasDemoData = true
+      }
+
+      if (!hasDemoData) {
+        // Asegurar columnas foto_url LONGTEXT en vehiculos y choferes y usuario admin Aníbal
+        try {
+          await connection.query('ALTER TABLE vehiculos MODIFY COLUMN foto_url LONGTEXT NULL')
+        } catch {}
+        try {
+          const [cols] = await connection.query("SHOW COLUMNS FROM choferes LIKE 'foto_url'")
+          if (!Array.isArray(cols) || cols.length === 0) {
+            await connection.query('ALTER TABLE choferes ADD COLUMN foto_url LONGTEXT NULL AFTER foto_licencia_dorso')
+          }
+        } catch {}
+        try {
+          await connection.query(`
+            INSERT IGNORE INTO usuarios (id, rol_id, dependencia_id, nombre, apellido, email, password_hash, dni, telefono, activo)
+            VALUES (1, 1, NULL, 'Aníbal', 'Administrador', 'anibal@sanjuanadmin', '$2b$10$476RAYizCI0NW.M6lBaX6OxR9vtFjtA3de9wSx/WkeTBTDZcYGHda', '25112233', '264-4801122', 1)
+          `)
+        } catch {}
+
+        console.log('[DB Init] Base de datos limpia y lista para producción.')
         await connection.end()
         process.exit(0)
       }
     }
 
-    console.log('[DB Init] Inicializando estructura y datos maestros...')
+    console.log('[DB Init] Inicializando estructura limpia y catálogos base...')
     const sqlPath = path.resolve(__dirname, '../database/sc_vehiculos_completa.sql')
     if (!fs.existsSync(sqlPath)) {
       console.warn(`[DB Init] Advertencia: No se encontró el archivo ${sqlPath}`)
@@ -160,7 +184,7 @@ async function main() {
     }
 
     await connection.query(sqlContent)
-    console.log('[DB Init] Base de datos y datos demo (Admin + Choferes) importados con éxito.')
+    console.log('[DB Init] Base de datos inicializada limpia (sin datos demo) con éxito.')
 
     await connection.end()
     process.exit(0)

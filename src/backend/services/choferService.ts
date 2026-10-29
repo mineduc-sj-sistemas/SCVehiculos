@@ -9,6 +9,18 @@ import type {
   ChoferLicenciaSaveInput,
 } from '../types/chofer.types'
 
+let choferFotoColChecked = false
+async function ensureChoferFotoColumn() {
+  if (choferFotoColChecked) return
+  choferFotoColChecked = true
+  try {
+    const cols = await query<any[]>("SHOW COLUMNS FROM choferes LIKE 'foto_url'")
+    if (!Array.isArray(cols) || cols.length === 0) {
+      await query('ALTER TABLE choferes ADD COLUMN foto_url LONGTEXT NULL AFTER foto_licencia_dorso')
+    }
+  } catch {}
+}
+
 /**
  * 1. KPIs del módulo de Choferes
  */
@@ -127,6 +139,7 @@ function mapChoferRowToFull(r: any, includePhotos = false): ChoferFull {
     fechaVencimientoLicencia: r.fecha_vencimiento_licencia ? String(r.fecha_vencimiento_licencia) : '',
     fotoLicenciaFrente: includePhotos ? (r.foto_licencia_frente || null) : null,
     fotoLicenciaDorso: includePhotos ? (r.foto_licencia_dorso || null) : null,
+    fotoUrl: r.foto_url || null,
     tieneFotoDni,
     tieneFotoLicencia,
     licenciaFormatted: formattedDate,
@@ -146,6 +159,7 @@ function mapChoferRowToFull(r: any, includePhotos = false): ChoferFull {
  */
 export async function getChoferById(choferId: number, includePhotos = true): Promise<ChoferFull | null> {
   try {
+    await ensureChoferFotoColumn()
     const rows = await query<any[]>(`
       SELECT 
         c.id,
@@ -157,6 +171,7 @@ export async function getChoferById(choferId: number, includePhotos = true): Pro
         c.telefono,
         c.email,
         c.direccion,
+        c.foto_url,
         ${includePhotos ? 'c.foto_dni_frente, c.foto_dni_dorso, c.foto_licencia_frente, c.foto_licencia_dorso,' : ''}
         (c.foto_dni_frente IS NOT NULL AND c.foto_dni_frente != '') AS tiene_foto_dni_frente,
         (c.foto_dni_dorso IS NOT NULL AND c.foto_dni_dorso != '') AS tiene_foto_dni_dorso,
@@ -186,10 +201,11 @@ export async function getChoferById(choferId: number, includePhotos = true): Pro
 }
 
 /**
- * 2. Lista completa de choferes optimizada: excluye cadenas pesadas en base64 de fotos (cargas rápidas)
+ * 2. Lista completa de choferes optimizada: excluye cadenas pesadas en base64 de fotos de documentos pero incluye foto_url de portada/perfil
  */
 export async function getChoferesFullList(): Promise<ChoferFull[]> {
   try {
+    await ensureChoferFotoColumn()
     const rows = await query<any[]>(`
       SELECT 
         c.id,
@@ -201,6 +217,7 @@ export async function getChoferesFullList(): Promise<ChoferFull[]> {
         c.telefono,
         c.email,
         c.direccion,
+        c.foto_url,
         (c.foto_dni_frente IS NOT NULL AND c.foto_dni_frente != '') AS tiene_foto_dni_frente,
         (c.foto_dni_dorso IS NOT NULL AND c.foto_dni_dorso != '') AS tiene_foto_dni_dorso,
         (c.foto_licencia_frente IS NOT NULL AND c.foto_licencia_frente != '') AS tiene_foto_licencia_frente,
@@ -396,6 +413,13 @@ export async function getChoferDetailWithHistory(choferId: number): Promise<Chof
  */
 export async function saveChofer(data: ChoferSaveInput): Promise<{ success: boolean; id?: number; error?: string }> {
   try {
+    try {
+      const cols = await query<any[]>("SHOW COLUMNS FROM choferes LIKE 'foto_url'")
+      if (!Array.isArray(cols) || cols.length === 0) {
+        await query('ALTER TABLE choferes ADD COLUMN foto_url LONGTEXT NULL AFTER foto_licencia_dorso')
+      }
+    } catch {}
+
     if (data.id) {
       await query(`
         UPDATE choferes SET
@@ -413,6 +437,7 @@ export async function saveChofer(data: ChoferSaveInput): Promise<{ success: bool
           fecha_vencimiento_licencia = ?,
           foto_licencia_frente = COALESCE(?, foto_licencia_frente),
           foto_licencia_dorso = COALESCE(?, foto_licencia_dorso),
+          foto_url = ?,
           estado = COALESCE(?, estado),
           observaciones = ?
         WHERE id = ?
@@ -431,6 +456,7 @@ export async function saveChofer(data: ChoferSaveInput): Promise<{ success: bool
         data.fechaVencimientoLicencia,
         data.fotoLicenciaFrente || null,
         data.fotoLicenciaDorso || null,
+        data.fotoUrl || null,
         data.estado || 'disponible',
         data.observaciones || null,
         data.id,
@@ -442,9 +468,9 @@ export async function saveChofer(data: ChoferSaveInput): Promise<{ success: bool
           nombre, apellido, dni, cuil, telefono, email, direccion,
           foto_dni_frente, foto_dni_dorso,
           numero_licencia, categoria_licencia, fecha_vencimiento_licencia,
-          foto_licencia_frente, foto_licencia_dorso,
+          foto_licencia_frente, foto_licencia_dorso, foto_url,
           estado, observaciones
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
         data.nombre.trim(),
         data.apellido.trim(),
@@ -460,6 +486,7 @@ export async function saveChofer(data: ChoferSaveInput): Promise<{ success: bool
         data.fechaVencimientoLicencia,
         data.fotoLicenciaFrente || null,
         data.fotoLicenciaDorso || null,
+        data.fotoUrl || null,
         data.estado || 'disponible',
         data.observaciones || null,
       ])
