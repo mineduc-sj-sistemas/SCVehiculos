@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tarjeta Maestra QA — SCVehiculos</title>
+<style>
+:root{--o:#FF8200;--od:#D46900;--d:#1D252D;--g:#4A5568;--l:#F8FAFC;--b:#E2E8F0;--s:#10B981;--r:#EF4444;--bl:#2563EB}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:#F1F5F9;color:var(--d);line-height:1.5;padding-bottom:60px}
+.top-action-bar{position:sticky;top:0;z-index:1000;background:rgba(29,37,45,.96);color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid var(--o)}
+.bar-brand{font-size:14px;font-weight:700;display:flex;gap:10px;align-items:center}.bar-badge{background:var(--o);padding:3px 8px;border-radius:4px;font-size:11px;font-weight:800;text-transform:uppercase}
+.btn{padding:8px 14px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:none;margin-left:8px}.btn-primary{background:var(--o);color:#fff}.btn-secondary{background:rgba(255,255,255,.15);color:#fff}
+.sheet{max-width:1060px;margin:30px auto;background:#fff;border-radius:12px;padding:40px;border:1px solid var(--b);box-shadow:0 4px 20px rgba(0,0,0,.06)}
+.official-header{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--d);padding-bottom:20px;margin-bottom:24px}
+.inst{font-size:13px;font-weight:800;text-transform:uppercase;color:var(--g)}.main-title{font-size:24px;font-weight:900;margin-top:4px}.subtitle{font-size:13px;color:var(--o);font-weight:700}.logo{height:75px}
+.meta-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;background:var(--l);padding:16px;border-radius:8px;border:1px solid var(--b);margin-bottom:24px}
+.meta-label{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g)}.meta-val{font-size:13px;font-weight:700}
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:24px}
+.kpi-card{border:1px solid var(--b);border-radius:8px;padding:14px;text-align:center;border-top:4px solid var(--g)}.k-o{border-top-color:var(--o)}.k-g{border-top-color:var(--s)}.k-r{border-top-color:var(--r)}.k-b{border-top-color:var(--bl)}
+.kpi-number{font-size:26px;font-weight:900}.kpi-label{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g)}
+.progress-section{background:var(--l);border:1px solid var(--b);border-radius:8px;padding:16px 20px;margin-bottom:28px}.progress-info{display:flex;justify-content:space-between;font-size:13px;font-weight:700;margin-bottom:8px}
+.progress-bg{height:12px;background:#E2E8F0;border-radius:6px;overflow:hidden}.progress-fill{height:100%;background:linear-gradient(90deg,var(--o),var(--s));transition:width .3s}
+.complexity-alert-section{background:#FFFDF5;border:2px solid #FCD34D;border-radius:10px;padding:24px;margin-bottom:34px}
+.alert-header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #FDE68A;padding-bottom:14px;margin-bottom:18px}.alert-title-wrap{display:flex;gap:10px;align-items:center}.alert-title-wrap h3{font-size:17px;font-weight:800;color:#92400E}
+.alert-badge{background:#FEF3C7;color:#B45309;font-size:11px;font-weight:800;padding:3px 8px;border-radius:4px}
+.alert-cards-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}.mini-alert-card{background:#fff;border:1px solid #FDE68A;border-radius:8px;padding:14px;border-left:5px solid #F59E0B}
+.mini-alert-card.alert-danger{border-left-color:var(--r);background:#FEF2F2;border-color:#FECACA}.mini-alert-card h4{font-size:14px;font-weight:800;margin-bottom:6px}.mini-alert-card p{font-size:12px;color:#475569}
+.extra-metrics{font-size:12px;background:#fff;border:1px solid #FDE68A;border-radius:8px;padding:10px 14px;margin-bottom:16px}
+.det-summary{font-size:13px;font-weight:800;cursor:pointer;padding:4px 0}
+.loc-table{width:100%;border-collapse:collapse;font-size:12px;background:#fff;margin-top:10px;border:1px solid var(--b)}.loc-table th{background:var(--l);padding:8px 12px;text-align:left;font-size:11px;text-transform:uppercase;color:#475569}.loc-table td{padding:8px 12px;border-top:1px solid #F1F5F9}
+.table-subtext{font-size:10px;color:#94A3B8}.table-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:800;white-space:nowrap}
+.badge-danger{background:#FEE2E2;color:#991B1B}.badge-warning{background:#FEF3C7;color:#92400E}.badge-info{background:#E0E7FF;color:#3730A3}.badge-success{background:#D1FAE5;color:#065F46}
+.filter-bar{display:flex;gap:10px;margin-bottom:24px;padding-bottom:12px;border-bottom:1px solid var(--b)}.filter-btn{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--b);background:#fff;color:var(--g)}.filter-btn.active{background:var(--d);color:#fff}
+.card-area{border:1px solid var(--b);border-radius:10px;margin-bottom:24px;overflow:hidden;page-break-inside:avoid}
+.card-header{background:var(--l);padding:14px 20px;border-bottom:1px solid var(--b);display:flex;justify-content:space-between;align-items:center}.card-title-group{display:flex;gap:12px;align-items:center}
+.card-badge-num{background:var(--d);color:#fff;font-size:11px;font-weight:800;padding:3px 8px;border-radius:6px}.card-title{font-size:16px;font-weight:800}
+.card-progress-wrap{display:flex;gap:10px;align-items:center}.card-counter{font-size:12px;font-weight:800;color:var(--g)}.mini-progress-bar{width:70px;height:6px;background:#E2E8F0;border-radius:3px;overflow:hidden}.mini-progress-fill{height:100%;background:var(--o)}
+.card-warning-banner{padding:10px 20px;background:#FEF2F2;border-bottom:1px solid #FECACA;font-size:12px;color:#991B1B}.card-na{padding:12px 20px;font-size:13px;color:var(--g);font-style:italic}
+.item-section{padding:10px 20px 4px;font-size:11px;font-weight:800;text-transform:uppercase;color:var(--o)}
+.checklist-item{display:flex;gap:14px;padding:11px 20px;border-bottom:1px solid #F1F5F9;cursor:pointer}.checklist-item:hover{background:var(--l)}
+.chk-item{margin-top:3px;width:17px;height:17px;accent-color:var(--o)}.item-content{flex:1;font-size:13px;color:#334155}.item-bold{font-weight:800;color:var(--d);margin-right:6px}.item-bold::after{content:" —";color:var(--o)}
+.item-checked .item-content{color:#64748B}.item-checked .item-bold{color:var(--s)}
+code{background:#F1F5F9;padding:1px 5px;border-radius:4px;font-size:12px}
+.signature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:40px;padding-top:30px;border-top:1px solid var(--b);page-break-inside:avoid}.sig-box{text-align:center}.sig-line{border-top:1px solid #94A3B8;width:80%;margin:0 auto 8px}.sig-title{font-size:12px;font-weight:800}.sig-sub{font-size:11px;color:var(--g)}
+@media print{body{background:#fff;padding:0}.top-action-bar,.filter-bar{display:none!important}.sheet{box-shadow:none;border:none;padding:0;margin:0;max-width:100%}details{display:block}details>summary{list-style:none}}
+</style></head><body>
+<div class="top-action-bar">
+  <div class="bar-brand"><span>GOBIERNO DE SAN JUAN</span><span class="bar-badge">QA Pre-Deploy</span><span style="font-size:12px;color:#94A3B8">| SCVehiculos</span></div>
+  <div><button class="btn btn-secondary" onclick="copySummaryText()">📋 Copiar Resumen</button><button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir / Guardar en PDF</button></div>
+</div>
+<div class="sheet">
+  <div class="official-header"><div><div class="inst">Gobierno de San Juan — Ministerio de Educación</div><div class="main-title">Tarjeta Maestra de Control QA Pre-Deploy</div><div class="subtitle">Matriz de verificación y criterios técnicos para despliegue</div></div>
+    <img src="data:image/png;base64,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" class="logo" alt="Logo institucional"></div>
+  <div class="meta-grid">
+    <div><div class="meta-label">Sistema</div><div class="meta-val">SCVehiculos</div></div>
+    <div><div class="meta-label">Fecha de emisión</div><div class="meta-val">2026-11-02</div></div>
+    <div><div class="meta-label">Destinatarios</div><div class="meta-val">Equipo de Desarrollo</div></div>
+    <div><div class="meta-label">Commit</div><div class="meta-val">7ec3fef</div></div>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi-card k-o"><div class="kpi-number">97</div><div class="kpi-label">Puntos de control</div></div>
+    <div class="kpi-card k-g"><div class="kpi-number" id="kpiChecked">0</div><div class="kpi-label">Cumplidos</div></div>
+    <div class="kpi-card"><div class="kpi-number" id="kpiPending">97</div><div class="kpi-label">Pendientes</div></div>
+    <div class="kpi-card k-r"><div class="kpi-number">21</div><div class="kpi-label">Archivos sobre umbral · 2 acc. datos</div></div>
+    <div class="kpi-card k-b"><div class="kpi-number" id="kpiPercent">0.0%</div><div class="kpi-label">Conformidad</div></div>
+  </div>
+  <div class="progress-section"><div class="progress-info"><span>Estado global de conformidad</span><span id="progressLabel">0.0% completado</span></div>
+    <div class="progress-bg"><div class="progress-fill" id="mainProgressBar" style="width:0.0%"></div></div></div>
+  
+    <div class="complexity-alert-section">
+      <div class="alert-header"><div class="alert-title-wrap"><span style="font-size:20px">🔬</span><h3>Diagnóstico de código: tamaños, acceso a datos, versiones y documentación</h3></div>
+      <span class="alert-badge">Medición 2026-11-02</span></div>
+      <div class="alert-cards-grid">
+      <div class="mini-alert-card alert-danger">
+        <h4>Vistas y Componentes Astro: 6 sobre umbral (500 lín)</h4>
+        <p>56 archivos analizados · 1 críticos.<br><strong>Acción:</strong> Extraer subcomponentes o modularizar lógica visual</p>
+      </div>
+      <div class="mini-alert-card alert-danger">
+        <h4>Endpoints API Backend: 0 sobre umbral (200 lín)</h4>
+        <p>18 archivos analizados · 0 críticos · <strong>2 con acceso directo a datos</strong>.<br>Dentro de los límites.</p>
+      </div>
+      <div class="mini-alert-card alert-danger">
+        <h4>Servicios Backend (Dominio y Datos): 9 sobre umbral (300 lín)</h4>
+        <p>15 archivos analizados · 3 críticos.<br><strong>Acción:</strong> Dividir responsabilidades y consultas en módulos cohesivos</p>
+      </div>
+      <div class="mini-alert-card alert-danger">
+        <h4>Controladores Frontend (Scripts Cliente): 6 sobre umbral (300 lín)</h4>
+        <p>9 archivos analizados · 4 críticos.<br><strong>Acción:</strong> Modularizar controladores de pantalla en submódulos o handlers de eventos</p>
+      </div></div>
+      <div class="extra-metrics">🗂️ <strong>Versiones:</strong> 80% commits convencionales · 0 tags · commit <code>7ec3fef</code><br>📚 <strong>Documentación:</strong> última actualización nunca · — commits de código desde entonces</div>
+      
+      <details open style="margin-bottom:14px;">
+        <summary class="det-summary">▶ Vistas y Componentes Astro — umbral 500 lín / crítico 800 lín</summary>
+        <table class="loc-table"><thead><tr><th>Archivo</th><th style="text-align:right">Líneas</th><th>Estado</th><th>Acceso a datos</th></tr></thead><tbody>
+        <tr><td><strong>AuditorExecutiveView.astro</strong><br><span class="table-subtext">src/frontend/components/auditoria/AuditorExecutiveView.astro</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">916</td>
+          <td><span class="table-badge badge-danger">🔴 Crítico</span></td>
+          <td>—</td></tr><tr><td><strong>mi-viaje.astro</strong><br><span class="table-subtext">src/pages/mi-viaje.astro</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">800</td>
+          <td><span class="table-badge badge-warning">🟡 Sobre umbral</span></td>
+          <td>—</td></tr><tr><td><strong>viajes-choferes.astro</strong><br><span class="table-subtext">src/pages/viajes-choferes.astro</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">718</td>
+          <td><span class="table-badge badge-warning">🟡 Sobre umbral</span></td>
+          <td>—</td></tr><tr><td><strong>VehicleDetailModal.astro</strong><br><span class="table-subtext">src/frontend/components/flota/VehicleDetailModal.astro</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">674</td>
+          <td><span class="table-badge badge-warning">🟡 Sobre umbral</span></td>
+          <td>—</td></tr><tr><td><strong>VehicleFormModal.astro</strong><br><span class="table-subtext">src/frontend/components/flota/VehicleFormModal.astro</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">602</td>
+          <td><span class="table-badge badge-warning">🟡 Sobre umbral</span></td>
+          <td>—</td></tr><tr><td><strong>CronogramaDispatchModal.astro</strong><br><span class="table-subtext">src/frontend/components/cronograma/CronogramaDispatchModal.astro</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">580</td>
+          <td><span class="table-badge badge-warning">🟡 Sobre umbral</span></td>
+          <td>—</td></tr><tr><td><strong>ChoferFormModal.astro</strong><br><span class="table-subtext">src/frontend/components/choferes/ChoferFormModal.astro</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">497</td>
+          <td><span class="table-badge badge-info">🔵 Moderado</span></td>
+          <td>—</td></tr><tr><td><strong>PwaManager.astro</strong><br><span class="table-subtext">src/frontend/components/pwa/PwaManager.astro</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">429</td>
+          <td><span class="table-badge badge-info">🔵 Moderado</span></td>
+          <td>—</td></tr><tr><td><strong>index.astro</strong><br><span class="table-subtext">src/pages/index.astro</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">375</td>
+          <td><span class="table-badge badge-info">🔵 Moderado</span></td>
+          <td>—</td></tr><tr><td><strong>[id].astro</strong><br><span class="table-subtext">src/pages/cronograma/imprimir/[id].astro</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">350</td>
+          <td><span class="table-badge badge-info">🔵 Moderado</span></td>
+          <td>—</td></tr><tr><td><strong>FuelFormModal.astro</strong><br><span class="table-subtext">src/frontend/components/combustible/FuelFormModal.astro</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">332</td>
+          <td><span class="table-badge badge-info">🔵 Moderado</span></td>
+          <td>—</td></tr><tr><td><strong>ChoferDetailModal.astro</strong><br><span class="table-subtext">src/frontend/components/choferes/ChoferDetailModal.astro</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">282</td>
+          <td><span class="table-badge badge-success">🟢 Óptimo</span></td>
+          <td>—</td></tr><tr><td><strong>UserFormModal.astro</strong><br><span class="table-subtext">src/frontend/components/usuarios/UserFormModal.astro</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">271</td>
+          <td><span class="table-badge badge-success">🟢 Óptimo</span></td>
+          <td>—</td></tr><tr><td><strong>CronogramaDetailModal.astro</strong><br><span class="table-subtext">src/frontend/components/cronograma/CronogramaDetailModal.astro</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">259</td>
+          <td><span class="table-badge badge-success">🟢 Óptimo</span></td>
+          <td>—</td></tr><tr><td><strong>CronogramaGrid.astro</strong><br><span class="table-subtext">src/frontend/components/cronograma/CronogramaGrid.astro</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">253</td>
+          <td><span class="table-badge badge-success">🟢 Óptimo</span></td>
+          <td>—</td></tr><tr><td><strong>MaintenanceFormModal.astro</strong><br><span class="table-subtext">src/frontend/components/mantenimientos/MaintenanceFormModal.astro</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">244</td>
+          <td><span class="table-badge badge-success">🟢 Óptimo</span></td>
+          <td>—</td></tr><tr><td><strong>mi-perfil.astro</strong><br><span class="table-subtext">src/pages/mi-perfil.astro</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">226</td>
+          <td><span class="table-badge badge-success">🟢 Óptimo</span></td>
+          <td>—</td></tr><tr><td><strong>MaintenanceTable.astro</strong><br><span class="table-subtext">src/frontend/components/mantenimientos/MaintenanceTable.astro</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">216</td>
+          <td><span class="table-badge badge-success">🟢 Óptimo</span></td>
+          <td>—</td></tr><tr><td><strong>login.astro</strong><br><span class="table-subtext">src/pages/login.astro</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">213</td>
+          <td><span class="table-badge badge-success">🟢 Óptimo</span></td>
+          <td>—</td></tr><tr><td><strong>FuelTable.astro</strong><br><span class="table-subtext">src/frontend/components/combustible/FuelTable.astro</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">205</td>
+          <td><span class="table-badge badge-success">🟢 Óptimo</span></td>
+          <td>—</td></tr><tr><td><strong>ViajesTable.astro</strong><br><span class="table-subtext">src/frontend/components/viajes/ViajesTable.astro</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">194</td>
+          <td><span class="table-badge badge-success">🟢 Óptimo</span></td>
+          <td>—</td></tr><tr><td><strong>VehicleCardGrid.astro</strong><br><span class="table-subtext">src/frontend/components/flota/VehicleCardGrid.astro</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">192</td>
+          <td><span class="table-badge badge-success">🟢 Óptimo</span></td>
+          <td>—</td></tr><tr><td><strong>ChoferTable.astro</strong><br><span class="table-subtext">src/frontend/components/choferes/ChoferTable.astro</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">184</td>
+          <td><span class="table-badge badge-success">🟢 Óptimo</span></td>
+          <td>—</td></tr><tr><td><strong>CronogramaHeader.astro</strong><br><span class="table-subtext">src/frontend/components/cronograma/CronogramaHeader.astro</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">184</td>
+          <td><span class="table-badge badge-success">🟢 Óptimo</span></td>
+          <td>—</td></tr><tr><td><strong>VehicleTable.astro</strong><br><span class="table-subtext">src/frontend/components/flota/VehicleTable.astro</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">172</td>
+          <td><span class="table-badge badge-success">🟢 Óptimo</span></td>
+          <td>—</td></tr>
+        </tbody></table>
+      </details>
+      <details  style="margin-bottom:14px;">
+        <summary class="det-summary">▶ Endpoints API Backend — umbral 200 lín / crítico 300 lín</summary>
+        <table class="loc-table"><thead><tr><th>Archivo</th><th style="text-align:right">Líneas</th><th>Estado</th><th>Acceso a datos</th></tr></thead><tbody>
+        <tr><td><strong>[id].ts</strong><br><span class="table-subtext">src/pages/api/cronograma/[id].ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">177</td>
+          <td><span class="table-badge badge-info">🔵 Moderado</span></td>
+          <td>—</td></tr><tr><td><strong>index.ts</strong><br><span class="table-subtext">src/pages/api/combustible/index.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">126</td>
+          <td><span class="table-badge badge-info">🔵 Moderado</span></td>
+          <td><span class="table-badge badge-danger">L69</span></td></tr><tr><td><strong>index.ts</strong><br><span class="table-subtext">src/pages/api/cronograma/index.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">95</td>
+          <td><span class="table-badge badge-success">🟢 Óptimo</span></td>
+          <td>—</td></tr><tr><td><strong>index.ts</strong><br><span class="table-subtext">src/pages/api/analizar-tablero/index.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">91</td>
+          <td><span class="table-badge badge-success">🟢 Óptimo</span></td>
+          <td>—</td></tr><tr><td><strong>index.ts</strong><br><span class="table-subtext">src/pages/api/mantenimientos/index.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">89</td>
+          <td><span class="table-badge badge-success">🟢 Óptimo</span></td>
+          <td>—</td></tr><tr><td><strong>index.ts</strong><br><span class="table-subtext">src/pages/api/choferes/index.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">84</td>
+          <td><span class="table-badge badge-success">🟢 Óptimo</span></td>
+          <td>—</td></tr><tr><td><strong>index.ts</strong><br><span class="table-subtext">src/pages/api/vehiculos/index.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">84</td>
+          <td><span class="table-badge badge-success">🟢 Óptimo</span></td>
+          <td>—</td></tr><tr><td><strong>index.ts</strong><br><span class="table-subtext">src/pages/api/analizar-ticket/index.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">71</td>
+          <td><span class="table-badge badge-success">🟢 Óptimo</span></td>
+          <td>—</td></tr><tr><td><strong>[tipo].ts</strong><br><span class="table-subtext">src/pages/api/reportes/[tipo].ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">68</td>
+          <td><span class="table-badge badge-success">🟢 Óptimo</span></td>
+          <td>—</td></tr><tr><td><strong>[id].ts</strong><br><span class="table-subtext">src/pages/api/mantenimientos/[id].ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">64</td>
+          <td><span class="table-badge badge-success">🟢 Óptimo</span></td>
+          <td>—</td></tr><tr><td><strong>checkin.ts</strong><br><span class="table-subtext">src/pages/api/chofer/checkin.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">58</td>
+          <td><span class="table-badge badge-success">🟢 Óptimo</span></td>
+          <td>—</td></tr><tr><td><strong>index.ts</strong><br><span class="table-subtext">src/pages/api/usuarios/index.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">57</td>
+          <td><span class="table-badge badge-success">🟢 Óptimo</span></td>
+          <td>—</td></tr><tr><td><strong>login.ts</strong><br><span class="table-subtext">src/pages/api/auth/login.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">52</td>
+          <td><span class="table-badge badge-success">🟢 Óptimo</span></td>
+          <td>—</td></tr><tr><td><strong>licencias.ts</strong><br><span class="table-subtext">src/pages/api/choferes/licencias.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">45</td>
+          <td><span class="table-badge badge-success">🟢 Óptimo</span></td>
+          <td>—</td></tr><tr><td><strong>mi-viaje.ts</strong><br><span class="table-subtext">src/pages/api/chofer/mi-viaje.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">37</td>
+          <td><span class="table-badge badge-success">🟢 Óptimo</span></td>
+          <td>—</td></tr><tr><td><strong>index.ts</strong><br><span class="table-subtext">src/pages/api/alertas/index.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">34</td>
+          <td><span class="table-badge badge-success">🟢 Óptimo</span></td>
+          <td><span class="table-badge badge-danger">L14</span></td></tr><tr><td><strong>viajes-asignados.ts</strong><br><span class="table-subtext">src/pages/api/chofer/viajes-asignados.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">32</td>
+          <td><span class="table-badge badge-success">🟢 Óptimo</span></td>
+          <td>—</td></tr><tr><td><strong>logout.ts</strong><br><span class="table-subtext">src/pages/api/auth/logout.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">16</td>
+          <td><span class="table-badge badge-success">🟢 Óptimo</span></td>
+          <td>—</td></tr>
+        </tbody></table>
+      </details>
+      <details  style="margin-bottom:14px;">
+        <summary class="det-summary">▶ Servicios Backend (Dominio y Datos) — umbral 300 lín / crítico 500 lín</summary>
+        <table class="loc-table"><thead><tr><th>Archivo</th><th style="text-align:right">Líneas</th><th>Estado</th><th>Acceso a datos</th></tr></thead><tbody>
+        <tr><td><strong>cronogramaService.ts</strong><br><span class="table-subtext">src/backend/services/cronogramaService.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">1192</td>
+          <td><span class="table-badge badge-danger">🔴 Crítico</span></td>
+          <td>—</td></tr><tr><td><strong>vehicleService.ts</strong><br><span class="table-subtext">src/backend/services/vehicleService.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">623</td>
+          <td><span class="table-badge badge-danger">🔴 Crítico</span></td>
+          <td>—</td></tr><tr><td><strong>choferService.ts</strong><br><span class="table-subtext">src/backend/services/choferService.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">552</td>
+          <td><span class="table-badge badge-danger">🔴 Crítico</span></td>
+          <td>—</td></tr><tr><td><strong>choferViajesService.ts</strong><br><span class="table-subtext">src/backend/services/choferViajesService.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">454</td>
+          <td><span class="table-badge badge-warning">🟡 Sobre umbral</span></td>
+          <td>—</td></tr><tr><td><strong>visionService.ts</strong><br><span class="table-subtext">src/backend/services/visionService.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">394</td>
+          <td><span class="table-badge badge-warning">🟡 Sobre umbral</span></td>
+          <td>—</td></tr><tr><td><strong>alertService.ts</strong><br><span class="table-subtext">src/backend/services/alertService.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">375</td>
+          <td><span class="table-badge badge-warning">🟡 Sobre umbral</span></td>
+          <td>—</td></tr><tr><td><strong>maintenanceService.ts</strong><br><span class="table-subtext">src/backend/services/maintenanceService.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">375</td>
+          <td><span class="table-badge badge-warning">🟡 Sobre umbral</span></td>
+          <td>—</td></tr><tr><td><strong>userService.ts</strong><br><span class="table-subtext">src/backend/services/userService.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">355</td>
+          <td><span class="table-badge badge-warning">🟡 Sobre umbral</span></td>
+          <td>—</td></tr><tr><td><strong>authService.ts</strong><br><span class="table-subtext">src/backend/services/authService.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">338</td>
+          <td><span class="table-badge badge-warning">🟡 Sobre umbral</span></td>
+          <td>—</td></tr><tr><td><strong>fuelService.ts</strong><br><span class="table-subtext">src/backend/services/fuelService.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">298</td>
+          <td><span class="table-badge badge-info">🔵 Moderado</span></td>
+          <td>—</td></tr><tr><td><strong>viajesService.ts</strong><br><span class="table-subtext">src/backend/services/viajesService.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">255</td>
+          <td><span class="table-badge badge-info">🔵 Moderado</span></td>
+          <td>—</td></tr><tr><td><strong>choferPortalService.ts</strong><br><span class="table-subtext">src/backend/services/choferPortalService.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">242</td>
+          <td><span class="table-badge badge-info">🔵 Moderado</span></td>
+          <td>—</td></tr><tr><td><strong>dashboardService.ts</strong><br><span class="table-subtext">src/backend/services/dashboardService.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">222</td>
+          <td><span class="table-badge badge-info">🔵 Moderado</span></td>
+          <td>—</td></tr><tr><td><strong>choferPerfilService.ts</strong><br><span class="table-subtext">src/backend/services/choferPerfilService.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">197</td>
+          <td><span class="table-badge badge-info">🔵 Moderado</span></td>
+          <td>—</td></tr><tr><td><strong>reportService.ts</strong><br><span class="table-subtext">src/backend/services/reportService.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">185</td>
+          <td><span class="table-badge badge-info">🔵 Moderado</span></td>
+          <td>—</td></tr>
+        </tbody></table>
+      </details>
+      <details  style="margin-bottom:14px;">
+        <summary class="det-summary">▶ Controladores Frontend (Scripts Cliente) — umbral 300 lín / crítico 500 lín</summary>
+        <table class="loc-table"><thead><tr><th>Archivo</th><th style="text-align:right">Líneas</th><th>Estado</th><th>Acceso a datos</th></tr></thead><tbody>
+        <tr><td><strong>cronogramaController.ts</strong><br><span class="table-subtext">src/frontend/scripts/cronogramaController.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">1622</td>
+          <td><span class="table-badge badge-danger">🔴 Crítico</span></td>
+          <td>—</td></tr><tr><td><strong>choferesController.ts</strong><br><span class="table-subtext">src/frontend/scripts/choferesController.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">1250</td>
+          <td><span class="table-badge badge-danger">🔴 Crítico</span></td>
+          <td>—</td></tr><tr><td><strong>viajesController.ts</strong><br><span class="table-subtext">src/frontend/scripts/viajesController.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">1190</td>
+          <td><span class="table-badge badge-danger">🔴 Crítico</span></td>
+          <td>—</td></tr><tr><td><strong>miViajeController.ts</strong><br><span class="table-subtext">src/frontend/scripts/miViajeController.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">770</td>
+          <td><span class="table-badge badge-danger">🔴 Crítico</span></td>
+          <td>—</td></tr><tr><td><strong>combustibleController.ts</strong><br><span class="table-subtext">src/frontend/scripts/combustibleController.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">428</td>
+          <td><span class="table-badge badge-warning">🟡 Sobre umbral</span></td>
+          <td>—</td></tr><tr><td><strong>viajesChoferesController.ts</strong><br><span class="table-subtext">src/frontend/scripts/viajesChoferesController.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">415</td>
+          <td><span class="table-badge badge-warning">🟡 Sobre umbral</span></td>
+          <td>—</td></tr><tr><td><strong>mantenimientosController.ts</strong><br><span class="table-subtext">src/frontend/scripts/mantenimientosController.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">280</td>
+          <td><span class="table-badge badge-info">🔵 Moderado</span></td>
+          <td>—</td></tr><tr><td><strong>flotaController.ts</strong><br><span class="table-subtext">src/frontend/scripts/flotaController.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">202</td>
+          <td><span class="table-badge badge-info">🔵 Moderado</span></td>
+          <td>—</td></tr><tr><td><strong>userController.ts</strong><br><span class="table-subtext">src/frontend/scripts/userController.ts</span></td>
+          <td style="text-align:right;font-weight:800;font-family:monospace">171</td>
+          <td><span class="table-badge badge-success">🟢 Óptimo</span></td>
+          <td>—</td></tr>
+        </tbody></table>
+      </details>
+    </div>
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="applyFilter(event,'all')">Todos</button>
+    <button class="filter-btn" onclick="applyFilter(event,'pending')">Pendientes</button>
+    <button class="filter-btn" onclick="applyFilter(event,'checked')">Cumplidos</button>
+  </div>
+  
+  <div class="card-area">
+    <div class="card-header">
+      <div class="card-title-group"><span class="card-badge-num">01</span><h2 class="card-title">01 — Seguridad y Control de Accesos</h2></div>
+      <div class="card-progress-wrap"><span class="card-counter" id="counter_0">0 / 9</span>
+        <div class="mini-progress-bar"><div class="mini-progress-fill" id="progress_0" style="width:0%"></div></div></div>
+    </div>
+    
+    
+    <div class="checklist-items">
+      <label class="checklist-item " id="label_chk_0_0">
+        <input type="checkbox" class="chk-item" data-cat="0" id="chk_0_0"  onchange="toggleItem('chk_0_0', 0)">
+        <div class="item-content"><span class="item-bold">Control horizontal (BOLA / IDOR)</span><span>El identificador del usuario/titular sale exclusivamente de la sesión/token autenticado, nunca de params, body o query string.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_0_1">
+        <input type="checkbox" class="chk-item" data-cat="0" id="chk_0_1"  onchange="toggleItem('chk_0_1', 0)">
+        <div class="item-content"><span class="item-bold">Control vertical por rol (RBAC)</span><span>Toda ruta operativa exige autenticación y autorización explícita por rol; solo endpoints públicos declarados están exentos. Acciones administrativas y dictámenes restringidos a roles autorizados.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_0_2">
+        <input type="checkbox" class="chk-item" data-cat="0" id="chk_0_2"  onchange="toggleItem('chk_0_2', 0)">
+        <div class="item-content"><span class="item-bold">Autenticación y sesiones</span><span>Sin credenciales maestras, bypasses ni headers de prueba (<code>x-test-*</code>) en código productivo. Alta de cuentas con verificación de identidad.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_0_3">
+        <input type="checkbox" class="chk-item" data-cat="0" id="chk_0_3"  onchange="toggleItem('chk_0_3', 0)">
+        <div class="item-content"><span class="item-bold">Gestión de secretos y firmas</span><span>Claves de firma y tokens leídos de variables de entorno seguras (sin fallbacks inseguros ni hardcoded en repositorio). Contraseñas almacenadas con algoritmos seguros y factor de costo adecuado.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_0_4">
+        <input type="checkbox" class="chk-item" data-cat="0" id="chk_0_4"  onchange="toggleItem('chk_0_4', 0)">
+        <div class="item-content"><span class="item-bold">CORS y cabeceras de red</span><span>CORS acotado estrictamente a los dominios autorizados en producción. Cabeceras HTTP de seguridad configuradas (<code>X-Content-Type-Options: nosniff</code>, <code>X-Frame-Options</code>, etc.).</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_0_5">
+        <input type="checkbox" class="chk-item" data-cat="0" id="chk_0_5"  onchange="toggleItem('chk_0_5', 0)">
+        <div class="item-content"><span class="item-bold">Carga de archivos y adjuntos</span><span>Verificación de extensiones permitidas, validación de firma/magic bytes, límite de tamaño por archivo y almacenamiento con nombres generados por el servidor para evitar Path Traversal.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_0_6">
+        <input type="checkbox" class="chk-item" data-cat="0" id="chk_0_6"  onchange="toggleItem('chk_0_6', 0)">
+        <div class="item-content"><span class="item-bold">Prevención de inyección y XSS</span><span>Consultas a base de datos parametrizadas (sin concatenación de SQL). Renderizado en frontend sanitizado, evitando inyección de HTML crudo.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_0_7">
+        <input type="checkbox" class="chk-item" data-cat="0" id="chk_0_7"  onchange="toggleItem('chk_0_7', 0)">
+        <div class="item-content"><span class="item-bold">Manejo seguro de excepciones y logs</span><span>Respuestas en producción sin exponer detalles internos, rutas ni stack traces. Logs estructurados sin almacenar contraseñas, tokens ni datos personales sensibles.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_0_8">
+        <input type="checkbox" class="chk-item" data-cat="0" id="chk_0_8"  onchange="toggleItem('chk_0_8', 0)">
+        <div class="item-content"><span class="item-bold">Auditoría de dependencias</span><span>Sin dependencias con vulnerabilidades de severidad alta o crítica reportadas en el gestor de paquetes.</span></div>
+      </label></div>
+  </div>
+  <div class="card-area">
+    <div class="card-header">
+      <div class="card-title-group"><span class="card-badge-num">02</span><h2 class="card-title">02 — Backend y Arquitectura (Astro SSR &amp; Node.js)</h2></div>
+      <div class="card-progress-wrap"><span class="card-counter" id="counter_1">0 / 18</span>
+        <div class="mini-progress-bar"><div class="mini-progress-fill" id="progress_1" style="width:0%"></div></div></div>
+    </div>
+    <div class="card-warning-banner">⚠️ <strong>2 con acceso directo a datos:</strong> <code>index.ts</code>, <code>index.ts</code><br><strong>9 archivo(s) de "Servicios Backend (Dominio y Datos)" superan 300 líneas:</strong> <code>cronogramaService.ts (1192)</code>, <code>vehicleService.ts (623)</code>, <code>choferService.ts (552)</code>, <code>choferViajesService.ts (454)</code>, <code>visionService.ts (394)</code>, <code>alertService.ts (375)</code>, <code>maintenanceService.ts (375)</code>, <code>userService.ts (355)</code>…</div>
+    
+    <div class="checklist-items"><div class="item-section">Buenas Prácticas y Arquitectura</div>
+      <label class="checklist-item " id="label_chk_1_0">
+        <input type="checkbox" class="chk-item" data-cat="1" id="chk_1_0"  onchange="toggleItem('chk_1_0', 1)">
+        <div class="item-content"><span class="item-bold">Capas y separación de responsabilidades</span><span>Separación estricta entre Adaptadores HTTP (<code>src/pages/api/</code>), Servicios de Dominio (<code>src/backend/services/</code>) y Capa de Datos (<code>src/backend/config/db.ts</code>).</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_1_1">
+        <input type="checkbox" class="chk-item" data-cat="1" id="chk_1_1"  onchange="toggleItem('chk_1_1', 1)">
+        <div class="item-content"><span class="item-bold">Controladores delgados (Endpoints API &lt; 200 lín)</span><span>Los endpoints en <code>src/pages/api/</code> solo parsean la petición, validan parámetros y formatean la respuesta HTTP.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_1_2">
+        <input type="checkbox" class="chk-item" data-cat="1" id="chk_1_2"  onchange="toggleItem('chk_1_2', 1)">
+        <div class="item-content"><span class="item-bold">Cero acceso directo a datos en endpoints</span><span>Prohibido invocar <code>query(...)</code>, <code>pool.execute(...)</code> o escribir sentencias SQL directamente en archivos bajo <code>src/pages/api/</code>; toda consulta a base de datos debe residir en <code>src/backend/services/</code>.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_1_3">
+        <input type="checkbox" class="chk-item" data-cat="1" id="chk_1_3"  onchange="toggleItem('chk_1_3', 1)">
+        <div class="item-content"><span class="item-bold">Validación de esquemas y payloads</span><span>Validación exhaustiva de parámetros de entrada antes de invocar la capa de negocio; prevención de inyección o valores inválidos.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_1_4">
+        <input type="checkbox" class="chk-item" data-cat="1" id="chk_1_4"  onchange="toggleItem('chk_1_4', 1)">
+        <div class="item-content"><span class="item-bold">Manejo uniforme de errores y respuestas HTTP</span><span>Respuestas JSON estructuradas con <code>{ success: boolean, data?: any, error?: string }</code> y códigos HTTP representativos (<code>200</code>, <code>201</code>, <code>400</code>, <code>401</code>, <code>403</code>, <code>404</code>, <code>500</code>).</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_1_5">
+        <input type="checkbox" class="chk-item" data-cat="1" id="chk_1_5"  onchange="toggleItem('chk_1_5', 1)">
+        <div class="item-content"><span class="item-bold">Manejo transaccional ACID seguro</span><span>Operaciones críticas compuestas (ej. asignación de vehículos, registro de despachos con cambio de estado) deben ejecutarse mediante <code>withTransaction(...)</code> con rollback automático ante excepciones.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_1_6">
+        <input type="checkbox" class="chk-item" data-cat="1" id="chk_1_6"  onchange="toggleItem('chk_1_6', 1)">
+        <div class="item-content"><span class="item-bold">Centralización de variables de entorno</span><span>Validación de configuración al inicio (variables de MySQL <code>DB_HOST</code>, <code>DB_PORT</code>, <code>DB_USER</code>, <code>DB_PASSWORD</code>, <code>DB_NAME</code>, JWT/secretos) sin valores hardcodeados en el código.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_1_7">
+        <input type="checkbox" class="chk-item" data-cat="1" id="chk_1_7"  onchange="toggleItem('chk_1_7', 1)">
+        <div class="item-content"><span class="item-bold">Logging estructurado</span><span>Registro de eventos operativos y errores con trazabilidad semántica evitando <code>console.log</code> dispersos o no estructurados en producción.</span></div>
+      </label><div class="item-section">Hallazgos de la Medición (Archivos sobre Umbral y Deuda de Datos)</div>
+      <label class="checklist-item " id="label_chk_1_8">
+        <input type="checkbox" class="chk-item" data-cat="1" id="chk_1_8"  onchange="toggleItem('chk_1_8', 1)">
+        <div class="item-content"><span class="item-bold">Corregir acceso directo a SQL en <code>src/pages/api/combustible/index.ts</code> (L69)</span><span>Eliminar la sentencia directa <code>SELECT odometro_actual FROM vehiculos WHERE id = ?</code> en el endpoint y delegar la obtención a <code>fuelService</code> o <code>vehicleService</code>.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_1_9">
+        <input type="checkbox" class="chk-item" data-cat="1" id="chk_1_9"  onchange="toggleItem('chk_1_9', 1)">
+        <div class="item-content"><span class="item-bold">Dividir <code>src/backend/services/cronogramaService.ts</code> (1192 lín - 🔴 Crítico)</span><span>Extraer cálculo de matrices semanales y fechas a un helper temporal, y segregar la lógica de despacho transaccional y validación de conflictos en submódulos dedicados.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_1_10">
+        <input type="checkbox" class="chk-item" data-cat="1" id="chk_1_10"  onchange="toggleItem('chk_1_10', 1)">
+        <div class="item-content"><span class="item-bold">Dividir <code>src/backend/services/vehicleService.ts</code> (623 lín - 🔴 Crítico)</span><span>Separar consultas de ficha 360°, auditoría de estados y operaciones CRUD base en módulos específicos.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_1_11">
+        <input type="checkbox" class="chk-item" data-cat="1" id="chk_1_11"  onchange="toggleItem('chk_1_11', 1)">
+        <div class="item-content"><span class="item-bold">Dividir <code>src/backend/services/choferService.ts</code> (552 lín - 🔴 Crítico)</span><span>Extraer gestión de licencias y validaciones de vigencia hacia un servicio modular de licencias.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_1_12">
+        <input type="checkbox" class="chk-item" data-cat="1" id="chk_1_12"  onchange="toggleItem('chk_1_12', 1)">
+        <div class="item-content"><span class="item-bold">Modularizar <code>src/backend/services/choferViajesService.ts</code> (454 lín - 🟡 Sobre umbral)</span><span>Segregar flujos de check-in y confirmación de viajes de la consulta de histórico.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_1_13">
+        <input type="checkbox" class="chk-item" data-cat="1" id="chk_1_13"  onchange="toggleItem('chk_1_13', 1)">
+        <div class="item-content"><span class="item-bold">Modularizar <code>src/backend/services/visionService.ts</code> (394 lín - 🟡 Sobre umbral)</span><span>Desacoplar el cliente de OCR/Google Vision de las reglas de sanitización de importes y odómetros.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_1_14">
+        <input type="checkbox" class="chk-item" data-cat="1" id="chk_1_14"  onchange="toggleItem('chk_1_14', 1)">
+        <div class="item-content"><span class="item-bold">Modularizar <code>src/backend/services/alertService.ts</code> (375 lín - 🟡 Sobre umbral)</span><span>Extraer reglas de cálculo de vencimientos preventivos a evaluadores unitarios.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_1_15">
+        <input type="checkbox" class="chk-item" data-cat="1" id="chk_1_15"  onchange="toggleItem('chk_1_15', 1)">
+        <div class="item-content"><span class="item-bold">Modularizar <code>src/backend/services/maintenanceService.ts</code> (375 lín - 🟡 Sobre umbral)</span><span>Separar gestión de órdenes de taller de la actualización de odómetro y estados del vehículo.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_1_16">
+        <input type="checkbox" class="chk-item" data-cat="1" id="chk_1_16"  onchange="toggleItem('chk_1_16', 1)">
+        <div class="item-content"><span class="item-bold">Modularizar <code>src/backend/services/userService.ts</code> (355 lín - 🟡 Sobre umbral)</span><span>Segregar asignación de roles y permisos de la gestión de credenciales.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_1_17">
+        <input type="checkbox" class="chk-item" data-cat="1" id="chk_1_17"  onchange="toggleItem('chk_1_17', 1)">
+        <div class="item-content"><span class="item-bold">Modularizar <code>src/backend/services/authService.ts</code> (338 lín - 🟡 Sobre umbral)</span><span>Separar validación de credenciales y hashing de la emisión y verificación de tokens/sesiones.</span></div>
+      </label></div>
+  </div>
+  <div class="card-area">
+    <div class="card-header">
+      <div class="card-title-group"><span class="card-badge-num">03</span><h2 class="card-title">03 — Frontend y Experiencia de Usuario (Astro &amp; Tailwind CSS)</h2></div>
+      <div class="card-progress-wrap"><span class="card-counter" id="counter_2">0 / 20</span>
+        <div class="mini-progress-bar"><div class="mini-progress-fill" id="progress_2" style="width:0%"></div></div></div>
+    </div>
+    <div class="card-warning-banner">⚠️ <strong>6 archivo(s) de "Vistas y Componentes Astro" superan 500 líneas:</strong> <code>AuditorExecutiveView.astro (916)</code>, <code>mi-viaje.astro (800)</code>, <code>viajes-choferes.astro (718)</code>, <code>VehicleDetailModal.astro (674)</code>, <code>VehicleFormModal.astro (602)</code>, <code>CronogramaDispatchModal.astro (580)</code><br><strong>6 archivo(s) de "Controladores Frontend (Scripts Cliente)" superan 300 líneas:</strong> <code>cronogramaController.ts (1622)</code>, <code>choferesController.ts (1250)</code>, <code>viajesController.ts (1190)</code>, <code>miViajeController.ts (770)</code>, <code>combustibleController.ts (428)</code>, <code>viajesChoferesController.ts (415)</code></div>
+    
+    <div class="checklist-items"><div class="item-section">Buenas Prácticas y UI</div>
+      <label class="checklist-item " id="label_chk_2_0">
+        <input type="checkbox" class="chk-item" data-cat="2" id="chk_2_0"  onchange="toggleItem('chk_2_0', 2)">
+        <div class="item-content"><span class="item-bold">Límite de tamaño de vistas (&lt; 500 lín)</span><span>Ningún componente <code>.astro</code> debe superar las 500 líneas de código; las pantallas extensas deben dividirse en subcomponentes modulares.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_2_1">
+        <input type="checkbox" class="chk-item" data-cat="2" id="chk_2_1"  onchange="toggleItem('chk_2_1', 2)">
+        <div class="item-content"><span class="item-bold">Modularidad y subcomponentes (Partials)</span><span>Descomponer vistas complejas en subcomponentes atómicos (<code>src/frontend/components/</code>) organizados por dominio funcional (<code>flota</code>, <code>choferes</code>, <code>cronograma</code>, <code>auditoria</code>).</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_2_2">
+        <input type="checkbox" class="chk-item" data-cat="2" id="chk_2_2"  onchange="toggleItem('chk_2_2', 2)">
+        <div class="item-content"><span class="item-bold">Separación limpia de scripts de cliente</span><span>Scripts de interacción de cliente extraídos a archivos <code>.ts</code> independientes en <code>src/frontend/scripts/</code>, evitando etiquetas <code>&lt;script&gt;</code> masivas en archivos <code>.astro</code>.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_2_3">
+        <input type="checkbox" class="chk-item" data-cat="2" id="chk_2_3"  onchange="toggleItem('chk_2_3', 2)">
+        <div class="item-content"><span class="item-bold">Controladores de cliente contenidos (&lt; 300 lín)</span><span>Los controladores de cliente deben limitarse a coordinar eventos del DOM y delegar la lógica de red o formato a utilidades especializadas.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_2_4">
+        <input type="checkbox" class="chk-item" data-cat="2" id="chk_2_4"  onchange="toggleItem('chk_2_4', 2)">
+        <div class="item-content"><span class="item-bold">Control de envíos duplicados</span><span>Botones de acción y formularios deshabilitados durante el envío (<code>loading</code>, spinner, estado deshabilitado) para impedir registros repetidos.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_2_5">
+        <input type="checkbox" class="chk-item" data-cat="2" id="chk_2_5"  onchange="toggleItem('chk_2_5', 2)">
+        <div class="item-content"><span class="item-bold">Manejo de sesión y expiración</span><span>Verificación en cliente de códigos de error de autenticación (<code>401/403</code>) con redirección limpia al login sin recargas infinitas.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_2_6">
+        <input type="checkbox" class="chk-item" data-cat="2" id="chk_2_6"  onchange="toggleItem('chk_2_6', 2)">
+        <div class="item-content"><span class="item-bold">Accesibilidad y diseño responsive</span><span>Tablas con scroll horizontal controlado en móviles, etiquetas de accesibilidad en modales y contraste institucional adecuado con Tailwind CSS.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_2_7">
+        <input type="checkbox" class="chk-item" data-cat="2" id="chk_2_7"  onchange="toggleItem('chk_2_7', 2)">
+        <div class="item-content"><span class="item-bold">Compilación e integridad de tipos</span><span>Ejecución limpia de <code>astro check</code> y <code>tsc --noEmit</code> sin errores de compilación ni tipos <code>any</code> injustificados.</span></div>
+      </label><div class="item-section">Hallazgos de la Medición (Vistas y Scripts sobre Umbral)</div>
+      <label class="checklist-item " id="label_chk_2_8">
+        <input type="checkbox" class="chk-item" data-cat="2" id="chk_2_8"  onchange="toggleItem('chk_2_8', 2)">
+        <div class="item-content"><span class="item-bold">Dividir <code>src/frontend/scripts/cronogramaController.ts</code> (1622 lín - 🔴 Crítico)</span><span>Extraer gestión de modales, sincronización de filtros de fecha y llamadas a la API de cronograma a módulos separados.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_2_9">
+        <input type="checkbox" class="chk-item" data-cat="2" id="chk_2_9"  onchange="toggleItem('chk_2_9', 2)">
+        <div class="item-content"><span class="item-bold">Dividir <code>src/frontend/scripts/choferesController.ts</code> (1250 lín - 🔴 Crítico)</span><span>Desacoplar la lógica de gestión de licencias médicas/profesionales de la manipulación de la tabla de choferes.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_2_10">
+        <input type="checkbox" class="chk-item" data-cat="2" id="chk_2_10"  onchange="toggleItem('chk_2_10', 2)">
+        <div class="item-content"><span class="item-bold">Dividir <code>src/frontend/scripts/viajesController.ts</code> (1190 lín - 🔴 Crítico)</span><span>Separar controladores de eventos de filtros, exportación de reportes y modal de asignación de unidades.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_2_11">
+        <input type="checkbox" class="chk-item" data-cat="2" id="chk_2_11"  onchange="toggleItem('chk_2_11', 2)">
+        <div class="item-content"><span class="item-bold">Dividir <code>src/frontend/components/auditoria/AuditorExecutiveView.astro</code> (916 lín - 🔴 Crítico)</span><span>Extraer tarjetas de KPIs, gráficos de estado y tablas de logs a componentes hijos dedicados.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_2_12">
+        <input type="checkbox" class="chk-item" data-cat="2" id="chk_2_12"  onchange="toggleItem('chk_2_12', 2)">
+        <div class="item-content"><span class="item-bold">Dividir <code>src/pages/mi-viaje.astro</code> (800 lín - 🟡 Sobre umbral)</span><span>Extraer los modales de carga de ticket, confirmación de inicio de viaje y resumen del trayecto a partials.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_2_13">
+        <input type="checkbox" class="chk-item" data-cat="2" id="chk_2_13"  onchange="toggleItem('chk_2_13', 2)">
+        <div class="item-content"><span class="item-bold">Dividir <code>src/frontend/scripts/miViajeController.ts</code> (770 lín - 🔴 Crítico)</span><span>Modularizar la captura fotográfica con OCR, validación de odómetro y sincronización de estado del chofer.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_2_14">
+        <input type="checkbox" class="chk-item" data-cat="2" id="chk_2_14"  onchange="toggleItem('chk_2_14', 2)">
+        <div class="item-content"><span class="item-bold">Dividir <code>src/pages/viajes-choferes.astro</code> (718 lín - 🟡 Sobre umbral)</span><span>Descomponer el layout de listas de viajes y filtros por estado en componentes específicos.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_2_15">
+        <input type="checkbox" class="chk-item" data-cat="2" id="chk_2_15"  onchange="toggleItem('chk_2_15', 2)">
+        <div class="item-content"><span class="item-bold">Dividir <code>src/frontend/components/flota/VehicleDetailModal.astro</code> (674 lín - 🟡 Sobre umbral)</span><span>Separar cada una de las 4 pestañas técnicas (datos generales, historial comisiones, mantenimientos, consumo de combustible) en subcomponentes independientes.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_2_16">
+        <input type="checkbox" class="chk-item" data-cat="2" id="chk_2_16"  onchange="toggleItem('chk_2_16', 2)">
+        <div class="item-content"><span class="item-bold">Dividir <code>src/frontend/components/flota/VehicleFormModal.astro</code> (602 lín - 🟡 Sobre umbral)</span><span>Extraer la validación de campos, selectores de dependencias y tipos de vehículo a partials de formulario.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_2_17">
+        <input type="checkbox" class="chk-item" data-cat="2" id="chk_2_17"  onchange="toggleItem('chk_2_17', 2)">
+        <div class="item-content"><span class="item-bold">Dividir <code>src/frontend/components/cronograma/CronogramaDispatchModal.astro</code> (580 lín - 🟡 Sobre umbral)</span><span>Extraer selección de chofer sustituto y selector de móviles disponibles a componentes independientes.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_2_18">
+        <input type="checkbox" class="chk-item" data-cat="2" id="chk_2_18"  onchange="toggleItem('chk_2_18', 2)">
+        <div class="item-content"><span class="item-bold">Modularizar <code>src/frontend/scripts/combustibleController.ts</code> (428 lín - 🟡 Sobre umbral)</span><span>Desacoplar la previsualización de imagen del ticket de combustible de las validaciones de carga.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_2_19">
+        <input type="checkbox" class="chk-item" data-cat="2" id="chk_2_19"  onchange="toggleItem('chk_2_19', 2)">
+        <div class="item-content"><span class="item-bold">Modularizar <code>src/frontend/scripts/viajesChoferesController.ts</code> (415 lín - 🟡 Sobre umbral)</span><span>Extraer handlers de eventos de confirmación y paginación a utilidades específicas.</span></div>
+      </label></div>
+  </div>
+  <div class="card-area">
+    <div class="card-header">
+      <div class="card-title-group"><span class="card-badge-num">04</span><h2 class="card-title">04 — Base de Datos y Persistencia (MySQL 8.0+ / InnoDB)</h2></div>
+      <div class="card-progress-wrap"><span class="card-counter" id="counter_3">0 / 9</span>
+        <div class="mini-progress-bar"><div class="mini-progress-fill" id="progress_3" style="width:0%"></div></div></div>
+    </div>
+    
+    
+    <div class="checklist-items"><div class="item-section">Buenas Prácticas y Rendimiento</div>
+      <label class="checklist-item " id="label_chk_3_0">
+        <input type="checkbox" class="chk-item" data-cat="3" id="chk_3_0"  onchange="toggleItem('chk_3_0', 3)">
+        <div class="item-content"><span class="item-bold">Esquema versionado y migraciones ordenadas</span><span>Cambios de estructura gestionados exclusivamente a través de scripts DDL versionados en <code>database/schema.sql</code> y migraciones reproducibles sin scripts manuales ad-hoc.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_3_1">
+        <input type="checkbox" class="chk-item" data-cat="3" id="chk_3_1"  onchange="toggleItem('chk_3_1', 3)">
+        <div class="item-content"><span class="item-bold">Configuración de juego de caracteres utf8mb4</span><span>Tablas, columnas de texto y conexiones de pool configuradas estrictamente con <code>utf8mb4</code> / <code>utf8mb4_unicode_ci</code> para soporte completo de caracteres y tildes.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_3_2">
+        <input type="checkbox" class="chk-item" data-cat="3" id="chk_3_2"  onchange="toggleItem('chk_3_2', 3)">
+        <div class="item-content"><span class="item-bold">Uso de Connection Pooling</span><span>Configuración y reutilización eficiente del pool de conexiones <code>mysql2/promise</code> (<code>connectionLimit</code>, <code>waitForConnections: true</code>, <code>queueLimit</code>) sin crear conexiones volátiles por petición.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_3_3">
+        <input type="checkbox" class="chk-item" data-cat="3" id="chk_3_3"  onchange="toggleItem('chk_3_3', 3)">
+        <div class="item-content"><span class="item-bold">Consultas preparadas obligatorias</span><span>Toda consulta con parámetros externos debe usar prepared statements (<code>execute(sql, [params])</code>) para prevenir inyecciones SQL.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_3_4">
+        <input type="checkbox" class="chk-item" data-cat="3" id="chk_3_4"  onchange="toggleItem('chk_3_4', 3)">
+        <div class="item-content"><span class="item-bold">Transaccionalidad ACID</span><span>Operaciones multi-tabla (ej. creación de comisiones con actualización del estado del vehículo en <code>vehiculos</code> y registro en <code>auditoria_estados_vehiculo</code>) deben ejecutarse dentro de <code>withTransaction</code> con <code>START TRANSACTION</code>, <code>COMMIT</code> y <code>ROLLBACK</code> garantizado ante fallos.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_3_5">
+        <input type="checkbox" class="chk-item" data-cat="3" id="chk_3_5"  onchange="toggleItem('chk_3_5', 3)">
+        <div class="item-content"><span class="item-bold">Proyecciones acotadas de columnas</span><span>Evitar consultas indiscriminadas con <code>SELECT *</code> en listados masivos de comisiones o combustible; seleccionar únicamente los campos necesarios para la vista o reporte.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_3_6">
+        <input type="checkbox" class="chk-item" data-cat="3" id="chk_3_6"  onchange="toggleItem('chk_3_6', 3)">
+        <div class="item-content"><span class="item-bold">Cobertura de índices en columnas de búsqueda frecuente</span><span></span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_3_7">
+        <input type="checkbox" class="chk-item" data-cat="3" id="chk_3_7"  onchange="toggleItem('chk_3_7', 3)">
+        <div class="item-content"><span class="item-bold">Integridad referencial y claves foráneas</span><span>Restricciones de clave foránea (<code>FOREIGN KEY</code>) explícitas con <code>ON DELETE RESTRICT</code> en registros históricos (comisiones, combustible, auditoría) para evitar borrados accidentales en cascada.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_3_8">
+        <input type="checkbox" class="chk-item" data-cat="3" id="chk_3_8"  onchange="toggleItem('chk_3_8', 3)">
+        <div class="item-content"><span class="item-bold">Trazabilidad inmutable de estados</span><span>Registro automático e inmutable en <code>auditoria_estados_vehiculo</code> de cada transición de estado (<code>DISPONIBLE</code>, <code>EN_COMISION</code>, <code>EN_TALLER</code>, <code>FUERA_DE_SERVICIO</code>) con usuario, motivo y fecha.</span></div>
+      </label></div>
+  </div>
+  <div class="card-area">
+    <div class="card-header">
+      <div class="card-title-group"><span class="card-badge-num">05</span><h2 class="card-title">05 — API RESTful, Contratos y Endpoints</h2></div>
+      <div class="card-progress-wrap"><span class="card-counter" id="counter_4">0 / 6</span>
+        <div class="mini-progress-bar"><div class="mini-progress-fill" id="progress_4" style="width:0%"></div></div></div>
+    </div>
+    
+    
+    <div class="checklist-items"><div class="item-section">Buenas Prácticas y Contratos HTTP</div>
+      <label class="checklist-item " id="label_chk_4_0">
+        <input type="checkbox" class="chk-item" data-cat="4" id="chk_4_0"  onchange="toggleItem('chk_4_0', 4)">
+        <div class="item-content"><span class="item-bold">Sincronización cliente ↔ backend</span><span>Cada endpoint consumido por los controladores en <code>src/frontend/scripts/</code> coincide exactamente en método HTTP (<code>GET</code>, <code>POST</code>, <code>PUT</code>, <code>DELETE</code>), URL relativa (<code>/api/...</code>) y firma de datos con <code>src/pages/api/</code>.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_4_1">
+        <input type="checkbox" class="chk-item" data-cat="4" id="chk_4_1"  onchange="toggleItem('chk_4_1', 4)">
+        <div class="item-content"><span class="item-bold">Códigos de estado HTTP semánticos</span><span></span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_4_2">
+        <input type="checkbox" class="chk-item" data-cat="4" id="chk_4_2"  onchange="toggleItem('chk_4_2', 4)">
+        <div class="item-content"><span class="item-bold">Formato uniforme de respuesta</span><span>Respuestas JSON consistentes bajo la estructura <code>{ success: boolean, data?: any, error?: string }</code> o formato estándar de API.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_4_3">
+        <input type="checkbox" class="chk-item" data-cat="4" id="chk_4_3"  onchange="toggleItem('chk_4_3', 4)">
+        <div class="item-content"><span class="item-bold">Validación estricta de payloads (Anti Mass-Assignment)</span><span>Parámetros del cuerpo de peticiones <code>POST</code>/<code>PUT</code> validados y mapeados a interfaces TypeScript explícitas, impidiendo la mutación de campos protegidos como <code>id</code>, <code>created_at</code> o roles de usuario.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_4_4">
+        <input type="checkbox" class="chk-item" data-cat="4" id="chk_4_4"  onchange="toggleItem('chk_4_4', 4)">
+        <div class="item-content"><span class="item-bold">Cabeceras HTTP explícitas</span><span>Cabeceras <code>Content-Type: application/json; charset=utf-8</code> definidas en todas las respuestas de endpoints API.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_4_5">
+        <input type="checkbox" class="chk-item" data-cat="4" id="chk_4_5"  onchange="toggleItem('chk_4_5', 4)">
+        <div class="item-content"><span class="item-bold">Sanitización y control de archivos adjuntos</span><span>Validación de tipo MIME y tamaño máximo en endpoints de subida de tickets fotográficos (<code>/api/analizar-ticket</code>, <code>/api/analizar-tablero</code>).</span></div>
+      </label></div>
+  </div>
+  <div class="card-area">
+    <div class="card-header">
+      <div class="card-title-group"><span class="card-badge-num">06</span><h2 class="card-title">06 — Testing y Verificación Automatizada</h2></div>
+      <div class="card-progress-wrap"><span class="card-counter" id="counter_5">0 / 6</span>
+        <div class="mini-progress-bar"><div class="mini-progress-fill" id="progress_5" style="width:0%"></div></div></div>
+    </div>
+    
+    
+    <div class="checklist-items">
+      <label class="checklist-item " id="label_chk_5_0">
+        <input type="checkbox" class="chk-item" data-cat="5" id="chk_5_0"  onchange="toggleItem('chk_5_0', 5)">
+        <div class="item-content"><span class="item-bold">Suite de pruebas unitarias</span><span>Pruebas automáticas implementadas para la lógica de dominio pura y reglas de cálculo o parsing críticas del negocio.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_5_1">
+        <input type="checkbox" class="chk-item" data-cat="5" id="chk_5_1"  onchange="toggleItem('chk_5_1', 5)">
+        <div class="item-content"><span class="item-bold">Pruebas de máquina de estados</span><span>Cobertura de transiciones válidas e inválidas en los flujos principales del sistema.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_5_2">
+        <input type="checkbox" class="chk-item" data-cat="5" id="chk_5_2"  onchange="toggleItem('chk_5_2', 5)">
+        <div class="item-content"><span class="item-bold">Pruebas de autorización y roles (RBAC)</span><span>Casos de prueba que confirman denegación de acceso (<code>401 / 403</code>) para usuarios no autenticados o con rol insuficiente.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_5_3">
+        <input type="checkbox" class="chk-item" data-cat="5" id="chk_5_3"  onchange="toggleItem('chk_5_3', 5)">
+        <div class="item-content"><span class="item-bold">Aislamiento total de entornos productivos</span><span>Las pruebas automatizadas nunca se ejecutan contra bases de datos reales ni consumen APIs de terceros de producción.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_5_4">
+        <input type="checkbox" class="chk-item" data-cat="5" id="chk_5_4"  onchange="toggleItem('chk_5_4', 5)">
+        <div class="item-content"><span class="item-bold">Uso de base de datos efímera</span><span>Pruebas de integración ejecutadas contra bases de datos en memoria, SQLite o contenedores efímeros desechables.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_5_5">
+        <input type="checkbox" class="chk-item" data-cat="5" id="chk_5_5"  onchange="toggleItem('chk_5_5', 5)">
+        <div class="item-content"><span class="item-bold">Datos ficticios de prueba</span><span>Ningún archivo de test contiene datos personales reales ni secretos institucionales.</span></div>
+      </label></div>
+  </div>
+  <div class="card-area">
+    <div class="card-header">
+      <div class="card-title-group"><span class="card-badge-num">07</span><h2 class="card-title">07 — Legacy, Limpieza y Mantenibilidad</h2></div>
+      <div class="card-progress-wrap"><span class="card-counter" id="counter_6">0 / 7</span>
+        <div class="mini-progress-bar"><div class="mini-progress-fill" id="progress_6" style="width:0%"></div></div></div>
+    </div>
+    
+    
+    <div class="checklist-items"><div class="item-section">Limpieza de Repositorio y Código Muerto</div>
+      <label class="checklist-item " id="label_chk_6_0">
+        <input type="checkbox" class="chk-item" data-cat="6" id="chk_6_0"  onchange="toggleItem('chk_6_0', 6)">
+        <div class="item-content"><span class="item-bold">Unificación de gestor de paquetes (Lockfiles duplicados)</span><span>Resolver la convivencia conflictiva entre <code>package-lock.json</code> (npm) y <code>pnpm-lock.yaml</code> / <code>pnpm-workspace.yaml</code> (pnpm) en la raíz del proyecto.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_6_1">
+        <input type="checkbox" class="chk-item" data-cat="6" id="chk_6_1"  onchange="toggleItem('chk_6_1', 6)">
+        <div class="item-content"><span class="item-bold">Limpieza de colisión de archivos estáticos en <code>public/vehiculos/</code></span><span>Resolver la redundancia entre imágenes JPEG y PNG (<code>Auto.jpeg</code>/<code>auto.png</code>, <code>Camion.jpeg</code>/<code>camion.png</code>, etc.) y corregir la colisión de nombres mayúsculas/minúsculas para entornos Windows.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_6_2">
+        <input type="checkbox" class="chk-item" data-cat="6" id="chk_6_2"  onchange="toggleItem('chk_6_2', 6)">
+        <div class="item-content"><span class="item-bold">Exclusión de cachés y compilados de TypeScript</span><span>Asegurar que <code>tsconfig.tsbuildinfo</code> y carpetas de build (<code>dist/</code>) estén debidamente ignoradas en <code>.gitignore</code>.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_6_3">
+        <input type="checkbox" class="chk-item" data-cat="6" id="chk_6_3"  onchange="toggleItem('chk_6_3', 6)">
+        <div class="item-content"><span class="item-bold">Código libre de bloques comentados y funciones muertas</span><span>Verificar que los servicios en <code>src/backend/services/</code> y scripts en <code>src/frontend/scripts/</code> no contengan fragmentos extensos de código deshabilitado.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_6_4">
+        <input type="checkbox" class="chk-item" data-cat="6" id="chk_6_4"  onchange="toggleItem('chk_6_4', 6)">
+        <div class="item-content"><span class="item-bold">Eliminación de datos ficticios en flujos productivos</span><span>Confirmar que los endpoints en <code>src/pages/api/</code> operen contra la base de datos MySQL real y no mantengan payloads dummy hardcodeados.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_6_5">
+        <input type="checkbox" class="chk-item" data-cat="6" id="chk_6_5"  onchange="toggleItem('chk_6_5', 6)">
+        <div class="item-content"><span class="item-bold">Una sola fuente canónica de esquemas SQL</span><span>Garantizar que <code>database/schema.sql</code> y <code>database/seed.sql</code> sean la única referencia canónica de datos iniciales.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_6_6">
+        <input type="checkbox" class="chk-item" data-cat="6" id="chk_6_6"  onchange="toggleItem('chk_6_6', 6)">
+        <div class="item-content"><span class="item-bold">Archivos de configuración de despliegue consistentes</span><span>Revisar la concordancia entre <code>Dockerfile</code>, <code>docker-compose.yml</code>, <code>docker-compose.dev.yml</code>, <code>railway.json</code> y <code>render.yaml</code>.</span></div>
+      </label></div>
+  </div>
+  <div class="card-area">
+    <div class="card-header">
+      <div class="card-title-group"><span class="card-badge-num">08</span><h2 class="card-title">08 — Deploy y entorno</h2></div>
+      <div class="card-progress-wrap"><span class="card-counter" id="counter_7">0 / 10</span>
+        <div class="mini-progress-bar"><div class="mini-progress-fill" id="progress_7" style="width:0%"></div></div></div>
+    </div>
+    
+    
+    <div class="checklist-items">
+      <label class="checklist-item " id="label_chk_7_0">
+        <input type="checkbox" class="chk-item" data-cat="7" id="chk_7_0"  onchange="toggleItem('chk_7_0', 7)">
+        <div class="item-content"><span>Configuración de contenedores válida (<code>docker compose config -q</code>) e instalación reproducible (<code>npm ci</code> o equivalente con lockfiles sincronizados).</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_7_1">
+        <input type="checkbox" class="chk-item" data-cat="7" id="chk_7_1"  onchange="toggleItem('chk_7_1', 7)">
+        <div class="item-content"><span>Variables obligatorias definidas (base de datos, secretos de sesión/firma, credenciales de integraciones); <code>.env</code> del servidor verificado sin exponer secretos.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_7_2">
+        <input type="checkbox" class="chk-item" data-cat="7" id="chk_7_2"  onchange="toggleItem('chk_7_2', 7)">
+        <div class="item-content"><span>Entorno productivo explícito (<code>NODE_ENV=production</code> o equivalente) en todos los servicios.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_7_3">
+        <input type="checkbox" class="chk-item" data-cat="7" id="chk_7_3"  onchange="toggleItem('chk_7_3', 7)">
+        <div class="item-content"><span>Base de datos inicializada/migrada de forma controlada; respaldo previo; sin ejecución automática accidental de SQL destructivo o de inicialización.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_7_4">
+        <input type="checkbox" class="chk-item" data-cat="7" id="chk_7_4"  onchange="toggleItem('chk_7_4', 7)">
+        <div class="item-content"><span>Volúmenes persistentes (datos y archivos subidos) con permisos de usuario no-root correctos.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_7_5">
+        <input type="checkbox" class="chk-item" data-cat="7" id="chk_7_5"  onchange="toggleItem('chk_7_5', 7)">
+        <div class="item-content"><span>Proxy inverso (Nginx/equivalente) expone solo las rutas necesarias; HTTPS y <code>X-Forwarded-Proto</code> configurados.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_7_6">
+        <input type="checkbox" class="chk-item" data-cat="7" id="chk_7_6"  onchange="toggleItem('chk_7_6', 7)">
+        <div class="item-content"><span>Puertos y dirección de escucha (<code>BIND_IP</code>) acordes al nivel de exposición previsto.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_7_7">
+        <input type="checkbox" class="chk-item" data-cat="7" id="chk_7_7"  onchange="toggleItem('chk_7_7', 7)">
+        <div class="item-content"><span>Salida de red del servidor (DNS/IPv4/IPv6) verificada para descarga de imágenes e integraciones.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_7_8">
+        <input type="checkbox" class="chk-item" data-cat="7" id="chk_7_8"  onchange="toggleItem('chk_7_8', 7)">
+        <div class="item-content"><span>Health checks de todos los servicios en verde tras el despliegue.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_7_9">
+        <input type="checkbox" class="chk-item" data-cat="7" id="chk_7_9"  onchange="toggleItem('chk_7_9', 7)">
+        <div class="item-content"><span>Plan de rollback probado (imágenes etiquetadas por versión/commit) y responsable asignado.</span></div>
+      </label></div>
+  </div>
+  <div class="card-area">
+    <div class="card-header">
+      <div class="card-title-group"><span class="card-badge-num">09</span><h2 class="card-title">09 — Control de Versiones</h2></div>
+      <div class="card-progress-wrap"><span class="card-counter" id="counter_8">0 / 6</span>
+        <div class="mini-progress-bar"><div class="mini-progress-fill" id="progress_8" style="width:0%"></div></div></div>
+    </div>
+    <div class="card-warning-banner">⚠️ <strong>Sin tags de versión</strong> en el repositorio.</div>
+    
+    <div class="checklist-items"><div class="item-section">Buenas Prácticas de Versionado</div>
+      <label class="checklist-item " id="label_chk_8_0">
+        <input type="checkbox" class="chk-item" data-cat="8" id="chk_8_0"  onchange="toggleItem('chk_8_0', 8)">
+        <div class="item-content"><span class="item-bold">Estandarización de commits convencionales (Actual: 80%)</span><span>Homogeneizar los mensajes de commit bajo la convención SemVer / Angular (<code>feat:</code>, <code>fix:</code>, <code>docs:</code>, <code>chore:</code>, <code>refactor:</code>, <code>test:</code>), corrigiendo el 20% de commits libres o no estructurados.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_8_1">
+        <input type="checkbox" class="chk-item" data-cat="8" id="chk_8_1"  onchange="toggleItem('chk_8_1', 8)">
+        <div class="item-content"><span class="item-bold">Etiquetado formal de versiones (Tags) (Actual: 0 tags)</span><span>Crear tags versionados (ej. <code>v1.0.0</code>) correspondientes a las entregas estables y despliegues a producción.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_8_2">
+        <input type="checkbox" class="chk-item" data-cat="8" id="chk_8_2"  onchange="toggleItem('chk_8_2', 8)">
+        <div class="item-content"><span class="item-bold">Estrategia de ramas y revisiones (Pull Requests)</span><span>Mantener un flujo de integración ordenado (<code>main</code> protegido, ramas por funcionalidad <code>feature/...</code> o corrección <code>fix/...</code>).</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_8_3">
+        <input type="checkbox" class="chk-item" data-cat="8" id="chk_8_3"  onchange="toggleItem('chk_8_3', 8)">
+        <div class="item-content"><span class="item-bold">Configuración de exclusiones (.gitignore)</span><span>Verificar que <code>.gitignore</code> excluya dependencias (<code>node_modules</code>), compilados (<code>dist/</code>, <code>tsconfig.tsbuildinfo</code>), archivos <code>.env</code> con credenciales reales y volcados locales.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_8_4">
+        <input type="checkbox" class="chk-item" data-cat="8" id="chk_8_4"  onchange="toggleItem('chk_8_4', 8)">
+        <div class="item-content"><span class="item-bold">Privacidad de herramientas de auditoría</span><span>Reglas de exclusión locales configuradas (<code>.git/info/exclude</code>) para resguardar las herramientas privadas de auditoría (<code>qa/scripts/</code>, <code>qa/skills/</code>, etc.) sin ensuciar el repositorio compartido.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_8_5">
+        <input type="checkbox" class="chk-item" data-cat="8" id="chk_8_5"  onchange="toggleItem('chk_8_5', 8)">
+        <div class="item-content"><span class="item-bold">Repositorio libre de binarios pesados</span><span>Evaluar el versionado de PDFs pesados (<code>Guia_de_Usuario_SCVehiculos_Administradores_y_Choferes.pdf</code> ~518 KB) y optimizar imágenes en <code>public/vehiculos/</code>.</span></div>
+      </label></div>
+  </div>
+  <div class="card-area">
+    <div class="card-header">
+      <div class="card-title-group"><span class="card-badge-num">10</span><h2 class="card-title">10 — Documentación Técnica y Funcional</h2></div>
+      <div class="card-progress-wrap"><span class="card-counter" id="counter_9">0 / 6</span>
+        <div class="mini-progress-bar"><div class="mini-progress-fill" id="progress_9" style="width:0%"></div></div></div>
+    </div>
+    
+    
+    <div class="checklist-items"><div class="item-section">Buenas Prácticas de Documentación</div>
+      <label class="checklist-item " id="label_chk_9_0">
+        <input type="checkbox" class="chk-item" data-cat="9" id="chk_9_0"  onchange="toggleItem('chk_9_0', 9)">
+        <div class="item-content"><span class="item-bold">Manual de instalación y arranque actualizado</span><span>El archivo <code>README.md</code> describe con precisión los requisitos previos (Node.js 20+, MySQL 8+, Astro 7) y comandos de instalación (<code>npm install</code>, <code>npm run dev</code>, <code>npm run start</code>).</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_9_1">
+        <input type="checkbox" class="chk-item" data-cat="9" id="chk_9_1"  onchange="toggleItem('chk_9_1', 9)">
+        <div class="item-content"><span class="item-bold">Documentación de entorno Docker y despliegue</span><span><code>README_DOCKER.md</code> y <code>docker-compose.yml</code> contienen variables de entorno claras y pasos para levantar la base de datos y la aplicación en contenedores.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_9_2">
+        <input type="checkbox" class="chk-item" data-cat="9" id="chk_9_2"  onchange="toggleItem('chk_9_2', 9)">
+        <div class="item-content"><span class="item-bold">Registro de decisiones y mejoras arquitectónicas</span><span>El documento <code>MEJORAS_25_09.md</code> documenta los hitos y optimizaciones aplicadas al flujo de despacho y perfiles de chofer.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_9_3">
+        <input type="checkbox" class="chk-item" data-cat="9" id="chk_9_3"  onchange="toggleItem('chk_9_3', 9)">
+        <div class="item-content"><span class="item-bold">Manuales de usuario por rol</span><span>Se dispone de <code>Guia_de_Usuario_SCVehiculos_Administradores_y_Choferes.pdf</code> para capacitación operativa de choferes y administradores.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_9_4">
+        <input type="checkbox" class="chk-item" data-cat="9" id="chk_9_4"  onchange="toggleItem('chk_9_4', 9)">
+        <div class="item-content"><span class="item-bold">Documentación técnica de contratos de API</span><span>Detalle de endpoints HTTP bajo <code>src/pages/api/</code> con sus parámetros esperados y respuestas de error documentadas en el repositorio.</span></div>
+      </label>
+      <label class="checklist-item " id="label_chk_9_5">
+        <input type="checkbox" class="chk-item" data-cat="9" id="chk_9_5"  onchange="toggleItem('chk_9_5', 9)">
+        <div class="item-content"><span class="item-bold">Diccionario de datos y esquema relacional</span><span>Mantener documentación descriptiva de las tablas, relaciones e índices del esquema MySQL (<code>database/schema.sql</code>).</span></div>
+      </label></div>
+  </div>
+  <div class="signature-grid">
+    <div class="sig-box"><div class="sig-line"></div><div class="sig-title">Auditor QA / Control de Calidad</div><div class="sig-sub">Área de Sistemas</div></div>
+    <div class="sig-box"><div class="sig-line"></div><div class="sig-title">Líder Técnico</div><div class="sig-sub">Equipo de Desarrollo SCVehiculos</div></div>
+    <div class="sig-box"><div class="sig-line"></div><div class="sig-title">Jefatura de Sistemas</div><div class="sig-sub">Aprobación final de despliegue</div></div>
+  </div>
+</div>
+<script>
+const total=97;let checked=0;
+function toggleItem(id,cat){
+  const chk=document.getElementById(id);document.getElementById('label_'+id).classList.toggle('item-checked',chk.checked);
+  checked+=chk.checked?1:-1;
+  const boxes=document.querySelectorAll('.chk-item[data-cat="'+cat+'"]');let c=0;boxes.forEach(b=>{if(b.checked)c++});
+  document.getElementById('counter_'+cat).innerText=c+' / '+boxes.length;
+  document.getElementById('progress_'+cat).style.width=(boxes.length?Math.round(c/boxes.length*100):0)+'%';
+  const p=(total?checked/total*100:0).toFixed(1);
+  document.getElementById('kpiChecked').innerText=checked;document.getElementById('kpiPending').innerText=total-checked;
+  document.getElementById('kpiPercent').innerText=p+'%';document.getElementById('progressLabel').innerText=p+'% completado';
+  document.getElementById('mainProgressBar').style.width=p+'%';
+}
+function applyFilter(ev,mode){
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));ev.target.classList.add('active');
+  document.querySelectorAll('.checklist-item').forEach(it=>{const c=it.querySelector('.chk-item').checked;
+    it.style.display=mode==='all'||(mode==='checked'&&c)||(mode==='pending'&&!c)?'flex':'none';});
+}
+function copySummaryText(){
+  const t="📋 [QA SCVehiculos] Tarjeta Maestra\n• Puntos de control: "+total+"\n• Cumplidos: "+checked+"\n• Pendientes: "+(total-checked)+
+    "\n• Archivos sobre umbral: 21\n• Accesos directos a datos en controladores: 2\n• Conformidad: "+document.getElementById('kpiPercent').innerText+"\nGenerado: 2026-11-02";
+  navigator.clipboard.writeText(t).then(()=>alert('✅ Resumen copiado al portapapeles.'));
+}
+</script></body></html>

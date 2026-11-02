@@ -1,0 +1,3 @@
+﻿ID;Tipo;Modulo / Vista;Caso de Prueba / Hallazgo;Precondiciones / Datos;Pasos a Ejecutar;Resultado Esperado;Resultado Obtenido;Estado (PASS/FAIL/BLOQ);Severidad;Fecha;Tester;Evidencia / Captura
+S-01;Seguridad;;;;;;;PENDIENTE;Alta;;;
+F-01;Caja Negra;;;;;;;PENDIENTE;Alta;;;

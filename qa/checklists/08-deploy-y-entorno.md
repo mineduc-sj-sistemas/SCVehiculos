@@ -1,0 +1,11 @@
+# 08 — Deploy y entorno
+- [ ] Configuración de contenedores válida (`docker compose config -q`) e instalación reproducible (`npm ci` o equivalente con lockfiles sincronizados).
+- [ ] Variables obligatorias definidas (base de datos, secretos de sesión/firma, credenciales de integraciones); `.env` del servidor verificado sin exponer secretos.
+- [ ] Entorno productivo explícito (`NODE_ENV=production` o equivalente) en todos los servicios.
+- [ ] Base de datos inicializada/migrada de forma controlada; respaldo previo; sin ejecución automática accidental de SQL destructivo o de inicialización.
+- [ ] Volúmenes persistentes (datos y archivos subidos) con permisos de usuario no-root correctos.
+- [ ] Proxy inverso (Nginx/equivalente) expone solo las rutas necesarias; HTTPS y `X-Forwarded-Proto` configurados.
+- [ ] Puertos y dirección de escucha (`BIND_IP`) acordes al nivel de exposición previsto.
+- [ ] Salida de red del servidor (DNS/IPv4/IPv6) verificada para descarga de imágenes e integraciones.
+- [ ] Health checks de todos los servicios en verde tras el despliegue.
+- [ ] Plan de rollback probado (imágenes etiquetadas por versión/commit) y responsable asignado.

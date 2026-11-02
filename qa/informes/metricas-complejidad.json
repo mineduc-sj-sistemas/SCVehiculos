@@ -1,0 +1,799 @@
+{
+  "generado": "2026-11-02T13:30:23.038Z",
+  "proyecto": "SCVehiculos",
+  "categorias": [
+    {
+      "id": "vistas",
+      "nombre": "Vistas y Componentes Astro",
+      "checklist": "03-frontend-astro.md",
+      "umbralAdvertencia": 500,
+      "umbralCritico": 800,
+      "accion": "Extraer subcomponentes o modularizar lógica visual",
+      "archivos": [
+        {
+          "ruta": "src/frontend/components/auditoria/AuditorExecutiveView.astro",
+          "nombre": "AuditorExecutiveView.astro",
+          "lineas": 916,
+          "estado": "critico",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/pages/mi-viaje.astro",
+          "nombre": "mi-viaje.astro",
+          "lineas": 800,
+          "estado": "sobre-umbral",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/pages/viajes-choferes.astro",
+          "nombre": "viajes-choferes.astro",
+          "lineas": 718,
+          "estado": "sobre-umbral",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/flota/VehicleDetailModal.astro",
+          "nombre": "VehicleDetailModal.astro",
+          "lineas": 674,
+          "estado": "sobre-umbral",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/flota/VehicleFormModal.astro",
+          "nombre": "VehicleFormModal.astro",
+          "lineas": 602,
+          "estado": "sobre-umbral",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/cronograma/CronogramaDispatchModal.astro",
+          "nombre": "CronogramaDispatchModal.astro",
+          "lineas": 580,
+          "estado": "sobre-umbral",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/choferes/ChoferFormModal.astro",
+          "nombre": "ChoferFormModal.astro",
+          "lineas": 497,
+          "estado": "moderado",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/pwa/PwaManager.astro",
+          "nombre": "PwaManager.astro",
+          "lineas": 429,
+          "estado": "moderado",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/pages/index.astro",
+          "nombre": "index.astro",
+          "lineas": 375,
+          "estado": "moderado",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/pages/cronograma/imprimir/[id].astro",
+          "nombre": "[id].astro",
+          "lineas": 350,
+          "estado": "moderado",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/combustible/FuelFormModal.astro",
+          "nombre": "FuelFormModal.astro",
+          "lineas": 332,
+          "estado": "moderado",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/choferes/ChoferDetailModal.astro",
+          "nombre": "ChoferDetailModal.astro",
+          "lineas": 282,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/usuarios/UserFormModal.astro",
+          "nombre": "UserFormModal.astro",
+          "lineas": 271,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/cronograma/CronogramaDetailModal.astro",
+          "nombre": "CronogramaDetailModal.astro",
+          "lineas": 259,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/cronograma/CronogramaGrid.astro",
+          "nombre": "CronogramaGrid.astro",
+          "lineas": 253,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/mantenimientos/MaintenanceFormModal.astro",
+          "nombre": "MaintenanceFormModal.astro",
+          "lineas": 244,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/pages/mi-perfil.astro",
+          "nombre": "mi-perfil.astro",
+          "lineas": 226,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/mantenimientos/MaintenanceTable.astro",
+          "nombre": "MaintenanceTable.astro",
+          "lineas": 216,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/pages/login.astro",
+          "nombre": "login.astro",
+          "lineas": 213,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/combustible/FuelTable.astro",
+          "nombre": "FuelTable.astro",
+          "lineas": 205,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/viajes/ViajesTable.astro",
+          "nombre": "ViajesTable.astro",
+          "lineas": 194,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/flota/VehicleCardGrid.astro",
+          "nombre": "VehicleCardGrid.astro",
+          "lineas": 192,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/choferes/ChoferTable.astro",
+          "nombre": "ChoferTable.astro",
+          "lineas": 184,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/cronograma/CronogramaHeader.astro",
+          "nombre": "CronogramaHeader.astro",
+          "lineas": 184,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/flota/VehicleTable.astro",
+          "nombre": "VehicleTable.astro",
+          "lineas": 172,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/mantenimientos/MaintenanceFinishModal.astro",
+          "nombre": "MaintenanceFinishModal.astro",
+          "lineas": 166,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/layout/Header.astro",
+          "nombre": "Header.astro",
+          "lineas": 163,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/ui/ToastNotification.astro",
+          "nombre": "ToastNotification.astro",
+          "lineas": 159,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/flota/VehicleGraphic.astro",
+          "nombre": "VehicleGraphic.astro",
+          "lineas": 158,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/layout/Sidebar.astro",
+          "nombre": "Sidebar.astro",
+          "lineas": 154,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/choferes/ChoferLicenciaFormModal.astro",
+          "nombre": "ChoferLicenciaFormModal.astro",
+          "lineas": 135,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/usuarios/UserTable.astro",
+          "nombre": "UserTable.astro",
+          "lineas": 134,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/layouts/DashboardLayout.astro",
+          "nombre": "DashboardLayout.astro",
+          "lineas": 134,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/combustible/FuelKpiCards.astro",
+          "nombre": "FuelKpiCards.astro",
+          "lineas": 110,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/pages/combustible.astro",
+          "nombre": "combustible.astro",
+          "lineas": 101,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/pages/flota.astro",
+          "nombre": "flota.astro",
+          "lineas": 99,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/flota/VehicleKpiCards.astro",
+          "nombre": "VehicleKpiCards.astro",
+          "lineas": 98,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/flota/VehicleFilters.astro",
+          "nombre": "VehicleFilters.astro",
+          "lineas": 90,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/pages/usuarios.astro",
+          "nombre": "usuarios.astro",
+          "lineas": 84,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/ui/SanJuanLogo.astro",
+          "nombre": "SanJuanLogo.astro",
+          "lineas": 83,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/mantenimientos/MaintenanceKpiCards.astro",
+          "nombre": "MaintenanceKpiCards.astro",
+          "lineas": 82,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/pages/viajes.astro",
+          "nombre": "viajes.astro",
+          "lineas": 79,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/viajes/ViajesKpiCards.astro",
+          "nombre": "ViajesKpiCards.astro",
+          "lineas": 77,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/choferes/ChoferKpiCards.astro",
+          "nombre": "ChoferKpiCards.astro",
+          "lineas": 75,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/pages/mantenimientos.astro",
+          "nombre": "mantenimientos.astro",
+          "lineas": 72,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/pages/choferes.astro",
+          "nombre": "choferes.astro",
+          "lineas": 71,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/dashboard/DashboardStatCards.astro",
+          "nombre": "DashboardStatCards.astro",
+          "lineas": 67,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/usuarios/UserKpiCards.astro",
+          "nombre": "UserKpiCards.astro",
+          "lineas": 61,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/choferes/ChoferFilters.astro",
+          "nombre": "ChoferFilters.astro",
+          "lineas": 54,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/pages/auditoria.astro",
+          "nombre": "auditoria.astro",
+          "lineas": 52,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/cronograma/CronogramaFilters.astro",
+          "nombre": "CronogramaFilters.astro",
+          "lineas": 52,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/pages/cronograma.astro",
+          "nombre": "cronograma.astro",
+          "lineas": 50,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/ui/StatusBadge.astro",
+          "nombre": "StatusBadge.astro",
+          "lineas": 37,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/layouts/DashboardLayout.astro",
+          "nombre": "DashboardLayout.astro",
+          "lineas": 21,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/ui/PlateBadge.astro",
+          "nombre": "PlateBadge.astro",
+          "lineas": 16,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/components/layout/Footer.astro",
+          "nombre": "Footer.astro",
+          "lineas": 11,
+          "estado": "optimo",
+          "accesoDatos": []
+        }
+      ],
+      "resumen": {
+        "total": 56,
+        "sobreUmbral": 6,
+        "criticos": 1,
+        "accesoDatos": 0
+      }
+    },
+    {
+      "id": "controladores",
+      "nombre": "Endpoints API Backend",
+      "checklist": "02-backend-astro-node.md",
+      "umbralAdvertencia": 200,
+      "umbralCritico": 300,
+      "accion": "Mover lógica y consultas SQL a src/backend/services/; el endpoint solo valida y responde HTTP",
+      "archivos": [
+        {
+          "ruta": "src/pages/api/cronograma/[id].ts",
+          "nombre": "[id].ts",
+          "lineas": 177,
+          "estado": "moderado",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/pages/api/combustible/index.ts",
+          "nombre": "index.ts",
+          "lineas": 126,
+          "estado": "moderado",
+          "accesoDatos": [
+            {
+              "patron": "SELECT ",
+              "linea": 69
+            }
+          ]
+        },
+        {
+          "ruta": "src/pages/api/cronograma/index.ts",
+          "nombre": "index.ts",
+          "lineas": 95,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/pages/api/analizar-tablero/index.ts",
+          "nombre": "index.ts",
+          "lineas": 91,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/pages/api/mantenimientos/index.ts",
+          "nombre": "index.ts",
+          "lineas": 89,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/pages/api/choferes/index.ts",
+          "nombre": "index.ts",
+          "lineas": 84,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/pages/api/vehiculos/index.ts",
+          "nombre": "index.ts",
+          "lineas": 84,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/pages/api/analizar-ticket/index.ts",
+          "nombre": "index.ts",
+          "lineas": 71,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/pages/api/reportes/[tipo].ts",
+          "nombre": "[tipo].ts",
+          "lineas": 68,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/pages/api/mantenimientos/[id].ts",
+          "nombre": "[id].ts",
+          "lineas": 64,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/pages/api/chofer/checkin.ts",
+          "nombre": "checkin.ts",
+          "lineas": 58,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/pages/api/usuarios/index.ts",
+          "nombre": "index.ts",
+          "lineas": 57,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/pages/api/auth/login.ts",
+          "nombre": "login.ts",
+          "lineas": 52,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/pages/api/choferes/licencias.ts",
+          "nombre": "licencias.ts",
+          "lineas": 45,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/pages/api/chofer/mi-viaje.ts",
+          "nombre": "mi-viaje.ts",
+          "lineas": 37,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/pages/api/alertas/index.ts",
+          "nombre": "index.ts",
+          "lineas": 34,
+          "estado": "optimo",
+          "accesoDatos": [
+            {
+              "patron": "SELECT ",
+              "linea": 14
+            }
+          ]
+        },
+        {
+          "ruta": "src/pages/api/chofer/viajes-asignados.ts",
+          "nombre": "viajes-asignados.ts",
+          "lineas": 32,
+          "estado": "optimo",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/pages/api/auth/logout.ts",
+          "nombre": "logout.ts",
+          "lineas": 16,
+          "estado": "optimo",
+          "accesoDatos": []
+        }
+      ],
+      "resumen": {
+        "total": 18,
+        "sobreUmbral": 0,
+        "criticos": 0,
+        "accesoDatos": 2
+      }
+    },
+    {
+      "id": "servicios",
+      "nombre": "Servicios Backend (Dominio y Datos)",
+      "checklist": "02-backend-astro-node.md",
+      "umbralAdvertencia": 300,
+      "umbralCritico": 500,
+      "accion": "Dividir responsabilidades y consultas en módulos cohesivos",
+      "archivos": [
+        {
+          "ruta": "src/backend/services/cronogramaService.ts",
+          "nombre": "cronogramaService.ts",
+          "lineas": 1192,
+          "estado": "critico",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/backend/services/vehicleService.ts",
+          "nombre": "vehicleService.ts",
+          "lineas": 623,
+          "estado": "critico",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/backend/services/choferService.ts",
+          "nombre": "choferService.ts",
+          "lineas": 552,
+          "estado": "critico",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/backend/services/choferViajesService.ts",
+          "nombre": "choferViajesService.ts",
+          "lineas": 454,
+          "estado": "sobre-umbral",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/backend/services/visionService.ts",
+          "nombre": "visionService.ts",
+          "lineas": 394,
+          "estado": "sobre-umbral",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/backend/services/alertService.ts",
+          "nombre": "alertService.ts",
+          "lineas": 375,
+          "estado": "sobre-umbral",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/backend/services/maintenanceService.ts",
+          "nombre": "maintenanceService.ts",
+          "lineas": 375,
+          "estado": "sobre-umbral",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/backend/services/userService.ts",
+          "nombre": "userService.ts",
+          "lineas": 355,
+          "estado": "sobre-umbral",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/backend/services/authService.ts",
+          "nombre": "authService.ts",
+          "lineas": 338,
+          "estado": "sobre-umbral",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/backend/services/fuelService.ts",
+          "nombre": "fuelService.ts",
+          "lineas": 298,
+          "estado": "moderado",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/backend/services/viajesService.ts",
+          "nombre": "viajesService.ts",
+          "lineas": 255,
+          "estado": "moderado",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/backend/services/choferPortalService.ts",
+          "nombre": "choferPortalService.ts",
+          "lineas": 242,
+          "estado": "moderado",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/backend/services/dashboardService.ts",
+          "nombre": "dashboardService.ts",
+          "lineas": 222,
+          "estado": "moderado",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/backend/services/choferPerfilService.ts",
+          "nombre": "choferPerfilService.ts",
+          "lineas": 197,
+          "estado": "moderado",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/backend/services/reportService.ts",
+          "nombre": "reportService.ts",
+          "lineas": 185,
+          "estado": "moderado",
+          "accesoDatos": []
+        }
+      ],
+      "resumen": {
+        "total": 15,
+        "sobreUmbral": 9,
+        "criticos": 3,
+        "accesoDatos": 0
+      }
+    },
+    {
+      "id": "scripts_cliente",
+      "nombre": "Controladores Frontend (Scripts Cliente)",
+      "checklist": "03-frontend-astro.md",
+      "umbralAdvertencia": 300,
+      "umbralCritico": 500,
+      "accion": "Modularizar controladores de pantalla en submódulos o handlers de eventos",
+      "archivos": [
+        {
+          "ruta": "src/frontend/scripts/cronogramaController.ts",
+          "nombre": "cronogramaController.ts",
+          "lineas": 1622,
+          "estado": "critico",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/scripts/choferesController.ts",
+          "nombre": "choferesController.ts",
+          "lineas": 1250,
+          "estado": "critico",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/scripts/viajesController.ts",
+          "nombre": "viajesController.ts",
+          "lineas": 1190,
+          "estado": "critico",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/scripts/miViajeController.ts",
+          "nombre": "miViajeController.ts",
+          "lineas": 770,
+          "estado": "critico",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/scripts/combustibleController.ts",
+          "nombre": "combustibleController.ts",
+          "lineas": 428,
+          "estado": "sobre-umbral",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/scripts/viajesChoferesController.ts",
+          "nombre": "viajesChoferesController.ts",
+          "lineas": 415,
+          "estado": "sobre-umbral",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/scripts/mantenimientosController.ts",
+          "nombre": "mantenimientosController.ts",
+          "lineas": 280,
+          "estado": "moderado",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/scripts/flotaController.ts",
+          "nombre": "flotaController.ts",
+          "lineas": 202,
+          "estado": "moderado",
+          "accesoDatos": []
+        },
+        {
+          "ruta": "src/frontend/scripts/userController.ts",
+          "nombre": "userController.ts",
+          "lineas": 171,
+          "estado": "optimo",
+          "accesoDatos": []
+        }
+      ],
+      "resumen": {
+        "total": 9,
+        "sobreUmbral": 6,
+        "criticos": 4,
+        "accesoDatos": 0
+      }
+    }
+  ],
+  "versiones": {
+    "commitsTotales": 48,
+    "commitsAnalizados": 46,
+    "porcentajeConvencional": 80,
+    "noConvencionalesEjemplo": [
+      "Mejora en sidebar y formulario wizard - Augusto",
+      "Mejora en colores modo oscuro - Augusto",
+      "boton de editar en las comisiones",
+      "añadir rol de auditor, vista de panel ejecutivo y actualizar autorizaciones de rutas",
+      "cambios en el frontend"
+    ],
+    "tags": 0,
+    "ultimoTag": null,
+    "ramaActual": "main",
+    "commitActual": "7ec3fef"
+  },
+  "documentacion": {
+    "rutasDocs": [
+      "README.md",
+      "README_DOCKER.md",
+      "MEJORAS_25_09.md",
+      "docs"
+    ],
+    "rutasCodigo": [
+      "src",
+      "database",
+      "scripts"
+    ],
+    "ultimaActualizacionDocs": null,
+    "ultimoCambioCodigo": null,
+    "commitsDeCodigoSinActualizarDocs": null,
+    "desactualizada": false
+  }
+}

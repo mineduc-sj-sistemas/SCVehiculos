@@ -1,0 +1,7 @@
+{
+  "name": "qa-sistema",
+  "version": "1.0.0",
+  "description": "Sistema de Aseguramiento de Calidad y Auditoría Pre-Deploy",
+  "type": "commonjs",
+  "private": true
+}
