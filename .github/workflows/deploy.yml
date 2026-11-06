@@ -1,0 +1,76 @@
+name: Deploy SCVehiculos
+
+# Deploy al servidor 10.2.165.141 (puerto 4321) mediante runner self-hosted.
+#  - Manual: Actions -> Deploy SCVehiculos -> Run workflow
+#  - Automatico: descomentar el bloque "push" cuando el proceso este probado.
+on:
+  workflow_dispatch:
+    inputs:
+      esquema_revisado:
+        description: "Confirmo que los cambios en database/ o init_db.mjs ya se aplicaron a mano en la base"
+        type: boolean
+        default: false
+  # push:
+  #   branches: [main]
+
+concurrency: deploy-scvehiculos
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, scvehiculos]
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+        working-directory: /home/ebilbao@ejecutivo.sanjuan.gob/SCVehiculos
+    steps:
+      - name: Backup de la base
+        run: |
+          set -a; . ./.env; set +a
+          mkdir -p ~/backups
+          F=~/backups/scvehiculos_$(date +%Y%m%d_%H%M%S).sql
+          MYSQL_PWD="$DB_PASSWORD" mysqldump -h "$DB_HOST" -u "$DB_USER" --no-tablespaces "$DB_NAME" > "$F"
+          echo "Backup: $F ($(du -h "$F" | cut -f1))"
+          ls -1t ~/backups/scvehiculos_*.sql | tail -n +31 | xargs -r rm --   # conserva los ultimos 30
+
+      - name: Actualizar codigo
+        run: |
+          echo "PREV_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          git fetch origin main
+          git stash push -m deploy-local -- src/pages/api/auth/login.ts || true
+          git merge --ff-only origin/main
+          git stash pop || true
+          echo "Desplegando: $(git log --oneline -1)"
+
+      - name: Control de cambios de base de datos
+        # NO se ejecuta scripts/init_db.mjs: con los datos actuales recrearia (DROP TABLE) toda la base.
+        # Si el commit trae cambios de esquema, el deploy se frena hasta que se apliquen a mano.
+        run: |
+          CAMBIOS=$(git diff --name-only "$PREV_SHA" HEAD -- database/ scripts/init_db.mjs)
+          if [ -n "$CAMBIOS" ] && [ "${{ inputs.esquema_revisado }}" != "true" ]; then
+            echo "::error::Este deploy trae cambios de base de datos que no se aplican automaticamente:"
+            echo "$CAMBIOS"
+            echo "Aplicalos a mano en MySQL y relanza el workflow marcando 'esquema_revisado'."
+            git stash push -m deploy-local -- src/pages/api/auth/login.ts || true
+            git reset --hard "$PREV_SHA"
+            git stash pop || true
+            exit 1
+          fi
+
+      - name: Dependencias y build
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+
+      - name: Reiniciar servicio
+        run: sudo -n systemctl restart scvehiculos
+
+      - name: Verificar
+        run: |
+          for i in $(seq 1 12); do
+            if curl -fsS -o /dev/null http://localhost:4321/login; then echo "SCVehiculos OK"; exit 0; fi
+            sleep 5
+          done
+          echo "::error::SCVehiculos no responde despues del deploy"
+          tail -30 scvehiculos.log
+          exit 1
